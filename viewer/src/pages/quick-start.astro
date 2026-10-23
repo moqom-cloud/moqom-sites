@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import Code from '../components/Code.astro';
+import Generator from '../components/Generator.astro';
+import { SITE } from '../data/site';
+import { allowVisitorModels } from '../lib/csp';
+
+allowVisitorModels(Astro);
+const check = `npx -p ${SITE.hostingPackageName} viewer-check https://your-models.web.app/models/chair.glb --origin https://www.your-site.com`;
+---
+
+<Base title="Quick start" description={`Put a 3D model on your site with ${SITE.displayName} in three steps.`}>
+  <p class="eyebrow">Start</p>
+  <h1>Quick start</h1>
+  <div class="prose">
+    <h2>1. Prepare the model</h2>
+    <ul>
+      <li>
+        <strong>GLB</strong> (binary glTF) is the format browsers and Android load. Most 3D tools export it: in Blender, File → Export →
+        glTF 2.0, format “glTF Binary (.glb)”.
+      </li>
+      <li>
+        <strong>USDZ</strong> is optional. iPhone and iPad AR (Quick Look) uses it. Without one, &lt;model-viewer&gt; can convert the GLB
+        on the device when AR starts; a USDZ you export yourself usually looks closer to the original. See <a href="/ar/">AR on iOS and
+        Android</a>.
+      </li>
+      <li>Keep the GLB under about 15 MB. Real-world scale (1 unit = 1 metre) matters for AR.</li>
+      <li>A poster image (PNG, JPEG or WebP) shows while the model loads. Optional, but it helps on slow connections.</li>
+    </ul>
+
+    <h2>2. Put it at an https:// URL</h2>
+    <p>
+      <strong>We do not host your models.</strong> Use hosting you control. The model must be served over HTTPS and allow
+      cross-origin requests (CORS) from your site.
+    </p>
+    <ul>
+      <li><a href="/hosting/firebase/">Firebase</a>: free Hosting site, or Cloud Storage on the Blaze plan. A CLI uploads with your own login.</li>
+      <li><a href="/hosting/own-server/">Your own server or bucket</a>: Apache, Nginx, Netlify, Vercel, Cloudflare, S3, Google Cloud Storage.</li>
+    </ul>
+    <p>Then check the URL, in the <a href="/hosting/own-server/#checker">browser checker</a> or from a terminal:</p>
+  </div>
+  <Code title="Terminal" code={check} />
+
+  <div class="prose">
+    <h2>3. Add it to your site</h2>
+    <p>
+      Pick your platform: <a href="/platforms/html/">HTML</a>, <a href="/platforms/framer/">Framer</a>,
+      <a href="/platforms/squarespace/">Squarespace</a>, <a href="/platforms/wordpress/">WordPress</a>,
+      <a href="/platforms/webflow/">Webflow</a>, <a href="/platforms/wix/">Wix</a> or <a href="/platforms/shopify/">Shopify</a>. Or make
+      the snippet here.
+    </p>
+  </div>
+
+  <Generator />
+</Base>

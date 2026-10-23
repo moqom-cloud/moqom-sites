@@ -1,0 +1,72 @@
+---
+import { BENCH_LABEL, MOQOM_METRICS } from '../data/moqom';
+
+interface Props {
+  limit?: number;
+  details?: boolean;
+}
+const { limit = MOQOM_METRICS.length, details = false } = Astro.props;
+const metrics = MOQOM_METRICS.slice(0, limit);
+---
+
+<figure class="metrics">
+  <dl>
+    {metrics.map((m) => (
+      <div>
+        <dt>{m.label}</dt>
+        <dd class="value">{m.value}</dd>
+        {details && <dd class="detail">{m.detail}</dd>}
+      </div>
+    ))}
+  </dl>
+  <figcaption class="footnote">* {BENCH_LABEL}</figcaption>
+</figure>
+
+<style>
+  .metrics {
+    margin: 0;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 0 0 0.9rem;
+  }
+  dl > div {
+    background: var(--bg-raised);
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+  dt {
+    order: 2;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .value {
+    order: 1;
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    color: var(--accent);
+  }
+  .value::after {
+    content: '*';
+    font-size: 0.5em;
+    vertical-align: super;
+    color: var(--text-faint);
+    margin-left: 0.1em;
+  }
+  .detail {
+    order: 3;
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    line-height: 1.5;
+  }
+</style>

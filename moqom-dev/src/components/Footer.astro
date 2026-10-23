@@ -1,0 +1,55 @@
+---
+import Analytics from './Analytics.astro';
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default />
+<div class="moqom-footer">
+	<nav aria-label="MOQOM sites">
+		<a href="https://moqom.cloud">MOQOM Cloud</a>
+		<span aria-hidden="true">·</span>
+		<a href="https://moqom.cloud">Pricing</a>
+		<span aria-hidden="true">·</span>
+		<a href="https://moqom.cloud">Sign up</a>
+		<span aria-hidden="true">·</span>
+		<a href="https://elliottwave.dev">Developer hub</a>
+		<span aria-hidden="true">·</span>
+		<a href="https://elliottwave.studio">elliottwave.studio lab</a>
+		<span aria-hidden="true">·</span>
+		<a href="/community/contributing/">Contributing</a>
+	</nav>
+	<p>MOQOM · Media Over QUIC Orchestration Mesh</p>
+	<p>
+		© 2026 Elliott Wave LLC. All rights reserved. MOQOM™ and MOQOM Cloud™ are trademarks of Elliott Wave LLC. MOQOM is built
+		by elliottwave.studio lab. Patents pending. <a href="https://moqom.cloud/legal/notices/">Legal notices</a>
+	</p>
+</div>
+
+<style>
+	.moqom-footer {
+		margin-top: 2.5rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.moqom-footer nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0.6rem;
+	}
+	.moqom-footer a {
+		color: var(--sl-color-gray-2);
+		text-decoration: none;
+	}
+	.moqom-footer a:hover {
+		color: var(--sl-color-accent-high);
+	}
+	.moqom-footer p {
+		margin: 0;
+	}
+</style>
+<Analytics site="moqom.dev" />

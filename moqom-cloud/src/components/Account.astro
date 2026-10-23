@@ -1,0 +1,2328 @@
+---
+import { SIGNUP, SITE } from "../data/site";
+
+interface Props {
+  notice?: "success" | "cancelled" | "portal";
+}
+
+const { notice } = Astro.props;
+const notices = {
+  success:
+    "Stripe accepted the payment. Credit is added when Stripe confirms it to MOQOM, usually within a few seconds. Refresh if it is not shown yet.",
+  cancelled: "Checkout was cancelled. Nothing was charged.",
+  portal: "Back from the Stripe customer portal.",
+};
+const tabs = [
+  { id: "overview", label: "Overview" },
+  { id: "billing", label: "Billing" },
+  { id: "usage", label: "Usage" },
+  // Shown once the API answers GET /v1/usage/summary.
+  { id: "savings", label: "Savings", feature: true },
+  { id: "keys", label: "API keys" },
+  { id: "rooms", label: "Rooms" },
+  { id: "migrate", label: "Migrate from Agora", feature: true },
+];
+const resolutions = [
+  { id: "audio", label: "Audio only", width: 0, height: 0, kbps: 0 },
+  { id: "180", label: "180p (320×180)", width: 320, height: 180, kbps: 200 },
+  { id: "360", label: "360p (640×360)", width: 640, height: 360, kbps: 600 },
+  { id: "720", label: "720p (1280×720)", width: 1280, height: 720, kbps: 1800 },
+  { id: "1080", label: "1080p (1920×1080)", width: 1920, height: 1080, kbps: 4000 },
+  { id: "2160", label: "4K (3840×2160)", width: 3840, height: 2160, kbps: 12000 },
+];
+---
+
+<section class="section account">
+  <div class="container">
+    <span class="eyebrow">Account</span>
+    <h1 class="text-sweep">Console</h1>
+
+    {notice && <div class="glass callout notice" role="status"><p>{notices[notice]}</p></div>}
+
+    {!SIGNUP.enabled && (
+      <div class="glass glass--strong card panel" role="status">
+        <span class="pill pill-accent">Coming soon</span>
+        <p class="muted">
+          Self-serve accounts aren't open yet. Email <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>.
+        </p>
+      </div>
+    )}
+
+    {SIGNUP.enabled && (
+      <div id="account" data-api={SIGNUP.apiBase} data-contact={SITE.contact}>
+        <form id="key-form" class="glass glass--strong card panel narrow-panel" novalidate>
+          <p class="muted">
+            Paste a backend API key to manage this account. The key stays in this browser tab only: it is kept in
+            session storage, sent only to {new URL(SIGNUP.apiBase).host} in an Authorization header, and cleared when
+            you close the tab or sign out.
+          </p>
+          <div class="field">
+            <label for="key-input">Backend API key</label>
+            <input id="key-input" class="mono" type="password" autocomplete="off" spellcheck="false" placeholder="mqk_…" />
+          </div>
+          <p id="key-error" class="error" role="alert" hidden></p>
+          <div class="btn-row">
+            <button class="btn btn-primary" type="submit">Open console</button>
+            <a class="btn" href="/signup/">Create an account</a>
+          </div>
+        </form>
+
+        <div id="dashboard" hidden>
+          <div class="console-head">
+            <span id="nav-tenant" class="small faint mono"></span>
+            <div class="nav-side">
+              <button id="refresh" class="btn btn-small" type="button">Refresh</button>
+              <button id="sign-out" class="btn btn-small" type="button">Sign out</button>
+            </div>
+          </div>
+          <nav class="glass glass--strong console-nav" aria-label="Console">
+            <ul>
+              {tabs.map((tab) => (
+                <li hidden={tab.feature} data-feature-tab={tab.feature ? tab.id : undefined}><a href={`#${tab.id}`} data-tab={tab.id}>{tab.label}</a></li>
+              ))}
+              <li><a href="/account/live/">Live map</a></li>
+            </ul>
+          </nav>
+
+          <p id="dash-error" class="error panel-error" role="alert" hidden></p>
+
+          <!-- Overview -->
+          <div data-panel="overview">
+            <div id="admission" class="glass callout admission" role="status" hidden>
+              <p><strong id="admission-title"></strong></p>
+              <p id="admission-text" class="small"></p>
+            </div>
+            <div class="glass glass--strong card panel">
+              <h2>Overview</h2>
+              <dl class="meta">
+                <div><dt>Balance</dt><dd id="balance" class="mono big"></dd></div>
+                <div><dt>Spent this month</dt><dd id="month-spend" class="mono big"></dd></div>
+                <div><dt>New sessions</dt><dd id="admitted"></dd></div>
+                <div><dt>Status</dt><dd id="status" class="mono"></dd></div>
+                <div><dt>Name</dt><dd id="name"></dd></div>
+                <div><dt>Tenant ID</dt><dd id="tenant" class="mono"></dd></div>
+                <div><dt>Billing email</dt><dd id="email"></dd></div>
+                <div><dt>Card on file</dt><dd id="card"></dd></div>
+                <div><dt>Created</dt><dd id="created" class="small"></dd></div>
+                <div><dt>Spend limit</dt><dd id="overview-limit" class="mono"></dd></div>
+                <div><dt>Auto top-up</dt><dd id="overview-auto" class="small"></dd></div>
+                <div><dt>Working keys</dt><dd id="overview-keys" class="mono"></dd></div>
+              </dl>
+              <p class="small faint">Month is the calendar month in UTC. Balances move only by ledger entries.</p>
+            </div>
+          </div>
+
+          <!-- Billing -->
+          <div data-panel="billing" hidden>
+            <div class="grid grid-2">
+              <div class="glass card panel">
+                <h2>Add credit</h2>
+                <p class="small muted">Checkout is hosted by Stripe. The card is saved with Stripe for automatic top-ups.</p>
+                <form id="checkout-form" class="inline" novalidate>
+                  <div class="field">
+                    <label for="checkout-amount">Amount (USD)</label>
+                    <input id="checkout-amount" type="number" min="10" max="10000" step="1" value="50" inputmode="decimal" />
+                  </div>
+                  <button class="btn btn-primary" type="submit">Continue to checkout →</button>
+                </form>
+                <p class="small faint">Between $10 and $10,000.</p>
+                <div class="btn-row">
+                  <button id="portal" class="btn" type="button">Cards and receipts (Stripe portal) ↗</button>
+                </div>
+              </div>
+
+              <div class="glass card panel">
+                <h2>Auto top-up</h2>
+                <p class="small muted">
+                  When the balance falls below the threshold, the saved card is charged the top-up amount. It needs a
+                  card saved by a completed checkout.
+                </p>
+                <form id="auto-form" novalidate>
+                  <label class="agree">
+                    <input id="auto-enabled" type="checkbox" />
+                    <span>Top up automatically</span>
+                  </label>
+                  <div class="inline">
+                    <div class="field">
+                      <label for="auto-below">When the balance is below (USD)</label>
+                      <input id="auto-below" type="number" min="0" step="1" inputmode="decimal" />
+                    </div>
+                    <div class="field">
+                      <label for="auto-amount">Add (USD)</label>
+                      <input id="auto-amount" type="number" min="10" max="10000" step="1" inputmode="decimal" />
+                    </div>
+                  </div>
+                  <p id="auto-last-error" class="small warn" hidden></p>
+                  <div class="btn-row">
+                    <button class="btn btn-primary" type="submit">Save auto top-up</button>
+                    <span id="auto-status" class="small faint" aria-live="polite"></span>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>Spend alerts</h2>
+                <span class="pill pill-ok">Recommended</span>
+              </div>
+              <p class="small muted">
+                An alert fires once per calendar month (UTC) when this month's usage crosses each amount. Alerts never
+                stop a session. With no amounts set, they default to 50%, 80% and 100% of the spend limit, if there is
+                one.
+              </p>
+              <form id="alerts-form" novalidate>
+                <label class="agree">
+                  <input id="alerts-enabled" type="checkbox" />
+                  <span>Send spend alerts</span>
+                </label>
+                <div class="field">
+                  <label for="alerts-amounts">Alert at (USD, comma-separated, up to 10)</label>
+                  <input id="alerts-amounts" type="text" inputmode="decimal" placeholder="100, 250, 500" spellcheck="false" />
+                </div>
+                <p class="small faint">In force: <span id="alerts-in-force" class="mono"></span></p>
+                <p class="small faint">Fired this month: <span id="alerts-fired" class="mono"></span></p>
+                <p class="small faint">Email delivery to <span id="alerts-email"></span>: <span class="pill pill-planned">Coming soon</span></p>
+                <div class="btn-row">
+                  <button class="btn btn-primary" type="submit">Save alerts</button>
+                  <span id="alerts-status" class="small faint" aria-live="polite"></span>
+                </div>
+              </form>
+            </div>
+
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>Monthly spend limit</h2>
+                <span class="pill">Available, not recommended</span>
+              </div>
+              <p class="small muted">
+                A limit is a hard stop, and it ends streams already in progress, not just new ones. Once this month's
+                usage reaches it, new sessions are refused, every live stream and call ends within 15 minutes as its
+                token fails to renew, and auto top-up stops until the month turns over or
+                the limit is raised. Topping up does not lift it. To watch spend without risking an outage, use spend
+                alerts instead.
+              </p>
+              <form id="limit-form" novalidate>
+                <label class="agree">
+                  <input id="limit-enabled" type="checkbox" />
+                  <span>End all streaming, live and new, when this month's spend reaches a limit</span>
+                </label>
+                <div class="inline">
+                  <div class="field">
+                    <label for="limit-amount">Limit per month (USD)</label>
+                    <input id="limit-amount" type="number" min="1" step="1" inputmode="decimal" />
+                  </div>
+                </div>
+                <p id="limit-reached" class="small warn" hidden>This month's usage has reached the limit. New sessions are refused and live streams end within 15 minutes.</p>
+                <div class="btn-row">
+                  <button class="btn btn-primary" type="submit">Save limit</button>
+                  <span id="limit-status" class="small faint" aria-live="polite"></span>
+                </div>
+              </form>
+            </div>
+
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>Ledger</h2>
+                <div class="btn-row">
+                  <button id="ledger-csv" class="btn btn-small" type="button">Export CSV</button>
+                  <button id="account-export" class="btn btn-small" type="button">Account export (JSON)</button>
+                </div>
+              </div>
+              <p id="ledger-note" class="small muted">Newest first.</p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>When</th><th>Kind</th><th class="num">Amount</th><th>Reference</th></tr></thead>
+                  <tbody id="ledger"></tbody>
+                </table>
+              </div>
+              <div class="btn-row">
+                <button id="ledger-more" class="btn btn-small" type="button" hidden>Show more</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usage -->
+          <div data-panel="usage" hidden>
+            <div class="glass glass--strong card panel">
+              <div class="head-row">
+                <h2>Usage, last 30 days</h2>
+                <span id="usage-total" class="mono big"></span>
+              </div>
+              <p class="small muted">Usage charges per UTC day, from the ledger. Hover a bar for the exact amount.</p>
+              <div class="chart-wrap">
+                <svg id="usage-chart" viewBox="0 0 720 220" role="img" aria-labelledby="usage-chart-title">
+                  <title id="usage-chart-title">Daily usage charges for the last 30 days</title>
+                </svg>
+              </div>
+              <dl class="meta">
+                <div><dt>Busiest day</dt><dd id="usage-peak" class="mono"></dd></div>
+                <div><dt>Days with usage</dt><dd id="usage-days" class="mono"></dd></div>
+                <div><dt>Capped charges</dt><dd id="usage-capped" class="mono"></dd></div>
+                <div><dt>Top-ups, 30 days</dt><dd id="usage-topups" class="mono"></dd></div>
+              </dl>
+              <p id="usage-note" class="small faint" hidden></p>
+            </div>
+          </div>
+
+          <!-- Savings -->
+          <div data-panel="savings" hidden>
+            <div class="glass glass--strong card panel">
+              <div class="head-row">
+                <h2>Savings against Agora</h2>
+                <form id="period-form" class="inline" novalidate>
+                  <div class="field">
+                    <label for="period" class="visually-hidden">Period</label>
+                    <select id="period">
+                      <option value="this-month">This month</option>
+                      <option value="last-month">Last month</option>
+                      <option value="30">Last 30 days</option>
+                      <option value="90">Last 90 days</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                  <div class="field" data-custom hidden>
+                    <label for="period-from">From (UTC)</label>
+                    <input id="period-from" type="date" />
+                  </div>
+                  <div class="field" data-custom hidden>
+                    <label for="period-to">To, inclusive (UTC)</label>
+                    <input id="period-to" type="date" />
+                  </div>
+                  <button class="btn btn-small" type="submit">Show</button>
+                </form>
+              </div>
+              <p class="small muted">
+                Every metered minute in the period, from the ledger: what MOQOM charged, and what Agora's list price
+                would charge for the same participant-minutes at the same tier and role.
+              </p>
+              <p id="savings-error" class="error" role="alert" hidden></p>
+              <dl class="meta">
+                <div><dt id="savings-charged-label">MOQOM charged</dt><dd id="savings-charged" class="mono big"></dd></div>
+                <div><dt>Agora list, same usage</dt><dd id="savings-agora" class="mono big"></dd></div>
+                <div><dt>Saved</dt><dd id="savings-saved" class="mono big"></dd></div>
+                <div><dt>Saved, %</dt><dd id="savings-percent" class="mono big"></dd></div>
+                <div><dt>Participant-minutes</dt><dd id="savings-minutes" class="mono"></dd></div>
+                <div><dt>Egress</dt><dd id="savings-egress" class="mono"></dd></div>
+                <div><dt>Projected, this period (estimate)</dt><dd id="savings-projected" class="mono"></dd></div>
+                <div><dt>Per 30 days at this rate (estimate)</dt><dd id="savings-30" class="mono"></dd></div>
+              </dl>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Tier</th><th>Role</th><th>Relays</th><th class="num">Minutes</th><th class="num">Egress</th><th class="num">MOQOM</th><th class="num">Agora list</th><th class="num">Saved</th></tr></thead>
+                  <tbody id="savings-lines"></tbody>
+                </table>
+              </div>
+              <p id="savings-basis" class="small faint"></p>
+            </div>
+
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>What if</h2>
+                <span class="pill">Estimate</span>
+              </div>
+              <p class="small muted">
+                A month of usage you describe, priced by the API with the rate card in force. The bitrate per tile is
+                an assumption you can change; the bill is metered on bytes delivered.
+              </p>
+              <form id="whatif-form" class="whatif" novalidate>
+                <div class="field">
+                  <label for="wi-hosts">Hosts</label>
+                  <input id="wi-hosts" type="number" min="0" max="1000000" step="1" value="2" inputmode="numeric" />
+                </div>
+                <div class="field">
+                  <label for="wi-viewers">Viewers</label>
+                  <input id="wi-viewers" type="number" min="0" max="1000000" step="1" value="500" inputmode="numeric" />
+                </div>
+                <div class="field">
+                  <label for="wi-role">Viewers are</label>
+                  <select id="wi-role">
+                    <option value="broadcast_audience">Broadcast audience (watch only)</option>
+                    <option value="audience">Interactive audience</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="wi-tiles">Tiles each person sees</label>
+                  <input id="wi-tiles" type="number" min="1" max="64" step="1" value="2" inputmode="numeric" />
+                </div>
+                <div class="field">
+                  <label for="wi-resolution">Tile resolution</label>
+                  <select id="wi-resolution">
+                    {resolutions.map((r) => (
+                      <option value={r.id} data-width={r.width} data-height={r.height} data-kbps={r.kbps} selected={r.id === "360"}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="wi-kbps">Kbps per tile (assumed)</label>
+                  <input id="wi-kbps" type="number" min="0" max="50000" step="50" value="600" inputmode="numeric" />
+                </div>
+                <div class="field">
+                  <label for="wi-hours">Hours per person per month</label>
+                  <input id="wi-hours" type="number" min="0.1" max="744" step="0.5" value="20" inputmode="decimal" />
+                </div>
+                <div class="field">
+                  <label for="wi-hosting">Relays</label>
+                  <select id="wi-hosting">
+                    <option value="cloud">MOQOM Cloud</option>
+                    <option value="self_hosted">Self-hosted (platform fee only)</option>
+                  </select>
+                </div>
+              </form>
+              <p id="whatif-error" class="error" role="alert" hidden></p>
+              <dl class="meta">
+                <div><dt>MOQOM, per month (estimate)</dt><dd id="wi-moqom" class="mono big"></dd></div>
+                <div><dt>Agora list, per month</dt><dd id="wi-agora" class="mono big"></dd></div>
+                <div><dt>Saved</dt><dd id="wi-saved" class="mono big"></dd></div>
+                <div><dt>Tier received</dt><dd id="wi-tier" class="mono"></dd></div>
+              </dl>
+              <p id="wi-detail" class="small faint"></p>
+              <p class="small faint">
+                The default bitrates follow MOQOM's default camera ladder (180p 0.2, 360p 0.6, 720p 1.8, 1080p 4, 4K
+                12 Mbit/s). Tiers are by aggregate pixels received, the same boundaries Agora bills on.
+              </p>
+            </div>
+          </div>
+
+          <!-- Migrate from Agora -->
+          <div data-panel="migrate" hidden>
+            <div class="glass glass--strong card panel">
+              <h2>Connect Agora to plan a migration</h2>
+              <p class="small muted">
+                Paste an Agora Customer ID and Customer Secret (Agora Console, RESTful API). MOQOM sends them once,
+                from its servers to api.agora.io over HTTPS, to read your project list and the last 90 days of usage by
+                resolution tier. They are not saved, logged or sent back, and this page does not keep them.
+              </p>
+              <div class="callout callout-warn">
+                <p class="small">
+                  Create a new Customer Secret for this, read-only if your Agora account offers that, and delete it in
+                  Agora Console when you are done.
+                </p>
+              </div>
+              <form id="agora-form" class="inline" novalidate autocomplete="off">
+                <div class="field">
+                  <label for="agora-id">Customer ID</label>
+                  <input id="agora-id" class="mono" type="text" autocomplete="off" spellcheck="false" maxlength="256" />
+                </div>
+                <div class="field">
+                  <label for="agora-secret">Customer Secret</label>
+                  <input id="agora-secret" class="mono" type="password" autocomplete="off" spellcheck="false" maxlength="256" />
+                </div>
+                <button id="agora-go" class="btn btn-primary" type="submit">Read Agora usage</button>
+              </form>
+              <p id="agora-status" class="small faint" aria-live="polite"></p>
+              <p id="agora-error" class="error" role="alert" hidden></p>
+            </div>
+
+            <div id="agora-results" hidden>
+              <div class="glass card panel">
+                <div class="head-row">
+                  <h2>Agora usage, <span id="agora-range"></span></h2>
+                  <span class="pill">Estimate</span>
+                </div>
+                <dl class="meta">
+                  <div><dt>Agora list price</dt><dd id="agora-list" class="mono big"></dd></div>
+                  <div><dt>MOQOM Cloud (estimate)</dt><dd id="agora-moqom" class="mono big"></dd></div>
+                  <div><dt>Saved (estimate)</dt><dd id="agora-saved" class="mono big"></dd></div>
+                  <div><dt>Minutes</dt><dd id="agora-minutes" class="mono"></dd></div>
+                  <div><dt>Agora list, per 30 days</dt><dd id="agora-list-30" class="mono"></dd></div>
+                  <div><dt>MOQOM, per 30 days (estimate)</dt><dd id="agora-moqom-30" class="mono"></dd></div>
+                  <div><dt>If all broadcast audience</dt><dd id="agora-broadcast" class="small"></dd></div>
+                </dl>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tier</th><th class="num">Minutes</th><th class="num">Assumed kbps</th><th class="num">Agora list</th><th class="num">MOQOM (estimate)</th><th class="num">Saved</th></tr></thead>
+                    <tbody id="agora-tiers"></tbody>
+                  </table>
+                </div>
+                <ul id="agora-notes" class="small faint notes"></ul>
+              </div>
+
+              <div class="glass card panel">
+                <h2>Agora projects</h2>
+                <p id="agora-truncated" class="small warn" hidden>Only the first 20 projects were read.</p>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Project</th><th>ID</th><th>State</th><th class="num">Minutes</th><th>Note</th></tr></thead>
+                    <tbody id="agora-projects"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="glass card panel">
+                <h2>Migration checklist</h2>
+                <ol id="agora-checklist" class="checklist"></ol>
+                <p class="small"><a id="agora-guide" href="https://moqom.dev/guides/migrate-from-agora/" rel="noopener">Migration guide on moqom.dev ↗</a></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- API keys -->
+          <div data-panel="keys" hidden>
+            <div class="glass card panel">
+              <h2>API keys</h2>
+              <p class="small muted">
+                Backend keys manage the account and mint tokens. Mint keys only mint viewer and publisher tokens, and
+                read-only keys only read, so an agent, MCP server or dashboard never needs a backend key. Relay keys only
+                report usage from a self-hosted relay. Rotate a key to replace it without a gap: the new key works at
+                once and the old one keeps working until the overlap ends.
+              </p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Kind</th><th>ID</th><th>Created</th><th>Limits</th><th>State</th><th></th></tr></thead>
+                  <tbody id="keys"></tbody>
+                </table>
+              </div>
+              <form id="issue-form" class="inline" novalidate>
+                <div class="field">
+                  <label for="issue-name">New key name</label>
+                  <input id="issue-name" type="text" maxlength="100" placeholder="production" />
+                </div>
+                <div class="field">
+                  <label for="issue-kind">Kind</label>
+                  <select id="issue-kind">
+                    <option value="backend">backend</option>
+                    <option value="mint">mint</option>
+                    <option value="readonly">readonly</option>
+                    <option value="relay">relay</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="issue-expiry">Expires</label>
+                  <select id="issue-expiry">
+                    <option value="0">Never</option>
+                    <option value="30">In 30 days</option>
+                    <option value="90">In 90 days</option>
+                    <option value="365">In 1 year</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="issue-networks">Allowed networks</label>
+                  <input id="issue-networks" class="mono" type="text" spellcheck="false" autocomplete="off" placeholder="Anywhere, or 203.0.113.0/24, …" />
+                </div>
+                <div class="field">
+                  <label for="issue-rate">Calls a minute</label>
+                  <input id="issue-rate" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Default" />
+                </div>
+                <button class="btn btn-primary" type="submit">Issue key</button>
+              </form>
+              <p class="small faint">
+                Mint and read-only keys default to 600 calls a minute; backend and relay keys have no limit unless you
+                set one. A key used from outside its allowed networks is refused.
+              </p>
+            </div>
+
+            <div id="issued" class="glass callout callout-danger issued" hidden>
+              <p><strong>Store this key now.</strong> It is shown once and cannot be recovered, only revoked and replaced.</p>
+              <p id="issued-retires" class="small" hidden></p>
+              <div class="key-row">
+                <input id="issued-key" class="mono" type="text" readonly spellcheck="false" autocomplete="off" />
+                <button id="issued-copy" class="btn" type="button">Copy</button>
+              </div>
+              <div class="btn-row">
+                <button id="issued-use" class="btn btn-primary" type="button" hidden>Use the new key in this session</button>
+                <button id="issued-dismiss" class="btn" type="button">I've stored it</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rooms -->
+          <div data-panel="rooms" hidden>
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>Rooms</h2>
+                <div class="inline">
+                  <div class="field">
+                    <label for="rooms-filter" class="visually-hidden">Lifecycle</label>
+                    <select id="rooms-filter">
+                      <option value="">All rooms</option>
+                      <option value="live,acting_host">Live</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="ended">Ended</option>
+                    </select>
+                  </div>
+                  <button id="rooms-refresh" class="btn btn-small" type="button">Reload</button>
+                </div>
+              </div>
+              <p class="small muted">
+                Read-only. Creating rooms, moderation (kick, mute, ban) and minting tokens use the <a href={`${SITE.docs}/reference/admin-api/`} rel="noopener">admin API ↗</a> with a backend key.
+              </p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Room</th><th>State</th><th>Owner</th><th class="num">People</th><th class="num">Devices</th><th>Recording</th><th>Created</th></tr></thead>
+                  <tbody id="rooms"></tbody>
+                </table>
+              </div>
+              <div class="btn-row"><button id="rooms-more" class="btn btn-small" type="button" hidden>Load more</button></div>
+            </div>
+
+            <div class="glass card panel">
+              <div class="head-row">
+                <h2>Room events</h2>
+                <div class="inline">
+                  <div class="field">
+                    <label for="events-room" class="visually-hidden">Room</label>
+                    <select id="events-room"><option value="">All rooms (live only)</option></select>
+                  </div>
+                  <span id="events-state" class="pill">Stopped</span>
+                  <button id="events-toggle" class="btn btn-small" type="button">Start</button>
+                </div>
+              </div>
+              <p class="small muted">
+                Joins, leaves, publishing, moderation and lifecycle changes as they happen. Choosing one room also
+                replays its recent history. Newest first, last 500 kept in this tab.
+              </p>
+              <div class="table-wrap events-wrap">
+                <table>
+                  <thead><tr><th>When</th><th>Room</th><th class="num">Seq</th><th>Event</th><th>Detail</th></tr></thead>
+                  <tbody id="events"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <dialog id="revoke-dialog" class="glass glass--strong dialog">
+          <form method="dialog" id="revoke-form">
+            <h2 id="revoke-title">Revoke key</h2>
+            <p id="revoke-text" class="small"></p>
+            <div id="revoke-danger" class="callout callout-danger" hidden>
+              <p><strong id="revoke-danger-title"></strong></p>
+              <p id="revoke-danger-text" class="small"></p>
+              <p class="small">Rotating the key instead adds a replacement before the old one stops.</p>
+              <div class="field">
+                <label for="revoke-confirm">Type the key name, <span id="revoke-name" class="mono"></span>, to revoke it anyway</label>
+                <input id="revoke-confirm" type="text" autocomplete="off" spellcheck="false" />
+              </div>
+            </div>
+            <p id="revoke-error" class="error" role="alert" hidden></p>
+            <div class="btn-row">
+              <button id="revoke-go" class="btn btn-danger" type="submit" value="go">Revoke now</button>
+              <button id="revoke-rotate" class="btn" type="button" hidden>Rotate instead</button>
+              <button class="btn" type="submit" value="cancel" formnovalidate>Cancel</button>
+            </div>
+          </form>
+        </dialog>
+
+        <dialog id="audit-dialog" class="glass glass--strong dialog dialog-wide">
+          <form method="dialog">
+            <h2 id="audit-title">Key use</h2>
+            <p class="small muted">Counted per minute, by operation, source address and outcome. Newest first; entries can lag a call by up to 10 seconds.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Minute</th><th>Operation</th><th>Address</th><th>Outcome</th><th class="num">Calls</th></tr></thead>
+                <tbody id="audit"></tbody>
+              </table>
+            </div>
+            <p id="audit-error" class="error" role="alert" hidden></p>
+            <div class="btn-row">
+              <button class="btn" type="submit" value="close">Close</button>
+            </div>
+          </form>
+        </dialog>
+
+        <dialog id="rotate-dialog" class="glass glass--strong dialog">
+          <form method="dialog" id="rotate-form">
+            <h2>Rotate key</h2>
+            <p id="rotate-text" class="small"></p>
+            <div class="field">
+              <label for="rotate-overlap">The old key keeps working for</label>
+              <select id="rotate-overlap">
+                <option value="3600">1 hour</option>
+                <option value="86400" selected>24 hours (default)</option>
+                <option value="259200">3 days</option>
+                <option value="604800">7 days (longest)</option>
+              </select>
+            </div>
+            <p id="rotate-error" class="error" role="alert" hidden></p>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="submit" value="go">Issue replacement</button>
+              <button class="btn" type="submit" value="cancel" formnovalidate>Cancel</button>
+            </div>
+          </form>
+        </dialog>
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  type Money = { micros: number; display: string };
+  type Entry = { kind: string; amount: Money; capped?: boolean; reference?: string; detail?: string; at: string };
+  type Summary = {
+    tenant: {
+      id: string;
+      name: string;
+      email: string;
+      status: string;
+      has_card: boolean;
+      auto_top_up: { enabled: boolean; below: Money; amount: Money };
+      last_top_up_error?: string;
+      created_at: string;
+    };
+    balance: Money;
+    admitted: boolean;
+    refusal?: string;
+    recent: Entry[];
+    month?: string;
+    month_spend?: Money;
+    spend_limit?: Money | null;
+    limit_reached?: boolean;
+    alerts?: { enabled: boolean; default: boolean; thresholds: Money[] };
+    fired?: { threshold: Money; at: string }[];
+  };
+  type KeyView = {
+    id: string;
+    name: string;
+    kind: string;
+    created_at: string;
+    revoked_at?: string;
+    retires_at?: string;
+    expires_at?: string;
+    expired?: boolean;
+    allowed_networks?: string[];
+    rate_limit_per_minute?: number;
+  };
+  type AuditEntry = {
+    key_id: string;
+    minute: string;
+    operation: string;
+    address?: string;
+    outcome: string;
+    detail?: string;
+    count: number;
+  };
+  type RoomView = {
+    room: string;
+    lifecycle: string;
+    owner?: string;
+    created_at: string;
+    ended_at?: string;
+    devices: number;
+    people: number;
+    recording: boolean;
+  };
+
+  const STORAGE = "moqom.apiKey";
+  const root = document.getElementById("account");
+
+  if (root) {
+    const API = root.dataset.api ?? "";
+    const CONTACT = root.dataset.contact ?? "";
+    const byId = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    const keyForm = byId<HTMLFormElement>("key-form");
+    const keyInput = byId<HTMLInputElement>("key-input");
+    const keyError = byId<HTMLParagraphElement>("key-error");
+    const dashboard = byId<HTMLDivElement>("dashboard");
+    const dashError = byId<HTMLParagraphElement>("dash-error");
+
+    let apiKey = "";
+    try {
+      apiKey = sessionStorage.getItem(STORAGE) ?? "";
+    } catch {
+      /* storage blocked: memory only */
+    }
+    let summary: Summary | null = null;
+    let keys: KeyView[] = [];
+    let ledger: Entry[] = [];
+    let ledgerComplete = true;
+    let ledgerShown = 100;
+
+    const keyId = (key: string) => {
+      const match = /^mqk_([0-9a-f]+)_/.exec(key);
+      return match ? match[1] : "";
+    };
+    const centsOf = (value: string) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+    };
+    const dollarsOf = (m: Money) => (m.micros / 1_000_000).toFixed(2).replace(/\.00$/, "");
+    // Cents, except an amount under a cent, which would otherwise read as $0.00.
+    const usd = (micros: number) => {
+      const digits = micros !== 0 && Math.abs(micros) < 10_000 ? 4 : 2;
+      return (micros / 1_000_000).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
+    };
+    const shown = (m: { micros: number }) => usd(m.micros);
+
+    class ApiError extends Error {
+      status: number;
+      code: string;
+      constructor(status: number, message: string, code = "") {
+        super(message);
+        this.status = status;
+        this.code = code;
+      }
+    }
+
+    const call = async <T,>(method: string, path: string, body?: unknown): Promise<T> => {
+      let res: Response;
+      try {
+        res = await fetch(`${API}${path}`, {
+          method,
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/json",
+            ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          },
+          body: body === undefined ? undefined : JSON.stringify(body),
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+        });
+      } catch {
+        throw new ApiError(0, "Couldn't reach the MOQOM API. Check your connection and try again.");
+      }
+      if (res.status === 204) return undefined as T;
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* not JSON */
+      }
+      if (!res.ok) {
+        const detail = data && typeof data.error === "string" ? data.error : `HTTP ${res.status}`;
+        throw new ApiError(res.status, detail, data && typeof data.code === "string" ? data.code : "");
+      }
+      return data as T;
+    };
+
+    const showDashError = (message: string) => {
+      dashError.textContent = message;
+      dashError.hidden = !message;
+    };
+
+    const fail = (err: unknown) => {
+      if (err instanceof ApiError && err.status === 401) {
+        signOut("That key was not accepted. It may be revoked, or it may be a relay key.");
+        return;
+      }
+      showDashError(err instanceof Error ? err.message : String(err));
+    };
+
+    const safeRedirect = (raw: string, hosts: string[]) => {
+      try {
+        const url = new URL(raw);
+        if (url.protocol === "https:" && hosts.includes(url.hostname)) {
+          window.location.assign(url.href);
+          return;
+        }
+      } catch {
+        /* fall through */
+      }
+      showDashError("The API returned an unexpected redirect, so it was not followed.");
+    };
+
+    const cell = (text: string, className?: string) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (className) td.className = className;
+      return td;
+    };
+    const emptyRow = (body: HTMLElement, columns: number, text: string) => {
+      const tr = document.createElement("tr");
+      const td = cell(text, "faint");
+      td.colSpan = columns;
+      tr.append(td);
+      body.append(tr);
+    };
+    const when = (iso: string) => {
+      const d = new Date(iso);
+      return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+    };
+    const setText = (id: string, text: string) => {
+      byId(id).textContent = text;
+    };
+    const button = (label: string, onClick: () => void, className = "btn btn-small") => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = className;
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    };
+    const download = (name: string, type: string, contents: string) => {
+      const url = URL.createObjectURL(new Blob([contents], { type }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    // Tabs, on the URL fragment so they never reach a server log. Feature
+    // tabs join the list once the API is found to serve them.
+    const tabIds = ["overview", "billing", "usage", "keys", "rooms"];
+    const featureTabs = ["savings", "migrate"];
+    const setFeatures = (available: boolean) => {
+      document.querySelectorAll<HTMLElement>("[data-feature-tab]").forEach((li) => (li.hidden = !available));
+      for (const id of featureTabs) {
+        const at = tabIds.indexOf(id);
+        if (available && at < 0) tabIds.push(id);
+        if (!available && at >= 0) tabIds.splice(at, 1);
+      }
+    };
+    const showTab = (id: string) => {
+      if (!tabIds.includes(id)) id = "overview";
+      document.querySelectorAll<HTMLElement>("[data-panel]").forEach((panel) => (panel.hidden = panel.dataset.panel !== id));
+      document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((a) => {
+        if (a.dataset.tab === id) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+      if (id === "rooms" && !roomsLoaded) void loadRooms(false);
+      if (id === "savings" && !whatIfLoaded) void loadWhatIf();
+    };
+    window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+
+    // Overview.
+    const admissionCopy = (refusal: string): [string, string] => {
+      const r = refusal.toLowerCase();
+      if (r.startsWith("payment required"))
+        return ["New sessions are refused: no payment yet", "This tenant activates on its first top-up. Until then token minting is refused. Add credit under Billing."];
+      if (r.startsWith("insufficient credit"))
+        return ["New sessions are refused: the balance is spent", "Add credit under Billing, or turn on auto top-up. Until then token minting is refused, and live sessions end when their tokens can't renew (within 15 minutes)."];
+      if (r.startsWith("spend limit reached"))
+        return ["New sessions are refused: the monthly spend limit is reached", "This month's usage has reached the limit set under Billing. Topping up does not lift it. Live streams end within 15 minutes, as their tokens can't renew. Raise or remove the limit, or wait for the month to turn over (UTC). Token minting is refused until then."];
+      if (r.startsWith("tenant is not active"))
+        return ["New sessions are refused: this tenant is suspended", `MOQOM has suspended this tenant. The console and admin API still work. Email ${CONTACT} to resolve it.`];
+      return ["New sessions are refused", refusal];
+    };
+
+    const renderSummary = (s: Summary) => {
+      summary = s;
+      setText("nav-tenant", `${s.tenant.name} · ${s.tenant.id}`);
+      setText("balance", shown(s.balance));
+      setText("month-spend", s.month_spend ? shown(s.month_spend) : "–");
+      setText("status", s.tenant.status);
+      setText("admitted", s.admitted ? "Admitted" : "Refused");
+      byId("admitted").className = s.admitted ? "ok" : "warn";
+      setText("tenant", s.tenant.id);
+      setText("name", s.tenant.name);
+      setText("email", s.tenant.email);
+      setText("card", s.tenant.has_card ? "Saved with Stripe" : "None yet");
+      setText("created", s.tenant.created_at ? when(s.tenant.created_at) : "");
+      setText("overview-limit", s.spend_limit ? shown(s.spend_limit) : "None");
+      const auto = s.tenant.auto_top_up;
+      setText("overview-auto", auto.enabled ? `Add ${shown(auto.amount)} below ${shown(auto.below)}` : "Off");
+
+      const admission = byId("admission");
+      admission.hidden = s.admitted;
+      if (!s.admitted) {
+        const [title, text] = admissionCopy(s.refusal ?? "");
+        setText("admission-title", title);
+        setText("admission-text", text);
+        admission.className = `glass callout admission ${s.refusal?.startsWith("tenant is not active") ? "callout-danger" : "callout-warn"}`;
+      }
+
+      byId<HTMLInputElement>("auto-enabled").checked = auto.enabled;
+      byId<HTMLInputElement>("auto-below").value = auto.enabled || auto.below.micros ? dollarsOf(auto.below) : "10";
+      byId<HTMLInputElement>("auto-amount").value = auto.enabled || auto.amount.micros ? dollarsOf(auto.amount) : "50";
+      const lastError = byId<HTMLParagraphElement>("auto-last-error");
+      lastError.textContent = s.tenant.last_top_up_error
+        ? `The last automatic top-up failed: ${s.tenant.last_top_up_error}. Automatic top-ups are paused until a checkout succeeds.`
+        : "";
+      lastError.hidden = !s.tenant.last_top_up_error;
+
+      const limit = s.spend_limit ?? null;
+      byId<HTMLInputElement>("limit-enabled").checked = limit !== null;
+      byId<HTMLInputElement>("limit-amount").value = limit ? dollarsOf(limit) : "";
+      byId("limit-reached").hidden = !s.limit_reached;
+
+      const alerts = s.alerts ?? { enabled: true, default: true, thresholds: [] };
+      byId<HTMLInputElement>("alerts-enabled").checked = alerts.enabled;
+      byId<HTMLInputElement>("alerts-amounts").value = alerts.default ? "" : alerts.thresholds.map(dollarsOf).join(", ");
+      setText(
+        "alerts-in-force",
+        !alerts.enabled
+          ? "off"
+          : alerts.thresholds.length
+            ? alerts.thresholds.map((t) => shown(t)).join(", ") + (alerts.default ? " (defaults of the limit)" : "")
+            : "none (set amounts, or a spend limit for the defaults)",
+      );
+      setText("alerts-fired", s.fired && s.fired.length ? s.fired.map((f) => `${shown(f.threshold)} on ${when(f.at)}`).join("; ") : "none");
+      setText("alerts-email", s.tenant.email);
+    };
+
+    // Ledger and usage.
+    const renderLedger = () => {
+      const body = byId<HTMLTableSectionElement>("ledger");
+      body.replaceChildren();
+      if (ledger.length === 0) emptyRow(body, 4, "No entries yet.");
+      for (const entry of ledger.slice(0, ledgerShown)) {
+        const tr = document.createElement("tr");
+        const amount = cell(shown(entry.amount), "num");
+        if (entry.amount.micros > 0) amount.classList.add("ok");
+        tr.append(cell(when(entry.at)), cell(entry.kind.replace(/_/g, " ") + (entry.capped ? " (capped)" : "")), amount, cell(entry.reference ?? "", "mono small"));
+        if (entry.kind === "adjustment" && entry.detail) {
+          try {
+            const reason = JSON.parse(entry.detail).reason;
+            if (reason) tr.title = `Reason: ${reason}`;
+          } catch {
+            /* not JSON */
+          }
+        }
+        body.append(tr);
+      }
+      byId("ledger-more").hidden = ledger.length <= ledgerShown;
+      setText(
+        "ledger-note",
+        `Newest first. ${ledger.length} entr${ledger.length === 1 ? "y" : "ies"} loaded${ledgerComplete ? "" : " (the newest 5,000; the account export has everything)"}.`,
+      );
+    };
+
+    const DAY = 86_400_000;
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = (name: string, attrs: Record<string, string | number>, text?: string) => {
+      const el = document.createElementNS(svgNS, name);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      if (text !== undefined) el.textContent = text;
+      return el;
+    };
+
+    const renderUsage = () => {
+      const today = Math.floor(Date.now() / DAY) * DAY;
+      const first = today - 29 * DAY;
+      const days = Array.from({ length: 30 }, () => 0);
+      let capped = 0;
+      let topups = 0;
+      for (const entry of ledger) {
+        const at = Date.parse(entry.at);
+        if (Number.isNaN(at) || at < first) continue;
+        const index = Math.floor((at - first) / DAY);
+        if (index < 0 || index > 29) continue;
+        if (entry.kind === "usage") {
+          days[index] += -entry.amount.micros;
+          if (entry.capped) capped++;
+        } else if (entry.kind === "top_up") {
+          topups += entry.amount.micros;
+        }
+      }
+      const total = days.reduce((a, b) => a + b, 0);
+      const peak = Math.max(...days);
+      setText("usage-total", usd(total));
+      setText("usage-peak", peak > 0 ? `${usd(peak)} on ${new Date(first + days.indexOf(peak) * DAY).toISOString().slice(0, 10)}` : "–");
+      setText("usage-days", String(days.filter((d) => d > 0).length));
+      setText("usage-capped", String(capped));
+      setText("usage-topups", usd(topups));
+      const note = byId("usage-note");
+      note.hidden = ledgerComplete;
+      note.textContent = ledgerComplete ? "" : "Built from the newest 5,000 ledger entries; older days in the window may be incomplete.";
+
+      const chart = byId("usage-chart") as unknown as SVGSVGElement;
+      chart.querySelectorAll(":scope > :not(title)").forEach((el) => el.remove());
+      const left = 64, right = 8, top = 12, bottom = 28, width = 720 - left - right, height = 220 - top - bottom;
+      const scale = peak > 0 ? peak : 1;
+      for (const fraction of [0, 0.5, 1]) {
+        const y = top + height - fraction * height;
+        chart.append(svg("line", { x1: left, x2: left + width, y1: y, y2: y, class: "grid-line" }));
+        chart.append(svg("text", { x: left - 8, y: y + 4, "text-anchor": "end", class: "axis" }, usd(scale * fraction)));
+      }
+      const slot = width / 30;
+      days.forEach((value, i) => {
+        const h = (value / scale) * height;
+        const date = new Date(first + i * DAY).toISOString().slice(0, 10);
+        const bar = svg("rect", { x: left + i * slot + 2, y: top + height - h, width: slot - 4, height: Math.max(h, value > 0 ? 1 : 0), rx: 2, class: "bar" });
+        bar.append(svg("title", {}, `${date}: ${usd(value)}`));
+        chart.append(bar);
+        if (i % 5 === 0 || i === 29) chart.append(svg("text", { x: left + i * slot + slot / 2, y: 220 - 8, "text-anchor": "middle", class: "axis" }, date.slice(5)));
+      });
+      if (total === 0) chart.append(svg("text", { x: left + width / 2, y: top + height / 2, "text-anchor": "middle", class: "axis" }, "No usage in the last 30 days"));
+    };
+
+    const loadLedger = async () => {
+      const page = await call<{ entries: Entry[]; complete: boolean }>("GET", "/v1/billing/ledger?limit=5000");
+      ledger = page.entries;
+      ledgerComplete = page.complete;
+      renderLedger();
+      renderUsage();
+    };
+
+    const csvCell = (value: string) => {
+      // A spreadsheet runs a cell that starts with one of these as a formula.
+      const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+      return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+    };
+
+    byId("ledger-csv").addEventListener("click", () => {
+      const rows = [["at", "kind", "amount_usd", "capped", "reference", "detail"]];
+      for (const e of ledger) {
+        rows.push([e.at, e.kind, (e.amount.micros / 1_000_000).toFixed(6), e.capped ? "true" : "false", e.reference ?? "", e.detail ?? ""]);
+      }
+      const csv = rows.map((row, i) => row.map((v, j) => (i > 0 && j === 2 ? v : csvCell(v))).join(",")).join("\r\n") + "\r\n";
+      download(`moqom-ledger-${summary?.tenant.id ?? "tenant"}.csv`, "text/csv", csv);
+    });
+    byId("account-export").addEventListener("click", async () => {
+      try {
+        const data = await call<unknown>("GET", "/v1/account/export");
+        download(`moqom-account-export-${summary?.tenant.id ?? "tenant"}.json`, "application/json", JSON.stringify(data, null, 2));
+      } catch (err) {
+        fail(err);
+      }
+    });
+    byId("ledger-more").addEventListener("click", () => {
+      ledgerShown += 200;
+      renderLedger();
+    });
+
+    // Keys.
+    const issued = byId("issued");
+    const issuedKey = byId<HTMLInputElement>("issued-key");
+    const issuedUse = byId<HTMLButtonElement>("issued-use");
+    let replacementFor = "";
+
+    const showIssued = (plaintext: string, retires?: string, replacesCurrent = false) => {
+      issuedKey.value = plaintext;
+      byId("issued-copy").textContent = "Copy";
+      const retiresText = byId("issued-retires");
+      retiresText.hidden = !retires;
+      retiresText.textContent = retires
+        ? `The old key keeps working until ${when(retires)}, then stops.${replacesCurrent ? " It is the key this session is signed in with: switch to the new one before then." : ""}`
+        : "";
+      issuedUse.hidden = !replacesCurrent;
+      issued.hidden = false;
+      issued.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+    const hideIssued = () => {
+      issuedKey.value = "";
+      issued.hidden = true;
+      replacementFor = "";
+    };
+
+    const keyState = (key: KeyView, current: string) => {
+      if (key.revoked_at) return [`Revoked ${when(key.revoked_at)}`, "faint"];
+      if (key.expired) return [`Expired ${key.expires_at ? when(key.expires_at) : ""}`.trim(), "faint"];
+      if (key.retires_at) return [`Retires ${when(key.retires_at)}`, "warn"];
+      if (key.id === current) return ["Active · this session", "ok"];
+      return ["Active", "ok"];
+    };
+    const keyLimits = (key: KeyView) => {
+      const parts: string[] = [];
+      if (key.expires_at && !key.expired) parts.push(`Expires ${new Date(key.expires_at).toLocaleDateString()}`);
+      if (key.allowed_networks?.length) parts.push(key.allowed_networks.join(", "));
+      if (key.rate_limit_per_minute) parts.push(`${key.rate_limit_per_minute.toLocaleString()}/min`);
+      return parts.join(" · ") || "None";
+    };
+
+    const renderKeys = () => {
+      const current = keyId(apiKey);
+      const body = byId<HTMLTableSectionElement>("keys");
+      body.replaceChildren();
+      for (const key of keys) {
+        const tr = document.createElement("tr");
+        const [state, tone] = keyState(key, current);
+        tr.append(
+          cell(key.name),
+          cell(key.kind),
+          cell(key.id, "mono small"),
+          cell(when(key.created_at), "small"),
+          cell(keyLimits(key), "small"),
+          cell(state, `small ${tone}`),
+        );
+        const actions = document.createElement("td");
+        actions.className = "actions";
+        actions.append(button("Audit", () => openAudit(key)));
+        if (!key.revoked_at) {
+          if (!key.expired) actions.append(button("Rotate", () => openRotate(key)));
+          const revoke = button("Revoke", () => openRevoke(key), "btn btn-small btn-danger-ghost");
+          if (key.id === current) {
+            revoke.disabled = true;
+            revoke.title = "This session is signed in with this key. Rotate it, use the replacement, then revoke this one.";
+          }
+          actions.append(revoke);
+        }
+        tr.append(actions);
+        body.append(tr);
+      }
+      if (keys.length === 0) emptyRow(body, 7, "No keys.");
+      setText("overview-keys", String(keys.filter((k) => !k.revoked_at && !k.expired).length));
+    };
+
+    // Audit dialog.
+    const auditDialog = byId<HTMLDialogElement>("audit-dialog");
+    const OUTCOMES: Record<string, string> = {
+      ok: "Allowed",
+      bad_secret: "Wrong secret",
+      revoked: "Used after revoke",
+      expired: "Used after expiry",
+      out_of_scope: "Outside the key's kind",
+      address_refused: "Address not allowed",
+      rate_limited: "Rate limited",
+      leaked_revoked: "Revoked: found in public",
+    };
+    const openAudit = async (key: KeyView) => {
+      setText("audit-title", `Use of "${key.name}"`);
+      const body = byId<HTMLTableSectionElement>("audit");
+      body.replaceChildren();
+      byId("audit-error").hidden = true;
+      auditDialog.showModal();
+      try {
+        const { entries } = await call<{ entries: AuditEntry[] }>("GET", `/v1/keys/${encodeURIComponent(key.id)}/audit?limit=200`);
+        for (const e of entries ?? []) {
+          const tr = document.createElement("tr");
+          const outcome = OUTCOMES[e.outcome] ?? e.outcome;
+          tr.append(
+            cell(when(e.minute), "small"),
+            cell(e.operation, "mono small"),
+            cell(e.address ?? "", "mono small"),
+            cell(e.detail ? `${outcome}: ${e.detail}` : outcome, `small ${e.outcome === "ok" ? "" : "warn"}`),
+            cell(e.count.toLocaleString(), "num small"),
+          );
+          body.append(tr);
+        }
+        if (!entries?.length) emptyRow(body, 5, "No recorded use yet.");
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          auditDialog.close();
+          return fail(err);
+        }
+        const message = byId("audit-error");
+        message.textContent =
+          err instanceof ApiError && err.status === 404 ? "The API doesn't record key use yet." : err instanceof Error ? err.message : String(err);
+        message.hidden = false;
+      }
+    };
+
+    const loadSummary = async () => renderSummary(await call<Summary>("GET", "/v1/billing"));
+    const loadKeys = async () => {
+      keys = (await call<{ keys: KeyView[] }>("GET", "/v1/keys")).keys;
+      renderKeys();
+    };
+
+    // Rotate dialog.
+    const rotateDialog = byId<HTMLDialogElement>("rotate-dialog");
+    let rotating: KeyView | null = null;
+    const openRotate = (key: KeyView) => {
+      rotating = key;
+      setText("rotate-text", `Issues a new ${key.kind} key named "${key.name}". The new key works at once; "${key.name}" (${key.id}) keeps working until the overlap ends.`);
+      byId("rotate-error").hidden = true;
+      byId<HTMLSelectElement>("rotate-overlap").value = "86400";
+      rotateDialog.showModal();
+    };
+    byId<HTMLFormElement>("rotate-form").addEventListener("submit", async (event) => {
+      const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+      if (submitter?.value !== "go" || !rotating) return;
+      event.preventDefault();
+      const key = rotating;
+      try {
+        const result = await call<{ api_key: string; old_key_retires: string }>("POST", `/v1/keys/${encodeURIComponent(key.id)}/rotate`, {
+          overlap_seconds: Number(byId<HTMLSelectElement>("rotate-overlap").value),
+        });
+        rotateDialog.close();
+        replacementFor = key.id;
+        showIssued(result.api_key, result.old_key_retires, key.id === keyId(apiKey));
+        await loadKeys();
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) return fail(err);
+        const message = byId("rotate-error");
+        message.textContent = err instanceof Error ? err.message : String(err);
+        message.hidden = false;
+      }
+    });
+
+    // Revoke dialog. A first attempt never sends ?confirm; only the API saying
+    // would_stop_service, and the name typed back, unlocks it.
+    const revokeDialog = byId<HTMLDialogElement>("revoke-dialog");
+    const revokeConfirm = byId<HTMLInputElement>("revoke-confirm");
+    const revokeGo = byId<HTMLButtonElement>("revoke-go");
+    let revoking: KeyView | null = null;
+    let stopService = false;
+    const openRevoke = (key: KeyView) => {
+      if (key.id === keyId(apiKey)) return;
+      revoking = key;
+      stopService = false;
+      setText("revoke-title", `Revoke "${key.name}"?`);
+      setText("revoke-text", `${key.kind} key ${key.id}. Anything using it stops working immediately. This cannot be undone.`);
+      byId("revoke-danger").hidden = true;
+      byId("revoke-rotate").hidden = true;
+      byId("revoke-error").hidden = true;
+      revokeConfirm.value = "";
+      revokeGo.disabled = false;
+      revokeGo.textContent = "Revoke now";
+      revokeDialog.showModal();
+    };
+    revokeConfirm.addEventListener("input", () => {
+      revokeGo.disabled = stopService && revokeConfirm.value !== revoking?.name;
+    });
+    byId("revoke-rotate").addEventListener("click", () => {
+      const key = revoking;
+      revokeDialog.close();
+      if (key) openRotate(key);
+    });
+    byId<HTMLFormElement>("revoke-form").addEventListener("submit", async (event) => {
+      const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+      if (submitter?.value !== "go" || !revoking) return;
+      event.preventDefault();
+      const key = revoking;
+      if (key.id === keyId(apiKey)) return;
+      if (stopService && revokeConfirm.value !== key.name) return;
+      revokeGo.disabled = true;
+      try {
+        await call("DELETE", `/v1/keys/${encodeURIComponent(key.id)}${stopService ? "?confirm=stop-service" : ""}`);
+        revokeDialog.close();
+        await loadKeys();
+      } catch (err) {
+        if (err instanceof ApiError && err.code === "would_stop_service" && !stopService) {
+          stopService = true;
+          const relay = key.kind === "relay";
+          setText("revoke-danger-title", relay ? "This stops your self-hosted relays reporting usage." : "This stops all video.");
+          setText(
+            "revoke-danger-text",
+            relay
+              ? `"${key.name}" is your last working relay key. Once it is revoked, self-hosted relays can no longer report usage or learn whether to keep admitting sessions.`
+              : `"${key.name}" is your last working backend key. Once it is revoked, your backend can no longer mint tokens: new sessions are refused at once and live ones end within 15 minutes, when their tokens can't renew.`,
+          );
+          setText("revoke-name", key.name);
+          byId("revoke-danger").hidden = false;
+          byId("revoke-rotate").hidden = false;
+          revokeGo.textContent = relay ? "Revoke and stop usage reporting" : "Revoke and stop all video";
+          revokeGo.disabled = true;
+          revokeConfirm.focus();
+          return;
+        }
+        revokeGo.disabled = false;
+        if (err instanceof ApiError && err.status === 401) {
+          revokeDialog.close();
+          return fail(err);
+        }
+        const message = byId("revoke-error");
+        message.textContent = err instanceof Error ? err.message : String(err);
+        message.hidden = false;
+      }
+    });
+
+    byId<HTMLFormElement>("issue-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const name = byId<HTMLInputElement>("issue-name").value.trim();
+      const kind = byId<HTMLSelectElement>("issue-kind").value;
+      if (!name) return showDashError("Give the key a name, such as the service that will use it.");
+      const request: Record<string, unknown> = { name, kind };
+      const days = Number(byId<HTMLSelectElement>("issue-expiry").value);
+      if (days > 0) request.expires_at = new Date(Date.now() + days * 86_400_000).toISOString();
+      const networks = byId<HTMLInputElement>("issue-networks")
+        .value.split(/[\s,]+/)
+        .filter(Boolean);
+      if (networks.length > 20) return showDashError("A key can have at most 20 allowed networks.");
+      if (networks.length) request.allowed_networks = networks;
+      const rateText = byId<HTMLInputElement>("issue-rate").value.trim();
+      if (rateText) {
+        const rate = Number(rateText);
+        if (!Number.isInteger(rate) || rate < 0 || rate > 100_000) return showDashError("Calls a minute must be a whole number from 0 to 100,000.");
+        if (rate > 0) request.rate_limit_per_minute = rate;
+      }
+      try {
+        const result = await call<{ api_key: string }>("POST", "/v1/keys", request);
+        byId<HTMLInputElement>("issue-name").value = "";
+        byId<HTMLInputElement>("issue-networks").value = "";
+        byId<HTMLInputElement>("issue-rate").value = "";
+        byId<HTMLSelectElement>("issue-expiry").value = "0";
+        showIssued(result.api_key);
+        await loadKeys();
+      } catch (err) {
+        fail(err);
+      }
+    });
+    byId("issued-copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(issuedKey.value);
+        byId("issued-copy").textContent = "Copied";
+      } catch {
+        issuedKey.select();
+      }
+    });
+    byId("issued-dismiss").addEventListener("click", hideIssued);
+    issuedUse.addEventListener("click", async () => {
+      const next = issuedKey.value;
+      if (!next || !replacementFor) return;
+      apiKey = next;
+      try {
+        sessionStorage.setItem(STORAGE, apiKey);
+      } catch {
+        /* memory only */
+      }
+      hideIssued();
+      await load();
+    });
+
+    // Rooms.
+    let roomsLoaded = false;
+    let roomsToken = "";
+    const loadRooms = async (more: boolean) => {
+      const filter = byId<HTMLSelectElement>("rooms-filter").value;
+      const query = new URLSearchParams();
+      if (filter) query.set("lifecycle", filter);
+      if (more && roomsToken) query.set("page_token", roomsToken);
+      try {
+        const page = await call<{ rooms: RoomView[]; next_page_token: string }>("GET", `/v1/rooms?${query}`);
+        roomsLoaded = true;
+        roomsToken = page.next_page_token;
+        const body = byId<HTMLTableSectionElement>("rooms");
+        if (!more) body.replaceChildren();
+        for (const room of page.rooms) {
+          const tr = document.createElement("tr");
+          tr.append(
+            cell(room.room, "mono"),
+            cell(room.lifecycle.replace(/_/g, " ")),
+            cell(room.owner ?? ""),
+            cell(String(room.people), "num"),
+            cell(String(room.devices), "num"),
+            cell(room.recording ? "Yes" : "No"),
+            cell(when(room.created_at), "small"),
+          );
+          body.append(tr);
+        }
+        if (!more && page.rooms.length === 0) emptyRow(body, 7, "No rooms.");
+        byId("rooms-more").hidden = !roomsToken;
+        const select = byId<HTMLSelectElement>("events-room");
+        const known = new Set([...select.options].map((o) => o.value));
+        for (const room of page.rooms) {
+          if (known.has(room.room)) continue;
+          const option = document.createElement("option");
+          option.value = option.textContent = room.room;
+          select.append(option);
+        }
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          roomsLoaded = true;
+          const body = byId<HTMLTableSectionElement>("rooms");
+          body.replaceChildren();
+          emptyRow(body, 7, "Rooms are not available from this API endpoint yet.");
+          return;
+        }
+        fail(err);
+      }
+    };
+    byId("rooms-refresh").addEventListener("click", () => void loadRooms(false));
+    byId("rooms-filter").addEventListener("change", () => void loadRooms(false));
+    byId("rooms-more").addEventListener("click", () => void loadRooms(true));
+
+    // Room events over a fetch stream, so the key travels in a header and
+    // never in a URL.
+    let events: AbortController | null = null;
+    let eventsWanted = false;
+    let lastSequence = new Map<string, number>();
+    const eventsBody = byId<HTMLTableSectionElement>("events");
+    const setEventsState = (text: string, tone = "") => {
+      const pill = byId("events-state");
+      pill.textContent = text;
+      pill.className = `pill ${tone}`;
+      byId("events-toggle").textContent = eventsWanted ? "Stop" : "Start";
+    };
+    const findUsername = (value: unknown, depth = 0): string => {
+      if (!value || typeof value !== "object" || depth > 4) return "";
+      const record = value as Record<string, unknown>;
+      if (typeof record.username === "string") return record.username;
+      for (const child of Object.values(record)) {
+        const found = findUsername(child, depth + 1);
+        if (found) return found;
+      }
+      return "";
+    };
+    const addEvent = (event: Record<string, unknown>) => {
+      const room = String(event.room ?? "");
+      const sequence = Number(event.sequence ?? 0);
+      lastSequence.set(room, Math.max(lastSequence.get(room) ?? 0, sequence));
+      const kind = String(event.kind ?? "").replace(/^ROOM_EVENT_KIND_/, "").toLowerCase().replace(/_/g, " ");
+      const known = new Set(["tenant", "room", "sequence", "at", "kind", "timecode"]);
+      const bodyKey = Object.keys(event).find((k) => !known.has(k)) ?? "";
+      const detail = event[bodyKey];
+      const who = findUsername(detail);
+      const tr = document.createElement("tr");
+      const detailCell = document.createElement("td");
+      detailCell.className = "small";
+      const summaryText = who ? who : "";
+      const disclosure = document.createElement("details");
+      const label = document.createElement("summary");
+      label.textContent = summaryText || bodyKey.replace(/_/g, " ") || "details";
+      const pre = document.createElement("pre");
+      pre.className = "mono small";
+      pre.textContent = JSON.stringify(detail ?? {}, null, 2);
+      disclosure.append(label, pre);
+      detailCell.append(disclosure);
+      tr.append(cell(event.at ? when(String(event.at)) : "", "small"), cell(room, "mono small"), cell(String(sequence), "num"), cell(kind), detailCell);
+      eventsBody.prepend(tr);
+      while (eventsBody.rows.length > 500) eventsBody.deleteRow(eventsBody.rows.length - 1);
+    };
+
+    const streamEvents = async () => {
+      if (!eventsWanted) return;
+      const room = byId<HTMLSelectElement>("events-room").value;
+      const query = new URLSearchParams();
+      if (room) {
+        query.set("room", room);
+        query.set("after", String(lastSequence.get(room) ?? 0));
+      }
+      events?.abort();
+      const controller = new AbortController();
+      events = controller;
+      setEventsState("Connecting");
+      let retry = true;
+      try {
+        const res = await fetch(`${API}/v1/rooms/events/stream?${query}`, {
+          headers: { Authorization: `Bearer ${apiKey}`, Accept: "text/event-stream" },
+          signal: controller.signal,
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+        });
+        if (!res.ok || !res.body) {
+          retry = res.status >= 500 || res.status === 429;
+          if (res.status === 401) {
+            eventsWanted = false;
+            return fail(new ApiError(401, "unauthorized"));
+          }
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error ?? `HTTP ${res.status}`);
+        }
+        setEventsState("Live", "pill-ok");
+        const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+        let buffer = "";
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let split;
+          while ((split = buffer.indexOf("\n\n")) >= 0) {
+            const block = buffer.slice(0, split);
+            buffer = buffer.slice(split + 2);
+            let name = "message";
+            let data = "";
+            for (const line of block.split("\n")) {
+              if (line.startsWith("event: ")) name = line.slice(7);
+              else if (line.startsWith("data: ")) data += line.slice(6);
+            }
+            if (name === "room_event") {
+              try {
+                addEvent(JSON.parse(data));
+              } catch {
+                /* skip a malformed event */
+              }
+            } else if (name === "revoked") {
+              eventsWanted = false;
+              return fail(new ApiError(401, "unauthorized"));
+            } else if (name === "gap") {
+              setEventsState("Catching up", "pill-accent");
+            }
+          }
+        }
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setEventsState(err instanceof Error ? err.message : "Disconnected");
+      }
+      if (events === controller && eventsWanted && retry) {
+        setEventsState("Reconnecting");
+        setTimeout(() => {
+          if (events === controller && eventsWanted) void streamEvents();
+        }, 3000);
+      } else if (!eventsWanted) {
+        setEventsState("Stopped");
+      }
+    };
+    const stopEvents = () => {
+      eventsWanted = false;
+      events?.abort();
+      events = null;
+      setEventsState("Stopped");
+    };
+    byId("events-toggle").addEventListener("click", () => {
+      if (eventsWanted) return stopEvents();
+      eventsWanted = true;
+      void streamEvents();
+    });
+    byId("events-room").addEventListener("change", () => {
+      eventsBody.replaceChildren();
+      lastSequence = new Map();
+      if (eventsWanted) void streamEvents();
+    });
+
+    // Savings. Every amount is computed by the API in micros, from the same
+    // ledger and rate card as the bill; this page only formats them.
+    type Line = {
+      role?: string;
+      tier?: string;
+      hosting?: string;
+      participant_minutes: number;
+      egress_bytes: number;
+      charged: Money;
+      agora_list: Money;
+      savings: Money;
+      savings_basis_points: number;
+      unrated?: boolean;
+    };
+    type Projection = { charged: Money; agora_list: Money; savings: Money };
+    type UsageSummary = {
+      from: string;
+      to: string;
+      lines: Line[];
+      total: Line;
+      agora_basis: string;
+      projection_period?: Projection;
+      projection_30_days?: Projection;
+    };
+    type Estimate = {
+      groups: { role: string; tier: string; capped: boolean }[];
+      total: { participant_minutes: number; egress_gib: number; charge: Money; agora_list: Money; savings: Money; savings_basis_points: number };
+    };
+    const TIER_LABELS: Record<string, string> = { audio: "Audio", hd: "HD", full_hd: "Full HD", "2k": "2K", "2k_plus": "2K+" };
+    const ROLE_LABELS: Record<string, string> = { host: "Host", audience: "Interactive audience", broadcast_audience: "Broadcast audience" };
+    const HOSTING_LABELS: Record<string, string> = { cloud: "MOQOM Cloud", self_hosted: "Self-hosted" };
+    const percent = (basisPoints: number) => `${(basisPoints / 100).toFixed(1)}%`;
+    const gib = (bytes: number) => `${(bytes / 1024 ** 3).toLocaleString("en-US", { maximumFractionDigits: bytes < 1024 ** 3 ? 3 : 1 })} GiB`;
+    const count = (n: number) => Math.round(n).toLocaleString("en-US");
+    const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+    const showError = (id: string, message: string) => {
+      const el = byId(id);
+      el.textContent = message;
+      el.hidden = !message;
+    };
+    const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
+    let featuresAvailable = false;
+    let whatIfLoaded = false;
+
+    // [from, to) as UTC dates, or why the custom range is unusable.
+    const period = (): [string, string] | string => {
+      const choice = byId<HTMLSelectElement>("period").value;
+      const now = new Date();
+      const y = now.getUTCFullYear();
+      const m = now.getUTCMonth();
+      const tomorrow = Date.UTC(y, m, now.getUTCDate() + 1);
+      if (choice === "this-month") return [isoDay(Date.UTC(y, m, 1)), isoDay(Date.UTC(y, m + 1, 1))];
+      if (choice === "last-month") return [isoDay(Date.UTC(y, m - 1, 1)), isoDay(Date.UTC(y, m, 1))];
+      if (choice === "30" || choice === "90") return [isoDay(tomorrow - Number(choice) * DAY), isoDay(tomorrow)];
+      const from = Date.parse(byId<HTMLInputElement>("period-from").value);
+      const to = Date.parse(byId<HTMLInputElement>("period-to").value);
+      if (Number.isNaN(from) || Number.isNaN(to)) return "Choose both dates.";
+      if (to < from) return "The end date is before the start date.";
+      if (to - from >= 400 * DAY) return "A period can be at most 400 days.";
+      return [isoDay(from), isoDay(to + DAY)];
+    };
+
+    const renderSavings = (s: UsageSummary) => {
+      const t = s.total;
+      const ongoing = Date.parse(s.to) > Date.now();
+      setText("savings-charged-label", ongoing ? "MOQOM charged so far" : "MOQOM charged");
+      setText("savings-charged", shown(t.charged));
+      setText("savings-agora", shown(t.agora_list));
+      setText("savings-saved", shown(t.savings));
+      setText("savings-percent", t.agora_list.micros > 0 ? percent(t.savings_basis_points) : "–");
+      setText("savings-minutes", count(t.participant_minutes));
+      setText("savings-egress", gib(t.egress_bytes));
+      const versus = (p?: Projection) => (p ? `${shown(p.charged)} vs ${shown(p.agora_list)} at Agora list` : "");
+      setText("savings-projected", versus(s.projection_period) || (ongoing ? "Not enough usage yet" : "Period complete"));
+      setText("savings-30", versus(s.projection_30_days) || "Not enough usage yet");
+
+      const body = byId<HTMLTableSectionElement>("savings-lines");
+      body.replaceChildren();
+      const order = Object.keys(TIER_LABELS);
+      const rank = (tier = "") => (order.includes(tier) ? order.indexOf(tier) : order.length);
+      const lines = [...s.lines].sort((a, b) => rank(a.tier) - rank(b.tier) || (a.role ?? "").localeCompare(b.role ?? ""));
+      const row = (l: Line, total: boolean) => {
+        const tr = document.createElement("tr");
+        if (total) tr.className = "total-row";
+        tr.append(
+          cell(total ? "Total" : (TIER_LABELS[l.tier ?? ""] ?? (l.tier || "Unknown"))),
+          cell(total ? "" : (ROLE_LABELS[l.role ?? ""] ?? (l.role || "Unknown"))),
+          cell(total ? "" : (HOSTING_LABELS[l.hosting ?? ""] ?? (l.hosting ?? ""))),
+          cell(count(l.participant_minutes), "num"),
+          cell(gib(l.egress_bytes), "num"),
+          cell(shown(l.charged), "num"),
+          cell(l.unrated && !total ? "Not on Agora's rate card" : shown(l.agora_list), "num"),
+          cell(l.agora_list.micros > 0 ? `${shown(l.savings)} (${percent(l.savings_basis_points)})` : "–", "num"),
+        );
+        body.append(tr);
+      };
+      for (const l of lines) row(l, false);
+      if (lines.length === 0) emptyRow(body, 8, "No metered usage in this period.");
+      else row(t, true);
+      setText(
+        "savings-basis",
+        `${s.agora_basis} Projections extrapolate this period's average and are estimates. Covers ${s.from.slice(0, 10)} to ${isoDay(Date.parse(s.to) - DAY)}, UTC, inclusive.`,
+      );
+    };
+
+    // Also the feature probe: an API that predates the summary answers 404 or
+    // 405, and the Savings and Migrate tabs, which ship together, stay hidden.
+    const refreshSavings = async () => {
+      const range = period();
+      if (typeof range === "string") return showError("savings-error", range);
+      try {
+        const s = await call<UsageSummary>("GET", `/v1/usage/summary?${new URLSearchParams({ from: range[0], to: range[1] })}`);
+        renderSavings(s);
+        showError("savings-error", "");
+        featuresAvailable = true;
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) throw err;
+        featuresAvailable = !(err instanceof ApiError && (err.status === 404 || err.status === 405));
+        if (featuresAvailable) showError("savings-error", message(err));
+      }
+      setFeatures(featuresAvailable);
+    };
+
+    const syncCustomPeriod = () => {
+      const custom = byId<HTMLSelectElement>("period").value === "custom";
+      document.querySelectorAll<HTMLElement>("[data-custom]").forEach((el) => (el.hidden = !custom));
+      if (custom && !byId<HTMLInputElement>("period-from").value) {
+        const today = Date.now();
+        byId<HTMLInputElement>("period-from").value = isoDay(today - 29 * DAY);
+        byId<HTMLInputElement>("period-to").value = isoDay(today);
+      }
+    };
+    byId("period").addEventListener("change", () => {
+      syncCustomPeriod();
+      if (byId<HTMLSelectElement>("period").value !== "custom") void refreshSavings().catch(fail);
+    });
+    byId<HTMLFormElement>("period-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      void refreshSavings().catch(fail);
+    });
+
+    // What if.
+    const resolutionEl = byId<HTMLSelectElement>("wi-resolution");
+    const kbpsEl = byId<HTMLInputElement>("wi-kbps");
+    const tilesEl = byId<HTMLInputElement>("wi-tiles");
+    let whatIfTimer = 0;
+    let whatIfRequest = 0;
+    const loadWhatIf = async () => {
+      whatIfLoaded = true;
+      const whole = (id: string) => Math.floor(Number(byId<HTMLInputElement>(id).value));
+      const hosts = whole("wi-hosts");
+      const viewers = whole("wi-viewers");
+      const minutes = Math.round(Number(byId<HTMLInputElement>("wi-hours").value) * 60);
+      const audio = resolutionEl.value === "audio";
+      const tiles = audio ? 0 : whole("wi-tiles");
+      const kbps = audio ? 0 : whole("wi-kbps");
+      if (![hosts, viewers, kbps].every((n) => n >= 0 && n <= 1_000_000) || hosts + viewers === 0)
+        return showError("whatif-error", "Enter at least one host or viewer, up to 1,000,000 each.");
+      if (!(minutes >= 1 && minutes <= 44_640)) return showError("whatif-error", "Hours per person must be between 0.1 and 744.");
+      if (!audio && !(tiles >= 1 && tiles <= 64)) return showError("whatif-error", "Tiles must be 1 to 64.");
+      const option = resolutionEl.selectedOptions[0];
+      const tile = { tiles, tile_width: Number(option?.dataset.width ?? 0), tile_height: Number(option?.dataset.height ?? 0), kbps_per_tile: kbps };
+      const groups = [
+        ...(hosts > 0 ? [{ role: "host", count: hosts, ...tile }] : []),
+        ...(viewers > 0 ? [{ role: byId<HTMLSelectElement>("wi-role").value, count: viewers, ...tile }] : []),
+      ];
+      const request = ++whatIfRequest;
+      try {
+        const result = await call<Estimate>("POST", "/v1/usage/estimate", { hosting: byId<HTMLSelectElement>("wi-hosting").value, minutes, groups });
+        if (request !== whatIfRequest) return;
+        showError("whatif-error", "");
+        const t = result.total;
+        setText("wi-moqom", shown(t.charge));
+        setText("wi-agora", shown(t.agora_list));
+        setText("wi-saved", t.agora_list.micros > 0 ? `${shown(t.savings)} (${percent(t.savings_basis_points)})` : "–");
+        setText("wi-tier", result.groups.map((g) => `${g.role === "host" ? "Hosts" : "Viewers"}: ${TIER_LABELS[g.tier] ?? g.tier}`).join(" · "));
+        const capped = result.groups.some((g) => g.capped);
+        setText(
+          "wi-detail",
+          `${count(t.participant_minutes)} participant-minutes a month · about ${t.egress_gib.toLocaleString("en-US", { maximumFractionDigits: 1 })} GiB delivered${capped ? " · at this bitrate the self-hosted fee reaches the hosted rate, so you pay that instead" : ""}.`,
+        );
+      } catch (err) {
+        if (request !== whatIfRequest) return;
+        if (err instanceof ApiError && err.status === 401) return fail(err);
+        showError("whatif-error", message(err));
+      }
+    };
+    const scheduleWhatIf = () => {
+      clearTimeout(whatIfTimer);
+      whatIfTimer = window.setTimeout(() => void loadWhatIf(), 350);
+    };
+    resolutionEl.addEventListener("change", () => {
+      const audio = resolutionEl.value === "audio";
+      kbpsEl.value = resolutionEl.selectedOptions[0]?.dataset.kbps ?? "0";
+      tilesEl.disabled = audio;
+      kbpsEl.disabled = audio;
+    });
+    byId("whatif-form").addEventListener("input", scheduleWhatIf);
+    byId("whatif-form").addEventListener("change", scheduleWhatIf);
+    byId<HTMLFormElement>("whatif-form").addEventListener("submit", (event) => event.preventDefault());
+
+    // Migrate from Agora. The credentials go in one request body and are
+    // cleared from the form before it is sent; nothing here stores them.
+    type AgoraPreview = {
+      from_date: string;
+      to_date: string;
+      projects: { id: string; name: string; enabled: boolean; seconds_by_tier: Record<string, number>; error?: string }[];
+      projects_truncated: boolean;
+      tiers: { tier: string; minutes: number; assumed_kbps: number; agora_list: Money; moqom_estimate: Money }[];
+      total: {
+        minutes: number;
+        agora_list: Money;
+        moqom_estimate: Money;
+        savings: Money;
+        savings_basis_points: number;
+        agora_list_if_broadcast_audience: Money;
+        moqom_estimate_if_broadcast_audience: Money;
+      };
+      per_30_days: { agora_list: Money; moqom_estimate: Money };
+      notes: string[];
+      checklist: { step: string; detail: string; link?: string }[];
+    };
+    const docsLink = (raw?: string) => {
+      try {
+        const url = new URL(raw ?? "");
+        return url.protocol === "https:" && url.hostname === "moqom.dev" ? url.href : "";
+      } catch {
+        return "";
+      }
+    };
+    const clearAgora = () => {
+      byId<HTMLInputElement>("agora-id").value = "";
+      byId<HTMLInputElement>("agora-secret").value = "";
+      byId("agora-results").hidden = true;
+      for (const id of ["agora-tiers", "agora-projects", "agora-notes", "agora-checklist"]) byId(id).replaceChildren();
+      setText("agora-status", "");
+      showError("agora-error", "");
+    };
+    const renderAgora = (p: AgoraPreview) => {
+      const t = p.total;
+      setText("agora-range", `${p.from_date} to ${p.to_date} (UTC)`);
+      setText("agora-list", shown(t.agora_list));
+      setText("agora-moqom", shown(t.moqom_estimate));
+      setText("agora-saved", t.agora_list.micros > 0 ? `${shown(t.savings)} (${percent(t.savings_basis_points)})` : "–");
+      setText("agora-minutes", count(t.minutes));
+      setText("agora-list-30", shown(p.per_30_days.agora_list));
+      setText("agora-moqom-30", shown(p.per_30_days.moqom_estimate));
+      setText("agora-broadcast", `Agora ${shown(t.agora_list_if_broadcast_audience)}, MOQOM ${shown(t.moqom_estimate_if_broadcast_audience)} (estimate)`);
+
+      const tiers = byId<HTMLTableSectionElement>("agora-tiers");
+      tiers.replaceChildren();
+      for (const tier of p.tiers) {
+        const tr = document.createElement("tr");
+        const saved = tier.agora_list.micros - tier.moqom_estimate.micros;
+        tr.append(
+          cell(TIER_LABELS[tier.tier] ?? tier.tier),
+          cell(count(tier.minutes), "num"),
+          cell(count(tier.assumed_kbps), "num"),
+          cell(shown(tier.agora_list), "num"),
+          cell(shown(tier.moqom_estimate), "num"),
+          cell(usd(saved), "num"),
+        );
+        tiers.append(tr);
+      }
+      if (p.tiers.length === 0) emptyRow(tiers, 6, "Agora reported no usage in this period.");
+
+      const projects = byId<HTMLTableSectionElement>("agora-projects");
+      projects.replaceChildren();
+      for (const project of p.projects) {
+        const tr = document.createElement("tr");
+        const seconds = Object.values(project.seconds_by_tier ?? {}).reduce((a, b) => a + b, 0);
+        tr.append(
+          cell(project.name),
+          cell(project.id, "mono small"),
+          cell(project.enabled ? "Enabled" : "Disabled", project.enabled ? "ok" : "faint"),
+          cell(project.error ? "–" : count(seconds / 60), "num"),
+          cell(project.error ?? "", project.error ? "small warn" : "small"),
+        );
+        projects.append(tr);
+      }
+      if (p.projects.length === 0) emptyRow(projects, 5, "No projects on this Agora account.");
+      byId("agora-truncated").hidden = !p.projects_truncated;
+
+      const notes = byId("agora-notes");
+      notes.replaceChildren(
+        ...p.notes.map((text) => {
+          const li = document.createElement("li");
+          li.textContent = text;
+          return li;
+        }),
+      );
+      const checklist = byId("agora-checklist");
+      checklist.replaceChildren(
+        ...p.checklist.map((item) => {
+          const li = document.createElement("li");
+          const step = document.createElement("strong");
+          step.textContent = item.step;
+          const detail = document.createElement("p");
+          detail.className = "small muted";
+          detail.textContent = item.detail;
+          li.append(step, detail);
+          const href = docsLink(item.link);
+          if (href) {
+            const a = document.createElement("a");
+            a.href = href;
+            a.rel = "noopener";
+            a.className = "small";
+            a.textContent = `${new URL(href).pathname} ↗`;
+            li.append(a);
+          }
+          return li;
+        }),
+      );
+      byId("agora-results").hidden = false;
+    };
+    byId<HTMLFormElement>("agora-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const idEl = byId<HTMLInputElement>("agora-id");
+      const secretEl = byId<HTMLInputElement>("agora-secret");
+      const credentials = { customer_id: idEl.value.trim(), customer_secret: secretEl.value.trim() };
+      idEl.value = "";
+      secretEl.value = "";
+      if (!credentials.customer_id || !credentials.customer_secret)
+        return showError("agora-error", "Enter both the Customer ID and the Customer Secret.");
+      showError("agora-error", "");
+      const go = byId<HTMLButtonElement>("agora-go");
+      go.disabled = true;
+      setText("agora-status", "Reading from Agora. This can take up to half a minute…");
+      try {
+        renderAgora(await call<AgoraPreview>("POST", "/v1/migrate/agora/preview", credentials));
+        setText("agora-status", "Done. The credentials were used for that request only. You can delete the secret in Agora Console now.");
+      } catch (err) {
+        setText("agora-status", "");
+        if (err instanceof ApiError && err.status === 401) return fail(err);
+        showError("agora-error", message(err));
+      } finally {
+        go.disabled = false;
+      }
+    });
+
+    // Session.
+    const load = async () => {
+      showDashError("");
+      try {
+        await loadSummary();
+        await loadKeys();
+        await loadLedger();
+        if (roomsLoaded) await loadRooms(false);
+        await refreshSavings();
+        if (featureTabs.includes(location.hash.slice(1))) showTab(location.hash.slice(1));
+        return true;
+      } catch (err) {
+        fail(err);
+        return false;
+      }
+    };
+
+    const signOut = (message = "") => {
+      stopEvents();
+      apiKey = "";
+      summary = null;
+      keys = [];
+      ledger = [];
+      roomsLoaded = false;
+      whatIfLoaded = false;
+      featuresAvailable = false;
+      setFeatures(false);
+      clearAgora();
+      hideIssued();
+      try {
+        sessionStorage.removeItem(STORAGE);
+      } catch {
+        /* nothing stored */
+      }
+      for (const id of ["ledger", "keys", "rooms", "events", "savings-lines"]) byId(id).replaceChildren();
+      dashboard.hidden = true;
+      keyForm.hidden = false;
+      keyInput.value = "";
+      keyError.textContent = message;
+      keyError.hidden = !message;
+    };
+
+    const open = async () => {
+      keyForm.hidden = true;
+      dashboard.hidden = false;
+      showTab(location.hash.slice(1));
+      if (await load()) {
+        try {
+          sessionStorage.setItem(STORAGE, apiKey);
+        } catch {
+          /* memory only */
+        }
+      }
+    };
+
+    keyForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const value = keyInput.value.trim();
+      if (!/^mqk_[0-9a-f]+_[A-Za-z0-9_-]+$/.test(value)) {
+        keyError.textContent = "That does not look like a MOQOM API key. Keys start with mqk_.";
+        keyError.hidden = false;
+        return;
+      }
+      apiKey = value;
+      keyInput.value = "";
+      void open();
+    });
+
+    byId("refresh").addEventListener("click", () => void load());
+    byId("sign-out").addEventListener("click", () => signOut());
+
+    byId<HTMLFormElement>("checkout-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const cents = centsOf(byId<HTMLInputElement>("checkout-amount").value);
+      if (!(cents >= 1000 && cents <= 1_000_000)) return showDashError("A top-up must be between $10 and $10,000.");
+      try {
+        const { checkout_url } = await call<{ checkout_url: string }>("POST", "/v1/billing/checkout", { amount_cents: cents });
+        safeRedirect(checkout_url, ["checkout.stripe.com"]);
+      } catch (err) {
+        fail(err);
+      }
+    });
+
+    byId("portal").addEventListener("click", async () => {
+      try {
+        const { portal_url } = await call<{ portal_url: string }>("POST", "/v1/billing/portal");
+        safeRedirect(portal_url, ["billing.stripe.com"]);
+      } catch (err) {
+        fail(err);
+      }
+    });
+
+    byId<HTMLFormElement>("auto-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = byId("auto-status");
+      const enabled = byId<HTMLInputElement>("auto-enabled").checked;
+      const below = centsOf(byId<HTMLInputElement>("auto-below").value || "0");
+      const amount = centsOf(byId<HTMLInputElement>("auto-amount").value || "0");
+      if (enabled && !(amount >= 1000 && amount <= 1_000_000)) return showDashError("The top-up amount must be between $10 and $10,000.");
+      if (enabled && !(below >= 0)) return showDashError("The threshold cannot be negative.");
+      status.textContent = "Saving…";
+      try {
+        await call("PUT", "/v1/billing/auto-top-up", enabled ? { enabled, below_cents: below, amount_cents: amount } : { enabled: false });
+        await loadSummary();
+        status.textContent = "Saved.";
+      } catch (err) {
+        status.textContent = "";
+        fail(err);
+      }
+    });
+
+    byId<HTMLFormElement>("alerts-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = byId("alerts-status");
+      const enabled = byId<HTMLInputElement>("alerts-enabled").checked;
+      const raw = byId<HTMLInputElement>("alerts-amounts").value.trim();
+      const amounts = raw ? raw.split(/[,\s]+/).filter(Boolean).map((v) => centsOf(v.replace(/^\$/, ""))) : [];
+      if (amounts.some((c) => !(c >= 100 && c <= 100_000_000))) return showDashError("Each alert amount must be between $1 and $1,000,000.");
+      if (amounts.length > 10) return showDashError("At most 10 alert amounts.");
+      if (new Set(amounts).size !== amounts.length) return showDashError("An alert amount is listed twice.");
+      status.textContent = "Saving…";
+      try {
+        await call("PUT", "/v1/billing/spend-alerts", enabled ? { enabled, thresholds_cents: amounts } : { enabled: false });
+        await loadSummary();
+        status.textContent = "Saved.";
+      } catch (err) {
+        status.textContent = "";
+        fail(err);
+      }
+    });
+
+    byId<HTMLFormElement>("limit-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = byId("limit-status");
+      const enabled = byId<HTMLInputElement>("limit-enabled").checked;
+      const cents = centsOf(byId<HTMLInputElement>("limit-amount").value || "0");
+      if (enabled && !(cents >= 100)) return showDashError("A spend limit must be at least $1.");
+      if (enabled && !confirm("With a limit, new sessions are refused once this month's usage reaches it. Save the limit?")) return;
+      status.textContent = "Saving…";
+      try {
+        await call("PUT", "/v1/billing/spend-limit", enabled ? { enabled, monthly_cents: cents } : { enabled: false });
+        await loadSummary();
+        status.textContent = "Saved.";
+      } catch (err) {
+        status.textContent = "";
+        fail(err);
+      }
+    });
+
+    if (apiKey) void open();
+  }
+</script>
+
+<style>
+  .account {
+    min-height: 70vh;
+  }
+  .account [hidden] {
+    display: none !important;
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    margin-top: var(--space-5);
+    align-content: start;
+  }
+  .grid-2 > .panel {
+    margin-top: 0;
+  }
+  [data-panel] > .grid {
+    margin-top: var(--space-5);
+  }
+  .narrow-panel {
+    max-width: var(--container-narrow);
+  }
+  .panel h2,
+  .dialog h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+  .panel p,
+  .notice p,
+  .admission p,
+  .callout p {
+    margin: 0;
+  }
+  .notice,
+  .admission {
+    margin-top: var(--space-5);
+  }
+  .admission {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .panel .pill {
+    justify-self: start;
+  }
+  .console-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-5);
+  }
+  .console-nav {
+    position: relative;
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: var(--space-3);
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .console-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .console-nav ul {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .console-nav a {
+    display: block;
+    padding: 0.5rem 1.1rem;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .console-nav a:hover {
+    color: var(--text);
+    text-decoration: none;
+    background: rgb(255 255 255 / 0.05);
+  }
+  .console-nav a[aria-current="page"] {
+    color: var(--accent-ink);
+    background: var(--accent);
+  }
+  .nav-side {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4) var(--space-3);
+    margin: 0;
+  }
+  @media (max-width: 720px) {
+    .meta {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .meta dt {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .meta dd {
+    margin: 0;
+    word-break: break-word;
+  }
+  .big {
+    font-size: var(--text-lg);
+    color: var(--accent);
+  }
+  .inline {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .inline .field {
+    flex: 1 1 180px;
+  }
+  .head-row .inline .field {
+    flex: 0 1 200px;
+  }
+  .agree {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+    cursor: pointer;
+  }
+  .agree input {
+    flex: none;
+  }
+  form > .field,
+  form > p {
+    margin-bottom: var(--space-3);
+  }
+  .error {
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+  .panel-error {
+    margin-top: var(--space-5);
+  }
+  .warn {
+    color: var(--warn);
+  }
+  .ok {
+    color: var(--ok);
+  }
+  .key-row {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .key-row input {
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+  .issued {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+  .btn-small {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: var(--text-xs);
+  }
+  .btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #1a0505;
+  }
+  .btn-danger:hover {
+    background: #fb8f8f;
+    border-color: #fb8f8f;
+  }
+  .btn-danger-ghost {
+    color: var(--danger);
+  }
+  td.actions {
+    white-space: nowrap;
+    display: flex;
+    gap: var(--space-2);
+  }
+  .chart-wrap {
+    overflow-x: auto;
+  }
+  #usage-chart {
+    width: 100%;
+    min-width: 520px;
+    height: auto;
+  }
+  #usage-chart :global(.bar) {
+    fill: var(--accent);
+    opacity: 0.85;
+  }
+  #usage-chart :global(.bar:hover) {
+    opacity: 1;
+  }
+  #usage-chart :global(.grid-line) {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+  #usage-chart :global(.axis) {
+    fill: var(--text-faint);
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .events-wrap {
+    max-height: 520px;
+    overflow-y: auto;
+  }
+  .events-wrap pre {
+    max-width: 48ch;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-top: var(--space-2);
+  }
+  .events-wrap summary {
+    cursor: pointer;
+  }
+  .dialog {
+    width: min(100% - 2 * var(--space-5), 560px);
+    padding: var(--space-6);
+    color: var(--text);
+  }
+  .dialog-wide {
+    width: min(100% - 2 * var(--space-5), 880px);
+  }
+  .dialog-wide .table-wrap {
+    max-height: 60vh;
+    overflow: auto;
+  }
+  .dialog::backdrop {
+    background: rgb(0 0 0 / 0.6);
+  }
+  .dialog form {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-4);
+  }
+  .dialog .callout {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .whatif {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3) var(--space-4);
+  }
+  .whatif .field {
+    margin: 0;
+  }
+  .total-row td {
+    font-weight: 600;
+    border-top: 1px solid var(--border);
+  }
+  .checklist {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding-left: var(--space-5);
+  }
+  .checklist p {
+    margin: var(--space-1) 0 0;
+  }
+  .notes {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding-left: var(--space-5);
+  }
+</style>

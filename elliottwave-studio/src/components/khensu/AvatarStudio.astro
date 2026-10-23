@@ -1,0 +1,459 @@
+---
+// On-device streaming avatar studio: camera → canvas styles → live bit estimate.
+// Nothing leaves the device. Styles mirror design/nu-avatars.md.
+const styles = [
+  { id: 'ink', label: 'ink' },
+  { id: 'toon', label: 'toon' },
+  { id: 'pixel', label: 'pixel' },
+  { id: 'glass', label: 'glass' },
+  { id: 'mesh', label: 'mesh' },
+] as const;
+---
+
+<section class="avstudio" id="studio-section" aria-label="nu.avatars studio">
+  <div class="av-stage">
+    <video class="av-cam" playsinline muted autoplay></video>
+    <canvas class="av-out" width="640" height="480" aria-label="Styled camera output"></canvas>
+    <p class="av-status">camera off</p>
+  </div>
+  <div class="av-controls">
+    <div class="av-styles" role="tablist" aria-label="style">
+      {styles.map((s, i) => (
+        <button type="button" class:list={['av-style', { on: i === 0 }]} data-style={s.id} role="tab" aria-selected={i === 0}>
+          {s.label}
+        </button>
+      ))}
+    </div>
+    <button type="button" class="btn primary av-start">start camera</button>
+    <dl class="av-meter">
+      <div><dt>style</dt><dd data-m="style">ink</dd></div>
+      <div><dt>pack estimate</dt><dd data-m="kbps">—</dd></div>
+      <div><dt>vs photo hevc</dt><dd data-m="save">—</dd></div>
+      <div><dt>path</dt><dd>on device · nu.media base</dd></div>
+    </dl>
+    <p class="av-note">
+      Frames stay on this device. The meter is an example from frame entropy, not a lab benchmark.
+      On a call, the same look rides a nu.media base layer over nu.network — small enough for AR glasses.
+    </p>
+  </div>
+</section>
+
+<script>
+  type StyleId = 'ink' | 'toon' | 'pixel' | 'glass' | 'mesh';
+
+  for (const root of document.querySelectorAll<HTMLElement>('.avstudio')) {
+    const video = root.querySelector<HTMLVideoElement>('.av-cam')!;
+    const canvas = root.querySelector<HTMLCanvasElement>('.av-out')!;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const status = root.querySelector<HTMLElement>('.av-status')!;
+    const startBtn = root.querySelector<HTMLButtonElement>('.av-start')!;
+    const styleBtns = [...root.querySelectorAll<HTMLButtonElement>('.av-style')];
+    const mStyle = root.querySelector<HTMLElement>('[data-m="style"]')!;
+    const mKbps = root.querySelector<HTMLElement>('[data-m="kbps"]')!;
+    const mSave = root.querySelector<HTMLElement>('[data-m="save"]')!;
+
+    let style: StyleId = 'ink';
+    let stream: MediaStream | null = null;
+    let raf = 0;
+    let face: { x: number; y: number; w: number; h: number } | null = null;
+    let detector: { detect: (img: ImageBitmapSource) => Promise<Array<{ boundingBox: DOMRectReadOnly }>> } | null = null;
+    let lastDetect = 0;
+    let entropyEma = 0.12;
+
+    const work = document.createElement('canvas');
+    const wctx = work.getContext('2d', { willReadFrequently: true })!;
+
+    if ('FaceDetector' in window) {
+      try {
+        // @ts-expect-error FaceDetector is Chromium
+        detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      } catch {
+        detector = null;
+      }
+    }
+
+    const setStatus = (t: string) => {
+      status.textContent = t;
+    };
+
+    const pickStyle = (id: StyleId) => {
+      style = id;
+      mStyle.textContent = id;
+      for (const b of styleBtns) {
+        const on = b.dataset.style === id;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+    };
+
+    for (const b of styleBtns) {
+      b.addEventListener('click', () => pickStyle(b.dataset.style as StyleId));
+    }
+
+    const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
+
+    const entropy = (data: Uint8ClampedArray) => {
+      const hist = new Uint32Array(32);
+      let n = 0;
+      for (let i = 0; i < data.length; i += 16) {
+        const y = (data[i] * 3 + data[i + 1] * 6 + data[i + 2]) >> 4;
+        hist[y >> 3]++;
+        n++;
+      }
+      if (!n) return 0;
+      let h = 0;
+      for (let i = 0; i < 32; i++) {
+        if (!hist[i]) continue;
+        const p = hist[i] / n;
+        h -= p * Math.log2(p);
+      }
+      return h / 5; // 0..1-ish
+    };
+
+    const ink = (src: ImageData, dst: ImageData) => {
+      const s = src.data;
+      const d = dst.data;
+      const w = src.width;
+      const h = src.height;
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const i = (y * w + x) * 4;
+          const gx =
+            -s[i - 4] +
+            s[i + 4] -
+            2 * s[i - 4 + w * 4] +
+            2 * s[i + 4 + w * 4] -
+            s[i - 4 + w * 8] +
+            s[i + 4 + w * 8];
+          const gy =
+            -s[i - w * 4] -
+            2 * s[i] -
+            s[i + 4 - w * 4] +
+            s[i + w * 4] +
+            2 * s[i + w * 8] +
+            s[i + 4 + w * 4];
+          // approximate: use green channel neighbors already sampled loosely
+          const g0 = s[i + 1];
+          const edge = Math.min(255, Math.hypot(gx * 0.02, gy * 0.02));
+          const fill = Math.round(g0 / 48) * 48;
+          const v = edge > 40 ? 20 : fill + 40;
+          d[i] = v * 0.85;
+          d[i + 1] = v * 0.9;
+          d[i + 2] = Math.min(255, v + 30);
+          d[i + 3] = 255;
+        }
+      }
+    };
+
+    const toon = (src: ImageData, dst: ImageData) => {
+      const s = src.data;
+      const d = dst.data;
+      for (let i = 0; i < s.length; i += 4) {
+        d[i] = Math.round(s[i] / 36) * 36;
+        d[i + 1] = Math.round(s[i + 1] / 36) * 36;
+        d[i + 2] = Math.round(s[i + 2] / 40) * 40;
+        d[i + 3] = 255;
+      }
+    };
+
+    const pixel = (src: ImageData, dst: ImageData, block = 10) => {
+      const s = src.data;
+      const d = dst.data;
+      const w = src.width;
+      const h = src.height;
+      for (let y = 0; y < h; y += block) {
+        for (let x = 0; x < w; x += block) {
+          let r = 0,
+            g = 0,
+            b = 0,
+            n = 0;
+          for (let dy = 0; dy < block && y + dy < h; dy++) {
+            for (let dx = 0; dx < block && x + dx < w; dx++) {
+              const i = ((y + dy) * w + (x + dx)) * 4;
+              r += s[i];
+              g += s[i + 1];
+              b += s[i + 2];
+              n++;
+            }
+          }
+          r = Math.round(r / n / 32) * 32;
+          g = Math.round(g / n / 32) * 32;
+          b = Math.round(b / n / 32) * 32;
+          for (let dy = 0; dy < block && y + dy < h; dy++) {
+            for (let dx = 0; dx < block && x + dx < w; dx++) {
+              const i = ((y + dy) * w + (x + dx)) * 4;
+              d[i] = r;
+              d[i + 1] = g;
+              d[i + 2] = b;
+              d[i + 3] = 255;
+            }
+          }
+        }
+      }
+    };
+
+    const glass = (src: ImageData, dst: ImageData) => {
+      // Soft wash: average neighborhood + cool tint.
+      const s = src.data;
+      const d = dst.data;
+      const w = src.width;
+      const h = src.height;
+      for (let y = 2; y < h - 2; y++) {
+        for (let x = 2; x < w - 2; x++) {
+          const i = (y * w + x) * 4;
+          let r = 0,
+            g = 0,
+            b = 0;
+          for (let oy = -2; oy <= 2; oy++) {
+            for (let ox = -2; ox <= 2; ox++) {
+              const j = ((y + oy) * w + (x + ox)) * 4;
+              r += s[j];
+              g += s[j + 1];
+              b += s[j + 2];
+            }
+          }
+          d[i] = r / 25 + 8;
+          d[i + 1] = g / 25 + 4;
+          d[i + 2] = Math.min(255, b / 25 + 28);
+          d[i + 3] = 255;
+        }
+      }
+    };
+
+    const mesh = (src: ImageData, dst: ImageData) => {
+      // Darken + grid; ring the face box when detected.
+      const s = src.data;
+      const d = dst.data;
+      const w = src.width;
+      const h = src.height;
+      for (let i = 0; i < s.length; i += 4) {
+        const y = 0.3 * s[i] + 0.59 * s[i + 1] + 0.11 * s[i + 2];
+        d[i] = y * 0.35;
+        d[i + 1] = y * 0.4;
+        d[i + 2] = y * 0.55 + 20;
+        d[i + 3] = 255;
+      }
+      for (let y = 0; y < h; y += 16) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          d[i] = Math.min(255, d[i] + 40);
+          d[i + 2] = Math.min(255, d[i + 2] + 60);
+        }
+      }
+      for (let x = 0; x < w; x += 16) {
+        for (let y = 0; y < h; y++) {
+          const i = (y * w + x) * 4;
+          d[i + 1] = Math.min(255, d[i + 1] + 35);
+        }
+      }
+      if (face) {
+        const { x, y, w: fw, h: fh } = face;
+        const drawBox = (t: number) => {
+          for (let px = x; px < x + fw; px++) {
+            for (const py of [y, y + fh - 1]) {
+              if (px < 0 || py < 0 || px >= w || py >= h) continue;
+              const i = (py * w + px) * 4;
+              d[i] = 180;
+              d[i + 1] = 200;
+              d[i + 2] = 255;
+            }
+          }
+          for (let py = y; py < y + fh; py++) {
+            for (const px of [x, x + fw - 1]) {
+              if (px < 0 || py < 0 || px >= w || py >= h) continue;
+              const i = (py * w + px) * 4;
+              d[i] = 180;
+              d[i + 1] = 200;
+              d[i + 2] = 255;
+            }
+          }
+          void t;
+        };
+        drawBox(0);
+      }
+    };
+
+    const tick = async () => {
+      if (!stream || video.readyState < 2) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (!vw || !vh) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      // Process at half-res (nu.media base spirit).
+      const pw = Math.min(480, Math.round(vw / 2));
+      const ph = Math.round((vh / vw) * pw);
+      if (work.width !== pw || work.height !== ph) {
+        work.width = pw;
+        work.height = ph;
+        canvas.width = pw;
+        canvas.height = ph;
+      }
+      wctx.save();
+      wctx.scale(-1, 1);
+      wctx.drawImage(video, -pw, 0, pw, ph);
+      wctx.restore();
+
+      const now = performance.now();
+      if (detector && now - lastDetect > 120) {
+        lastDetect = now;
+        try {
+          const faces = await detector.detect(work);
+          if (faces[0]) {
+            const b = faces[0].boundingBox;
+            face = { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) };
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
+      const src = wctx.getImageData(0, 0, pw, ph);
+      const dst = ctx.createImageData(pw, ph);
+      if (style === 'ink') ink(src, dst);
+      else if (style === 'toon') toon(src, dst);
+      else if (style === 'pixel') pixel(src, dst);
+      else if (style === 'glass') glass(src, dst);
+      else mesh(src, dst);
+      ctx.putImageData(dst, 0, 0);
+
+      const e = entropy(dst.data);
+      entropyEma = entropyEma * 0.9 + e * 0.1;
+      // Example pack: stylized half-res tends toward 80–280 kbit/s at call L spirit.
+      const photo = 900; // example photographic half-res HEVC
+      const styled = Math.round(clamp(70 + entropyEma * 420, 60, 480));
+      const save = Math.max(1, Math.round((photo / styled) * 10) / 10);
+      mKbps.textContent = `${styled} kbit/s`;
+      mSave.textContent = `${save}× smaller`;
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    startBtn.addEventListener('click', async () => {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+        cancelAnimationFrame(raf);
+        startBtn.textContent = 'start camera';
+        setStatus('camera off');
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        video.srcObject = stream;
+        await video.play();
+        startBtn.textContent = 'stop camera';
+        setStatus(detector ? 'on device · face mesh ready' : 'on device · no face api here');
+        raf = requestAnimationFrame(tick);
+      } catch {
+        setStatus('camera blocked');
+      }
+    });
+  }
+</script>
+
+<style>
+  .avstudio {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .avstudio {
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+    }
+  }
+  .av-stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #0a0b0d;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  .av-cam {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .av-out {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .av-status {
+    position: absolute;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    margin: 0;
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(10px);
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .av-controls {
+    display: grid;
+    gap: 1rem;
+  }
+  .av-styles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .av-style {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: inherit;
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .av-style.on {
+    border-color: rgba(185, 176, 255, 0.7);
+    background: rgba(139, 123, 255, 0.18);
+  }
+  .av-meter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem 1rem;
+    margin: 0;
+  }
+  .av-meter dt {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .av-meter dd {
+    margin: 0.1rem 0 0;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.05rem;
+  }
+  .av-note {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .av-start {
+    justify-self: start;
+  }
+</style>

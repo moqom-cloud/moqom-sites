@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+import { VUE } from '../../lib/framework-examples';
+---
+
+<Base title="Vue and Nuxt" description={`The ${SITE.displayName} Vue 3 component: SSR-safe and loads the pinned script once.`}>
+  <p class="eyebrow">Platforms · Built</p>
+  <h1>Vue and Nuxt</h1>
+  <p><PriceBadge plugin="vue" /></p>
+  <div class="prose">
+    <p>
+      <code>&lt;Viewer3D&gt;</code> for Vue 3.3 and later. Props are the same as the <a href="/platforms/react/">React component</a>'s,
+      written in kebab-case in templates (<code>ios-src</code>, <code>auto-rotate</code>). It emits <code>load</code> and
+      <code>error</code>; <code>class</code> and <code>style</code> go to the wrapping <code>&lt;div&gt;</code>.
+    </p>
+    <p>
+      Server rendering: nothing touches <code>window</code> or <code>document</code> at import time. The server renders the
+      <code>&lt;{SITE.tagName}&gt;</code> element with its attributes; the script is added after the component mounts. The component
+      renders the element itself, so no <code>isCustomElement</code> compiler option is needed. Tested with Vue 3.5.
+    </p>
+    <p>
+      Absent Boolean props keep the viewer's defaults (AR and orbit on, auto-rotate off), unlike Vue's usual “absent means false”.
+      Pass <code>:ar="false"</code> to turn AR off.
+    </p>
+  </div>
+
+  <Code title="Install" code={VUE.install} />
+  <Code title="Use" code={VUE.usage} />
+  <Code title="Nuxt" code={VUE.nuxt} />
+
+  <div class="prose">
+    <h2>Host the script yourself</h2>
+    <p>
+      Pass <code>:script="{'{'} url: '/js/{SITE.release.file}' {'}'}"</code> to use your own copy, or <code>:script="false"</code> if the
+      page already loads it.
+    </p>
+  </div>
+
+  <LicenceKey plugin="vue">
+    <li>Pass it to the component: <code>&lt;Viewer3D license-key="EWV-…" src="…" alt="…" /&gt;</code>.</li>
+  </LicenceKey>
+</Base>

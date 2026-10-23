@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import Code from '../components/Code.astro';
+import { SITE } from '../data/site';
+
+const setup = `git clone ${SITE.repoUrl}.git
+cd viewer
+pnpm install
+pnpm build      # core first, then the platform packages
+pnpm test
+pnpm typecheck`;
+const sign = 'I have read the Copyright Assignment Agreement and I hereby sign it';
+---
+
+<Base title="Contribute" description={`How to report bugs and contribute code to ${SITE.displayName}.`}>
+  <p class="eyebrow">Project</p>
+  <h1>Contribute</h1>
+  <div class="prose">
+    <p>
+      Bug reports, platform notes and fixes are welcome at <a href={SITE.repoUrl}>{SITE.repoUrl.replace('https://', '')}</a>. For security
+      problems, use <a href="/security/">security reporting</a> instead of a public issue.
+    </p>
+
+    <h2>Reporting a bug</h2>
+    <p>Include the platform, browser and device, the page URL if it is public, and the output of the URL checker for your model.</p>
+
+    <h2>Working on the code</h2>
+    <p>
+      The repository is a pnpm workspace: <code>packages/core</code> (the element and snippet generator), <code>hosting</code>,
+      <code>wordpress</code>, <code>framer</code>, <code>squarespace</code>, <code>webflow</code>, <code>wix</code> and <code>shopify</code>.
+      Node 20.11 or later and pnpm 11.
+    </p>
+  </div>
+  <Code title="Terminal" code={setup} />
+
+  <div class="prose">
+    <h2>Copyright assignment</h2>
+    <p>
+      Before a pull request is merged, contributors sign the Elliott Wave LLC Contributor Copyright Assignment Agreement
+      (<code>.github/CLA.md</code> in the repository). You assign the copyright in your contribution to Elliott Wave LLC and get back a
+      permanent licence to use your own contribution for any purpose. To sign, comment on your pull request:
+    </p>
+  </div>
+  <Code title="Pull request comment" code={sign} />
+
+  <div class="prose">
+    <h2>Support the project</h2>
+    <p><a href={SITE.donateUrl}>Donations</a> fund maintenance of the elliottwave.studio lab's free projects.</p>
+  </div>
+</Base>

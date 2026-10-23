@@ -1,0 +1,227 @@
+/* Operator console. Base, tokens and glass come from the public site; this is the layout. */
+
+[hidden] {
+  display: none !important;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-radius: 0;
+}
+.top-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+#nav {
+  display: flex;
+  gap: var(--space-1);
+}
+#nav a {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 560;
+}
+#nav a:hover {
+  color: var(--text);
+  text-decoration: none;
+  background: rgb(255 255 255 / 0.05);
+}
+#nav a[aria-current] {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+main.container {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-9, 6rem);
+  display: grid;
+  gap: var(--space-5);
+}
+main > section {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+main > section[hidden] {
+  display: none;
+}
+h1 {
+  font-size: var(--text-2xl, 2rem);
+  margin: 0;
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  align-content: start;
+}
+.panel > *,
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+.narrow-panel {
+  max-width: var(--container-narrow);
+}
+.panel h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+.panel p,
+.callout p {
+  margin: 0;
+}
+.table-card {
+  padding: var(--space-3);
+}
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4) var(--space-3);
+  margin: 0;
+}
+.meta.card {
+  padding: var(--space-5) var(--space-6);
+}
+@media (max-width: 720px) {
+  .meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.meta dt {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.meta dd {
+  margin: 0;
+  word-break: break-word;
+}
+.big {
+  font-size: var(--text-lg);
+  color: var(--accent);
+}
+.inline {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.inline .field {
+  flex: 1 1 180px;
+}
+.head-row .inline {
+  align-items: center;
+}
+.head-row input,
+.head-row select {
+  width: auto;
+}
+.head-row .inline input[type="search"] {
+  min-width: 280px;
+}
+form {
+  display: grid;
+  gap: var(--space-3);
+}
+.dev {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+.warn {
+  color: var(--warn);
+}
+.ok {
+  color: var(--ok);
+}
+.pill-warn {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.pill-danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+td .pill + .pill {
+  margin-left: var(--space-1);
+}
+.btn-small {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+}
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #1a0505;
+}
+.btn-danger:hover {
+  background: #fb8f8f;
+  border-color: #fb8f8f;
+}
+.chart-wrap {
+  overflow-x: auto;
+}
+#signup-chart {
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+}
+#signup-chart .bar {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+#signup-chart .bar:hover {
+  opacity: 1;
+}
+#signup-chart .grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+#signup-chart .axis {
+  fill: var(--text-faint);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.nowrap {
+  white-space: nowrap;
+}

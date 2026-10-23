@@ -1,0 +1,87 @@
+---
+import Base from '../layouts/Base.astro';
+import Code from '../components/Code.astro';
+import Demo from '../components/Demo.astro';
+import { SITE } from '../data/site';
+import { exampleHtml } from '../lib/examples';
+import { PRICE_LINE } from '../data/pricing';
+
+const snippet = exampleHtml();
+const platforms = [
+  { href: '/platforms/html/', name: 'HTML', text: 'Two tags: a script and the element.', paid: false },
+  { href: '/platforms/framer/', name: 'Framer', text: 'A code component with property controls.', paid: true },
+  { href: '/platforms/squarespace/', name: 'Squarespace', text: 'Code Injection plus a Code block.', paid: false },
+  { href: '/platforms/wordpress/', name: 'WordPress', text: 'A plugin with a block and a [viewer] shortcode.', paid: true },
+  { href: '/platforms/webflow/', name: 'Webflow', text: 'Footer code plus a Code Embed.', paid: false },
+  { href: '/platforms/wix/', name: 'Wix', text: 'A Velo custom element.', paid: true },
+  { href: '/platforms/shopify/', name: 'Shopify', text: 'A theme app extension block, or a theme section.', paid: true },
+];
+---
+
+<Base>
+  <p class="eyebrow">{SITE.vendor}</p>
+  <h1>{SITE.displayName}</h1>
+  <p class="lede">
+    An interactive, AR-ready 3D model on your website. Upload a GLB (and optionally a USDZ for iPhone and iPad), paste a snippet, and
+    visitors can orbit the model or place it in their room.
+  </p>
+  <div class="btn-row">
+    <a class="btn primary" href="/quick-start/">Quick start</a>
+    <a class="btn" href="/platforms/html/">Pick your platform</a>
+    <a class="btn" href={SITE.repoUrl}>Source</a>
+  </div>
+
+  <Demo />
+
+  <h2>What it is</h2>
+  <div class="prose">
+    <p>
+      A web component, <code>&lt;{SITE.tagName}&gt;</code>, built on Google's open-source
+      <a href="https://modelviewer.dev">&lt;model-viewer&gt;</a>
+      {SITE.modelViewerVersion}. It adds a loading bar, a “View in your space” button with a placement prompt, required alt text, lazy
+      loading, an optional tap-to-load mode, and respect for the visitor's reduced-motion setting. Every URL is checked: only
+      <code>https://</code> (or relative) addresses are used.
+    </p>
+    <p>
+      The script is about {Math.round(SITE.release.bytes / 1024)} KiB (around 300 KB compressed) because it includes three.js. Load it
+      once per page; the browser caches it.
+    </p>
+  </div>
+
+  <Code title="HTML" code={snippet.html} />
+
+  <h2>Platforms</h2>
+  <div class="grid">
+    {
+      platforms.map((p) => (
+        <a class="card" href={p.href}>
+          <h3>
+            {p.name} <span class:list={['tag', p.paid ? 'amber' : 'ok']}>{p.paid ? 'Paid plugin' : 'Free'}</span>
+          </h3>
+          <p>{p.text}</p>
+        </a>
+      ))
+    }
+  </div>
+
+  <h2>Where your models live</h2>
+  <div class="prose">
+    <p>
+      <strong>We do not host your models.</strong> In this version, models stay on hosting you control: your own Firebase project (a
+      helper CLI uploads them with your own login), or any HTTPS server or bucket. The <a href="/hosting/own-server/#checker">URL checker</a>
+      tells you if a URL will work and how to fix it if not.
+    </p>
+  </div>
+
+  <h2>Licence</h2>
+  <div class="prose">
+    <p>
+      The element, the snippets for every platform, the iframe embed and the hosting tools are <strong>free</strong> for any site,
+      including businesses and stores, under the <a href="/licence/">Apache License 2.0</a>.
+    </p>
+    <p>
+      The <strong>plugins</strong> for WordPress (with Elementor), Shopify, Wix, Framer, HubSpot, React and Vue are paid: {PRICE_LINE}, per
+      plugin per domain. See <a href="/pricing/">pricing</a>.
+    </p>
+  </div>
+</Base>

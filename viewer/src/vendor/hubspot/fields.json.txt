@@ -1,0 +1,160 @@
+[
+  {
+    "name": "model_file",
+    "label": "Model file (.glb)",
+    "type": "file",
+    "picker": "file",
+    "required": false,
+    "default": null,
+    "help_text": "A .glb from the file manager. The model URL below takes priority."
+  },
+  {
+    "name": "model_url",
+    "label": "Model URL",
+    "type": "text",
+    "required": false,
+    "default": "",
+    "validation_regex": "^(https://\\S+)?$",
+    "inline_help_text": "https:// URL of a .glb or .gltf file. The server must allow CORS."
+  },
+  {
+    "name": "alt",
+    "label": "Alt text",
+    "type": "text",
+    "required": true,
+    "default": "",
+    "allow_new_line": true,
+    "inline_help_text": "Required. Describe the model for people using screen readers."
+  },
+  {
+    "name": "poster_url",
+    "label": "Poster image URL",
+    "type": "text",
+    "required": false,
+    "default": "",
+    "validation_regex": "^(https://\\S+)?$"
+  },
+  {
+    "name": "ios_file",
+    "label": "USDZ file (iOS)",
+    "type": "file",
+    "picker": "file",
+    "required": false,
+    "default": null
+  },
+  {
+    "name": "ios_url",
+    "label": "USDZ URL (iOS)",
+    "type": "text",
+    "required": false,
+    "default": "",
+    "validation_regex": "^(https://\\S+)?$",
+    "help_text": "Optional. Without it, iOS Safari builds a USDZ from the GLB on the device."
+  },
+  {
+    "name": "ar",
+    "label": "AR button",
+    "type": "boolean",
+    "display": "toggle",
+    "default": true
+  },
+  {
+    "name": "ar_label",
+    "label": "AR button text",
+    "type": "text",
+    "required": false,
+    "default": "",
+    "placeholder": "View in your space"
+  },
+  {
+    "name": "camera_controls",
+    "label": "Orbit and zoom",
+    "type": "boolean",
+    "display": "toggle",
+    "default": true
+  },
+  {
+    "name": "auto_rotate",
+    "label": "Auto-rotate",
+    "type": "boolean",
+    "display": "toggle",
+    "default": false,
+    "help_text": "Off for visitors who ask for reduced motion."
+  },
+  {
+    "name": "shadow_intensity",
+    "label": "Shadow",
+    "type": "number",
+    "display": "slider",
+    "min": 0,
+    "max": 2,
+    "step": 0.1,
+    "default": 1
+  },
+  {
+    "name": "exposure",
+    "label": "Exposure",
+    "type": "number",
+    "display": "slider",
+    "min": 0,
+    "max": 4,
+    "step": 0.1,
+    "default": 1
+  },
+  {
+    "name": "background",
+    "label": "Background",
+    "type": "text",
+    "required": false,
+    "default": "transparent",
+    "validation_regex": "^(transparent|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-zA-Z]{3,24})?$",
+    "inline_help_text": "transparent, a hex colour like #ffffff, or a colour name."
+  },
+  {
+    "name": "height",
+    "label": "Height",
+    "type": "text",
+    "required": false,
+    "default": "480px",
+    "validation_regex": "^(\\d{1,4}(\\.\\d{1,3})?(px|vh|svh|dvh|rem|em|%))?$"
+  },
+  {
+    "name": "loading",
+    "label": "Loading",
+    "type": "choice",
+    "display": "select",
+    "choices": [
+      [
+        "lazy",
+        "Lazy (when near the screen)"
+      ],
+      [
+        "auto",
+        "Auto"
+      ],
+      [
+        "eager",
+        "Eager"
+      ]
+    ],
+    "default": "lazy"
+  },
+  {
+    "name": "tap_to_load",
+    "label": "Tap to load",
+    "type": "boolean",
+    "display": "toggle",
+    "default": false,
+    "help_text": "Waits for a tap before downloading the model."
+  },
+  {
+    "name": "license_key",
+    "label": "Licence key",
+    "type": "text",
+    "required": false,
+    "default": "",
+    "placeholder": "EWV-…",
+    "validation_regex": "^([A-Za-z0-9 -]{0,64})$",
+    "help_text": "For this site's domain (viewer.elliottwave.studio/pricing). Without it, published pages show a small \"Unlicensed\" link; the model still works."
+  }
+]

@@ -1,0 +1,58 @@
+---
+import knot from '../assets/demo/knot.glb?url';
+import poster from '../assets/demo/poster.svg?url';
+
+interface Props {
+  height?: string;
+  autoRotate?: boolean;
+  caption?: boolean;
+}
+const { height = '440px', autoRotate = true, caption = true } = Astro.props;
+---
+
+<figure class="demo">
+  <ew-viewer
+    src={knot}
+    poster={poster}
+    alt="A sample model: an amber metal torus knot"
+    ar
+    camera-controls
+    auto-rotate={autoRotate ? '' : undefined}
+    shadow-intensity="1"
+    height={height}></ew-viewer>
+  {
+    caption && (
+      <figcaption>
+        Live <code>&lt;ew-viewer&gt;</code>. Drag to orbit, pinch or scroll to zoom. On a phone with AR, tap “View in your space”.
+        Sample model: a 224 KiB GLB generated for these docs.
+      </figcaption>
+    )
+  }
+</figure>
+
+<script>
+  import '../vendor/core/index';
+</script>
+
+<style>
+  .demo {
+    margin: 1.5rem 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .demo ew-viewer {
+    display: block;
+    border-radius: 0;
+  }
+  .demo ew-viewer:not(:defined) {
+    min-height: 440px;
+  }
+  figcaption {
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    padding: 0.7rem 1rem;
+    border-top: 1px solid var(--line);
+  }
+</style>

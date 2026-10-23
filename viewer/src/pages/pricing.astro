@@ -1,0 +1,160 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+import { PAID_PLUGINS, PLUGIN_NAMES, PLUGIN_PAGES, PRICES, PRICE_LINE, usd } from '../data/pricing';
+
+const open = '(to be decided)';
+---
+
+<Base title="Pricing" description={`${SITE.displayName}: the element and snippets are free; the plugins are ${PRICE_LINE} per domain.`}>
+  <p class="eyebrow">Project</p>
+  <h1>Pricing</h1>
+  <div class="prose">
+    <p>
+      <span class="tag ok">Free</span> The <code>&lt;{SITE.tagName}&gt;</code> element, every paste-in snippet, the iframe embed, the framework
+      examples and the hosting tools cost nothing, for any site, including businesses and online stores (<a href="/licence/#free">Apache-2.0</a>).
+    </p>
+    <p>
+      <span class="tag amber">Paid</span> The plugins cost the same for every site, commercial or not. Each licence is for one plugin on one
+      domain.
+    </p>
+  </div>
+
+  <div class="grid plans">
+    <div class="card">
+      <h3>Yearly</h3>
+      <p class="price">{usd(PRICES.yearly)}<span> / year</span></p>
+      <p>Per plugin, per domain. Renews every year until you cancel; after cancelling, it works until the end of the year you paid for.</p>
+    </div>
+    <div class="card">
+      <h3>Lifetime</h3>
+      <p class="price">{usd(PRICES.lifetime)}<span> once</span></p>
+      <p>Per plugin, per domain. One payment, no end date.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>Prices are in US dollars. Payment is by Stripe Checkout; we never see your card details.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Plugin</th><th>Yearly</th><th>Lifetime</th><th></th></tr></thead>
+      <tbody>
+        {
+          PAID_PLUGINS.map((p) => (
+            <tr id={p}>
+              <td><a href={PLUGIN_PAGES[p].replace('#licence', '')}>{PLUGIN_NAMES[p]}</a></td>
+              <td>{usd(PRICES.yearly)}</td>
+              <td>{usd(PRICES.lifetime)}</td>
+              <td><a class="btn" href={`/buy/?plugin=${p}`}>Buy</a></td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose faq">
+    <h2 id="covered">What one licence covers</h2>
+    <ul>
+      <li>The domain you name at checkout, and the same domain with <code>www.</code>.</li>
+      <li>One staging subdomain of it that you name, such as <code>staging.example.com</code>. You can change it three times in any 365 days.</li>
+      <li>For Shopify, Wix, Framer and HubSpot: your site’s address on the platform, such as <code>your-store.myshopify.com</code>, if you enter it at checkout.</li>
+      <li>Local development, always and without a key: <code>localhost</code>, <code>127.0.0.1</code>, and names ending in <code>.local</code> or <code>.test</code>.</li>
+    </ul>
+    <p>
+      Domains are compared after converting international names to their ASCII (punycode) form, so <code>bücher.example</code> and
+      <code>xn--bcher-kva.example</code> are the same licence. A licence can’t be for a shared address such as <code>github.io</code> or
+      <code>co.uk</code>, only for a domain under it.
+    </p>
+
+    <h2 id="faq">Questions</h2>
+
+    <h3 id="which">Do I need a plugin at all?</h3>
+    <p>
+      No. Every platform with a paid plugin can also use the free <a href="/platforms/html/">HTML snippet</a> (Shopify in a Custom Liquid
+      section, WordPress in a Custom HTML block, React and Vue with the element directly). The plugins add editor settings and platform
+      features, such as the Shopify block reading a product’s 3D media and the WordPress Media Library.
+    </p>
+
+    <h3 id="two-plugins">I use WordPress and Shopify on the same domain.</h3>
+    <p>That is two licences: one per plugin. The Elementor widget is part of the WordPress plugin, so WordPress with Elementor is one.</p>
+
+    <h3 id="moving">Can I move a licence to another domain?</h3>
+    <p>
+      Yes, twice in any 365 days, from <a href="/licence/manage/">Manage a licence</a>. You need the key and the email address you bought
+      it with; we email a link to confirm. The old domain stops being covered when you confirm.
+    </p>
+
+    <h3 id="staging">What about staging and preview sites?</h3>
+    <p>
+      One staging subdomain of your domain is included. Platform editors (the Shopify theme editor, the Wix Editor, the Framer canvas, the
+      HubSpot page editor) never show the badge. Preview deployments on other hosts, such as <code>*.vercel.app</code>, are not covered.
+    </p>
+
+    <h3 id="multisite">WordPress multisite?</h3>
+    <p>
+      Each site is checked against its own domain. Sites in sub-directories of one domain share that domain’s licence. Sites on their own
+      domains or subdomains need their own licence each (a subdomain can also be the licence’s staging subdomain).
+    </p>
+
+    <h3 id="agencies">I’m an agency building sites for clients.</h3>
+    <p>
+      Buy one licence per client domain, with your email or the client’s. You can install and configure it on the client’s site. Agency
+      or bulk pricing: {open}.
+    </p>
+
+    <h3 id="unlicensed">What happens without a licence, or when it ends?</h3>
+    <p>
+      The plugin keeps working. Each model shows a small “Unlicensed” link in its corner, and the WordPress plugin shows administrators a
+      notice. Nothing is blocked or removed. If our licence server is unreachable, nothing changes for 30 days after the last successful
+      check.
+    </p>
+
+    <h3 id="privacy">Does the licence check track visitors?</h3>
+    <p>
+      No. WordPress checks from your server. The other plugins make one cached request per page that sends the key and the plugin name,
+      with no cookies and no page address. See <a href="/licence/#checks">licence checks</a>.
+    </p>
+
+    <h3 id="refunds">Refunds</h3>
+    <p>Refund policy: {open}. A full refund ends the licence.</p>
+
+    <h3 id="tax">VAT and sales tax</h3>
+    <p>
+      Prices are shown without tax. Whether VAT, GST or sales tax is added at checkout, and for which countries: {open}. Stripe sends a
+      receipt for every payment.
+    </p>
+
+    <h3 id="renewal">Will I be reminded before a yearly licence renews?</h3>
+    <p>Renewal reminders: {open}. You can cancel any time from <a href="/licence/manage/">Manage a licence</a> (billing portal).</p>
+
+    <h3 id="lost-key">I lost my key.</h3>
+    <p><a href="/licence/manage/#resend">Have it emailed again</a> to the address you bought it with.</p>
+
+    <h2 id="licence-keys">Where to enter your key</h2>
+    <ul>
+      {PAID_PLUGINS.map((p) => <li><a href={PLUGIN_PAGES[p]}>{PLUGIN_NAMES[p]}</a></li>)}
+    </ul>
+    <p>Questions not answered here: <a href={`mailto:${SITE.licensingEmail}`}>{SITE.licensingEmail}</a>.</p>
+  </div>
+</Base>
+
+<style>
+  .plans {
+    margin: 1.5rem 0;
+  }
+  .price {
+    font-size: 2rem;
+    color: var(--text) !important;
+    margin: 0.25rem 0 0.5rem !important;
+  }
+  .price span {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .faq h3 {
+    margin-top: 1.5rem;
+  }
+</style>

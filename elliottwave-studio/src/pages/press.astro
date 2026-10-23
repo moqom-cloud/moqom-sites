@@ -1,0 +1,348 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import Base from '../layouts/Base.astro';
+import {
+  ASSETS,
+  BOILERPLATE,
+  BRAND,
+  CONTACT,
+  FACTS,
+  FOUNDER,
+  HEADLINE_NUMBERS,
+  LAUNCH,
+  NAMING,
+  PRESS_FOOTNOTE,
+  PRODUCTS,
+} from '../data/press';
+
+const publicDir = path.join(process.cwd(), 'public');
+const assets = ASSETS.flatMap((a) => {
+  const file = path.join(publicDir, a.file);
+  if (!fs.existsSync(file)) return [];
+  const kb = Math.max(1, Math.round(fs.statSync(file).size / 1024));
+  return [{ ...a, href: `/${a.file}`, size: `${kb} KB` }];
+});
+
+const facts = FACTS.filter((f) => f.value !== null);
+
+const launch = [
+  { name: 'Hacker News', note: 'Show HN', url: LAUNCH.hackerNews },
+  { name: 'Product Hunt', note: 'Launch page', url: LAUNCH.productHunt },
+];
+
+const boilerplate = [
+  { label: 'elliottwave.studio lab — 50 words', text: BOILERPLATE.company50, footnote: false },
+  { label: 'elliottwave.studio lab — 100 words', text: BOILERPLATE.company100, footnote: false },
+  { label: 'MOQOM — 50 words', text: BOILERPLATE.moqom50, footnote: true },
+  { label: 'MOQOM — 100 words', text: BOILERPLATE.moqom100, footnote: true },
+];
+---
+
+<Base
+  title="Press"
+  description="Press kit for elliottwave.studio lab and MOQOM: boilerplate, fact sheet, headline numbers, brand assets and press contact."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Press</p>
+      <h1>Press kit.</h1>
+      <p class="lede">
+        Boilerplate, facts, numbers and assets for writing about elliottwave.studio lab and MOQOM. Everything here is
+        free to quote. Questions go to <a href={`mailto:${CONTACT.press}`}>{CONTACT.press}</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="launch">
+    <div class="wrap">
+      <p class="eyebrow">Launch</p>
+      <h2 id="launch">MOQOM launch, October 2026.</h2>
+      <div class="grid launch">
+        {launch.map((l) => (
+          <div class="card">
+            <span class="num">{l.note}</span>
+            <h3>{l.name}</h3>
+            {l.url ? (
+              <a href={l.url} rel="noopener">Read the post →</a>
+            ) : (
+              <p class="soon">Coming soon</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="boilerplate">
+    <div class="wrap">
+      <p class="eyebrow">Boilerplate</p>
+      <h2 id="boilerplate">Ready to paste.</h2>
+      <div class="grid copy">
+        {boilerplate.map((b) => (
+          <figure class="card">
+            <figcaption class="num">{b.label}</figcaption>
+            <blockquote><p>{b.text}</p></blockquote>
+            {b.footnote && <p class="footnote">* {PRESS_FOOTNOTE}</p>}
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section moqom" aria-labelledby="numbers">
+    <div class="wrap">
+      <p class="eyebrow">Headline numbers</p>
+      <h2 id="numbers">MOQOM, measured.</h2>
+      <div class="grid numbers">
+        {HEADLINE_NUMBERS.map((n) => (
+          <div class="card">
+            <p class="figure">{n.value}<span aria-hidden="true">*</span></p>
+            <h3>{n.label}</h3>
+            <p class="detail">{n.detail}</p>
+          </div>
+        ))}
+      </div>
+      <p class="footnote">* {PRESS_FOOTNOTE}</p>
+      <p class="footnote">Full method and raw figures: <a href="https://moqom.cloud/benchmarks/">moqom.cloud/benchmarks</a>.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="facts">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Fact sheet</p>
+        <h2 id="facts">The company.</h2>
+        <dl class="facts">
+          {facts.map((f) => (
+            <div>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div>
+        <p class="eyebrow">Products</p>
+        <ul class="products">
+          {PRODUCTS.map((p) => (
+            <li>
+              <h3>{p.name}</h3>
+              <p>{p.summary}</p>
+              <p class="links">
+                {p.links.map((l, i) => (
+                  <>
+                    {i > 0 && ' · '}
+                    <a href={l.href}>{l.label}</a>
+                  </>
+                ))}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="founder">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Founder</p>
+        <h2 id="founder">{FOUNDER.name}</h2>
+      </div>
+      <div class="prose">
+        <p>{FOUNDER.line}</p>
+        <ul class="plain">
+          {FOUNDER.links.map((l) => (
+            <li>
+              <a href={l.href} rel="me noopener">{l.label}</a> <span class="mono dim">{l.handle}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="assets">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Brand assets</p>
+        <h2 id="assets">Logos and images.</h2>
+        <p class="dim">Standalone SVG logos are on the way; until then, use the files here as they are.</p>
+      </div>
+      <div>
+        <ul class="assets">
+          {assets.map((a) => (
+            <li>
+              <a href={a.href} download>{a.file}</a>
+              <span>{a.label}</span>
+              <span class="mono dim">{a.format} · {a.size}</span>
+            </li>
+          ))}
+        </ul>
+        <h3>Colours</h3>
+        <ul class="swatches">
+          {BRAND.map((c) => (
+            <li>
+              <span class="swatch" style={`background:${c.hex}`} aria-hidden="true"></span>
+              <span>{c.name}</span>
+              <span class="mono dim">{c.hex}</span>
+              <span class="dim">{c.use}</span>
+            </li>
+          ))}
+        </ul>
+        <h3>Names</h3>
+        <ul class="plain dim">
+          {NAMING.map((n) => <li>{n}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="contact">
+    <div class="wrap">
+      <p class="eyebrow">Contact</p>
+      <h2 id="contact">Press enquiries.</h2>
+      <p class="lede">
+        <a href={`mailto:${CONTACT.press}`}>{CONTACT.press}</a> for interviews, briefings and anything on this page.
+        Security reports go to <a href={`mailto:${CONTACT.security}`}>{CONTACT.security}</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .two {
+    display: grid;
+    gap: 1.5rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .dim {
+    color: var(--text-dim);
+  }
+  .launch h3,
+  .numbers h3 {
+    margin: 0.75rem 0 0.5rem;
+  }
+  .soon {
+    color: var(--text-faint);
+    margin: 0;
+  }
+  .copy figure {
+    margin: 0;
+  }
+  .copy blockquote {
+    margin: 0.75rem 0 0;
+  }
+  .copy blockquote p {
+    color: var(--text);
+  }
+  .figure {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    line-height: 1;
+    color: var(--accent);
+    margin: 0;
+  }
+  .figure span {
+    font-size: 0.5em;
+    vertical-align: super;
+  }
+  .detail {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  .numbers + .footnote {
+    margin-top: 1.5rem;
+  }
+  .facts {
+    margin: 2rem 0 0;
+  }
+  .facts div {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .facts dt {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    padding-top: 0.2rem;
+  }
+  .facts dd {
+    margin: 0;
+  }
+  .products,
+  .plain,
+  .assets,
+  .swatches {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .products li {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .products li:first-child {
+    padding-top: 0;
+  }
+  .products p {
+    color: var(--text-dim);
+    margin: 0 0 0.4rem;
+  }
+  .products .links {
+    font-size: 0.9rem;
+  }
+  .plain li {
+    margin-bottom: 0.5rem;
+  }
+  .assets li {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .assets a {
+    font-family: var(--font-mono);
+  }
+  .swatches {
+    display: grid;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .swatches li {
+    display: grid;
+    grid-template-columns: 1.5rem 5rem 6rem 1fr;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .swatch {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--line-strong);
+  }
+  h3 {
+    margin-top: 2rem;
+  }
+  .card h3 {
+    margin-top: 0.75rem;
+  }
+  @media (max-width: 560px) {
+    .facts div {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+    .swatches li {
+      grid-template-columns: 1.5rem 1fr;
+    }
+  }
+</style>

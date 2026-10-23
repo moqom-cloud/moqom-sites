@@ -1,0 +1,139 @@
+---
+import Base from '../layouts/Base.astro';
+import Code from '../components/Code.astro';
+import { SITE } from '../data/site';
+import { LICENSING, PAID_PLUGINS, PLUGIN_NAMES, PRICE_LINE } from '../data/pricing';
+
+const APACHE = 'https://www.apache.org/licenses/LICENSE-2.0';
+const notice = 'Required Notice: Copyright (c) 2026 Elliott Wave LLC (https://elliottwave.studio)';
+const folders: Record<string, string> = { wordpress: 'packages/wordpress', shopify: 'packages/shopify', wix: 'packages/wix', framer: 'packages/framer', hubspot: 'packages/hubspot', react: 'packages/react', vue: 'packages/vue' };
+const thirdParty = [
+  ['<model-viewer>', SITE.modelViewerVersion, 'Apache License 2.0', 'Copyright Google LLC', 'https://github.com/google/model-viewer'],
+  ['three.js', SITE.threeVersion, 'MIT', 'Copyright (c) 2010-2026 three.js authors', 'https://github.com/mrdoob/three.js'],
+  ['fflate (in three.js)', '0.8.2', 'MIT', 'Copyright (c) Arjun Barrett', 'https://github.com/101arrowz/fflate'],
+  ['Lit', '', 'BSD 3-Clause', 'Copyright (c) 2017 Google LLC', 'https://github.com/lit/lit'],
+  ['gainmap-js', '', 'MIT', 'Copyright (c) 2023 MONOGRID', 'https://github.com/MONOGRID/gainmap-js'],
+];
+---
+
+<Base title="Licence" description={`${SITE.displayName}: the element and snippets are free under Apache-2.0; the platform plugins are paid, per domain.`}>
+  <p class="eyebrow">Project</p>
+  <h1>Licence</h1>
+  <div class="prose">
+    <p>{SITE.displayName} has two parts, under two licences. The licensor of both is {SITE.legalEntity}.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Part</th><th>Licence</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>The <code>&lt;{SITE.tagName}&gt;</code> element and script, the snippet generator and every snippet it makes (HTML, Squarespace, Webflow, Ghost, Duda and the other paste-in builders, the framework examples), the iframe embed, and the hosting tools</td>
+          <td><a href={APACHE}>Apache License 2.0</a></td>
+          <td><span class="tag ok">Free</span> including commercial use</td>
+        </tr>
+        <tr>
+          <td>The plugins: {PAID_PLUGINS.map((p) => PLUGIN_NAMES[p]).join(', ')}</td>
+          <td>Elliott Wave Plugin Licence</td>
+          <td><span class="tag amber">Paid</span> {PRICE_LINE}, per plugin per domain</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <p>This page is a summary. The licence texts decide; each folder in the <a href={SITE.repoUrl}>source repository</a> has its <code>LICENSE</code> file.</p>
+
+    <h2 id="free">The free parts (Apache-2.0)</h2>
+    <p>
+      You may use, change and share the element, the snippets and the hosting tools for any purpose, including on business websites and
+      online stores, at no cost. If you share copies (changed or not), include the Apache licence and the <code>NOTICE</code> file, and say
+      which files you changed. The licence includes a patent grant. There is no warranty.
+    </p>
+    <p>
+      Pasting a snippet into your site, using the iframe embed, or loading the script from jsDelivr needs nothing else: no key, no
+      account. The element does no licence check unless a paid plugin asks it to.
+    </p>
+
+    <h2 id="plugins">The plugins (paid)</h2>
+    <p>
+      The plugins are commercial software, sold per plugin and per domain. They are paid for every site, commercial or not. In short, a
+      licence lets you:
+    </p>
+    <ul>
+      <li>install, use and change the plugin on the licensed domain, its www. form, one staging subdomain you name, the platform’s own address for the site (for example your <code>myshopify.com</code> address), and local development hosts;</li>
+      <li>use it for any purpose, including client and commercial work, while the licence is valid (yearly: until the end of the paid period; lifetime: no end date);</li>
+      <li>move it to another domain twice in any 365 days, and change the staging subdomain three times.</li>
+    </ul>
+    <p>
+      It does not let you share or sell the licence key, use one licence on other domains, remove or get round the licence check, or
+      redistribute the plugin except as part of a site you build for a licensed domain. You may install a plugin to try it, and use it on
+      local development hosts, without a licence.
+    </p>
+    <p>
+      Two plugins on one domain need two licences (for example WordPress and Shopify). The Elementor widget is part of the WordPress
+      plugin. The plugin licence is a draft; its terms may change before the plugins go on sale. Prices,
+      the buy flow and frequent questions are on the <a href="/pricing/">pricing page</a>.
+    </p>
+    <ul>
+      {
+        PAID_PLUGINS.map((p) => (
+          <li>
+            {PLUGIN_NAMES[p]}: <a href={`${SITE.repoUrl}/blob/main/${folders[p]}/LICENSE`}><code>{folders[p]}/LICENSE</code></a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <h2 id="checks">Licence checks</h2>
+    <p>
+      A plugin checks its key with <code>{new URL(LICENSING.api).host}</code>. The WordPress plugin checks from your web server when you
+      save the key and about once a week after. The other plugins check in the visitor’s browser, with one cached request per page that
+      sends the key and the plugin name, and no cookies or page address. The server stores the purchase email, the licensed domains and,
+      for WordPress, a random ID and host for each installation. It stores nothing about visitors.
+    </p>
+    <p>
+      Without a valid licence the plugins keep working: the model shows normally, with a small “Unlicensed” link in the corner, and the
+      WordPress plugin shows administrators a notice. If the licence server can’t be reached, nothing changes for 30 days after the last
+      successful check.
+    </p>
+
+    <h2>Required Notice</h2>
+    <p>Both licences ask that copies keep this line:</p>
+  </div>
+  <Code title="Required Notice" code={notice} />
+
+  <div class="prose">
+    <h2>Third-party software</h2>
+    <p>
+      The viewer script bundles these libraries. Each stays under its own licence, and their licence texts ship next to every copy of
+      <code>{SITE.release.file}</code> and in the <code>NOTICE</code> file. {SITE.displayName} is not made or endorsed by Google.
+    </p>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Library</th><th>Version</th><th>Licence</th><th>Copyright</th></tr></thead>
+      <tbody>
+        {
+          thirdParty.map(([name, version, licence, copyright, url]) => (
+            <tr>
+              <td><a href={url}>{name}</a></td>
+              <td>{version || '—'}</td>
+              <td>{licence}</td>
+              <td>{copyright}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h2>Marketplaces</h2>
+    <p>
+      The WordPress plugin is not in the WordPress.org directory, which accepts only GPL-compatible licences. The Shopify, Wix, Framer and
+      HubSpot marketplaces sell through their own billing (verify), so the plugins are sold here with a licence key instead, and are not
+      listed there yet.
+    </p>
+  </div>
+</Base>

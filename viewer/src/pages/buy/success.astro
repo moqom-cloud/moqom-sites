@@ -1,0 +1,130 @@
+---
+// Stripe sends the buyer here with ?session_id=cs_…; the licence server returns the new key for
+// that session for 24 hours. The key arrives by email as well.
+import Base from '../../layouts/Base.astro';
+import { PAID_PLUGINS, PLUGIN_NAMES, PLUGIN_PAGES } from '../../data/pricing';
+---
+
+<Base title="Thank you" noindex>
+  <p class="eyebrow">Pricing</p>
+  <h1>Thank you</h1>
+  <div class="status prose" data-status aria-live="polite">
+    <p>Getting your licence key…</p>
+  </div>
+
+  <div data-ready hidden>
+    <div class="prose">
+      <p>Your licence key:</p>
+    </div>
+    <div class="key-row">
+      <code class="key" data-key></code>
+      <button type="button" class="btn" data-copy-key>Copy</button>
+    </div>
+    <div class="prose">
+      <p data-summary></p>
+      <p>We’ve also emailed it to you. Keep it: you need it, with your email address, to move the licence or manage billing.</p>
+      <h2>Next</h2>
+      <p>Add the key to your plugin:</p>
+      <ul>
+        {PAID_PLUGINS.map((p) => <li data-next={p}><a href={PLUGIN_PAGES[p]}>{PLUGIN_NAMES[p]}</a></li>)}
+      </ul>
+      <p>Manage the licence later at <a href="/licence/manage/">Manage a licence</a>.</p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { LICENSING, isPaidPlugin } from '../../vendor/core/licensing-config';
+
+  const status = document.querySelector<HTMLElement>('[data-status]')!;
+  const ready = document.querySelector<HTMLElement>('[data-ready]')!;
+  const say = (...lines: string[]) => {
+    status.replaceChildren(...lines.map((line) => Object.assign(document.createElement('p'), { textContent: line })));
+  };
+
+  const id = new URLSearchParams(location.search).get('session_id') ?? '';
+
+  type Answer = { status?: string; key?: string; plugin?: string; plan?: string; hosts?: string[]; paid_through?: number };
+
+  async function ask(): Promise<{ code: number; body: Answer }> {
+    const response = await fetch(`${LICENSING.api}/v1/checkout/session`, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: id }),
+    });
+    return { code: response.status, body: (await response.json().catch(() => ({}))) as Answer };
+  }
+
+  function show(body: Answer) {
+    // The key is on screen; drop the session ID from the address bar and history.
+    history.replaceState(null, '', location.pathname);
+    status.hidden = true;
+    ready.hidden = false;
+    ready.querySelector<HTMLElement>('[data-key]')!.textContent = body.key ?? '';
+    const plugin = isPaidPlugin(body.plugin) ? body.plugin : null;
+    const until = body.paid_through ? `, paid until ${new Date(body.paid_through * 1000).toLocaleDateString()}` : '';
+    ready.querySelector<HTMLElement>('[data-summary]')!.textContent =
+      `${body.plan === 'lifetime' ? 'Lifetime' : 'Yearly'} licence${plugin ? ` for the ${plugin} plugin` : ''}${until}. Covers: ${(body.hosts ?? []).join(', ')}, and local development hosts.`;
+    if (plugin) for (const item of ready.querySelectorAll<HTMLElement>('[data-next]')) item.hidden = item.dataset.next !== plugin;
+    ready.querySelector<HTMLButtonElement>('[data-copy-key]')!.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        await navigator.clipboard.writeText(body.key ?? '');
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Select and copy';
+      }
+    });
+  }
+
+  async function run() {
+    if (!/^cs_[A-Za-z0-9_]{1,250}$/.test(id)) {
+      say('This page needs the link Stripe sends you to after payment.', 'If you have paid, your key is in the email we sent.');
+      return;
+    }
+    // Stripe's webhook usually arrives within seconds; card payments that need extra checks can take longer.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      let result;
+      try {
+        result = await ask();
+      } catch {
+        say('Could not reach the licence server.', 'Your payment went through; the key will arrive by email.');
+        return;
+      }
+      if (result.code === 200 && result.body.key) return show(result.body);
+      if (result.code === 202) {
+        if (attempt === 3) say('Payment received. Waiting for the licence to be issued…');
+        await new Promise((resolve) => setTimeout(resolve, 2000 + attempt * 500));
+        continue;
+      }
+      if (result.code === 410) return say('This page has expired. Your key is in the email we sent when you paid.');
+      if (result.code === 403) return say('This licence is no longer valid (refunded or revoked).');
+      break;
+    }
+    say(
+      'Your licence is taking longer than usual to be issued.',
+      'If your payment went through, the key will arrive by email within a few minutes. Reloading this page tries again.',
+    );
+  }
+  run();
+</script>
+
+<style>
+  .key-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .key {
+    font: 1.1rem var(--font-mono);
+    padding: 0.6em 0.9em;
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    background: var(--bg-sunk);
+    user-select: all;
+  }
+</style>

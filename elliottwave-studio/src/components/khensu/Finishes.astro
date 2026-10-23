@@ -1,0 +1,214 @@
+---
+// The shell on iPhone 18 Pro in each of Apple's finishes: ceramic-coated titanium matched to
+// the phone, or bare brass. A CSS-only picker: two radio groups choose which render is shown, so it
+// works without script.
+const finishes = [
+  { id: 'burgundy', name: 'Burgundy', swatch: '#70222e' },
+  { id: 'glacier', name: 'Glacier', swatch: '#c4d4df' },
+  { id: 'silver', name: 'Silver', swatch: '#d4d5d8' },
+  { id: 'black', name: 'Black', swatch: '#2e2f33' },
+];
+const shells = [
+  { id: 'matched', name: 'Ceramic titanium', note: 'Ceramic coated to match', suffix: '' },
+  { id: 'brass', name: 'Brass', note: 'Bare, solid brass', suffix: '_brass' },
+];
+---
+
+<section class="section finishes" aria-labelledby="finish-title">
+  <div class="wrap">
+    <p class="eyebrow">Designed for iPhone 18 Pro and Pro Max</p>
+    <h2 id="finish-title" class="big">Your colour. <em>Or solid brass.</em></h2>
+    <p class="lede">
+      Ceramic powder-coated titanium in every iPhone 18 Pro and Pro Max finish, so it looks like part of the phone and doesn’t show
+      fingerprints. Grade 5 titanium is about 1.6 times as strong as the aluminium iPhone 18 Pro is made of, and a
+      shock-absorbing layer underneath takes the sting out of drops. Or bare brass, a copper alloy that kills bacteria on its surface and never rusts. Either way it sits
+      level with the lens tops, adding nothing above the camera, with the lenses, the flash and the sensors clear in its opening.
+    </p>
+
+    <div class="picker">
+      {finishes.map((f, i) => (
+        <input type="radio" name="finish" id={`finish-${f.id}`} value={f.id} checked={i === 0} class="sr" />
+      ))}
+      {shells.map((s, i) => (
+        <input type="radio" name="shell" id={`shell-${s.id}`} value={s.id} checked={i === 0} class="sr" />
+      ))}
+      <div class="stage">
+        <img class="shadow" src="/khensu/shell/shadow.png" alt="" width="1600" height="1600" loading="lazy" decoding="async" />
+        {finishes.map((f) =>
+          shells.map((s) => (
+            <img
+              class:list={['shot', `shot-${f.id}-${s.id}`]}
+              src={`/khensu/shell/assembled_${f.id}${s.suffix}.png`}
+              alt={`sunulink.shield in ${s.id === 'brass' ? 'bare brass' : `matte ${f.name} titanium`} on an iPhone 18 Pro in ${f.name}`}
+              width="1600"
+              height="1600"
+              loading="lazy"
+              decoding="async"
+            />
+          )),
+        )}
+      </div>
+
+      <div class="controls">
+        <div class="group">
+          <p class="group-label">iPhone</p>
+          <div class="swatches" role="radiogroup" aria-label="iPhone finish">
+            {finishes.map((f) => (
+              <label for={`finish-${f.id}`} class={`sw sw-${f.id}`}>
+                <span class="dot" style={`background:${f.swatch}`}></span>
+                <span class="name">{f.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div class="group">
+          <p class="group-label">suñůlink.shield</p>
+          <div class="swatches two" role="radiogroup" aria-label="suñůlink.shield">
+            {shells.map((s) => (
+              <label for={`shell-${s.id}`} class={`sw sh-${s.id}`}>
+                <span class:list={['dot', `dot-${s.id}`]}></span>
+                <span class="name">{s.name}</span>
+                <span class="note">{s.note}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="footnote">
+      Renders from the CAD model, on iPhone 18 Pro geometry measured from Apple’s published model. Brass is
+      heavier than titanium (about 136 g against 95 g) and ages to a warm patina shaped by your hands, how you carry it and the air it lives in, so no two brass sunulink.shields end up alike. It is left
+      uncoated, since a coating would stop it working on germs. Brass still needs regular cleaning, like any surface. iPhone is a trademark of Apple Inc., registered in the U.S. and
+      other countries; finish names are Apple’s. Not affiliated with or endorsed by Apple.
+    </p>
+  </div>
+</section>
+
+<style>
+  .big {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    max-width: 20ch;
+  }
+  /* Fixed inside the viewport, so focusing a radio when its label is clicked never scrolls the page. */
+  .sr {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+  .picker {
+    margin: 2rem 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .stage {
+    position: relative;
+    width: min(100%, 620px);
+    aspect-ratio: 1;
+  }
+  .stage img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: auto;
+  }
+  .shot {
+    opacity: 0;
+    scale: 0.97;
+    transition: opacity 0.5s ease, scale 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .picker:has(#finish-burgundy:checked):has(#shell-matched:checked) .shot-burgundy-matched,
+  .picker:has(#finish-glacier:checked):has(#shell-matched:checked) .shot-glacier-matched,
+  .picker:has(#finish-silver:checked):has(#shell-matched:checked) .shot-silver-matched,
+  .picker:has(#finish-black:checked):has(#shell-matched:checked) .shot-black-matched,
+  .picker:has(#finish-burgundy:checked):has(#shell-brass:checked) .shot-burgundy-brass,
+  .picker:has(#finish-glacier:checked):has(#shell-brass:checked) .shot-glacier-brass,
+  .picker:has(#finish-silver:checked):has(#shell-brass:checked) .shot-silver-brass,
+  .picker:has(#finish-black:checked):has(#shell-brass:checked) .shot-black-brass {
+    opacity: 1;
+    scale: 1;
+  }
+  .controls {
+    display: grid;
+    gap: 1.25rem;
+    width: min(100%, 720px);
+    margin-top: 0.5rem;
+  }
+  .group-label {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: var(--text-faint);
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+  .swatches.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sw {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.8rem 0.4rem;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    text-align: center;
+  }
+  .sw:hover {
+    border-color: var(--line-strong);
+  }
+  .picker:has(#finish-burgundy:checked) .sw-burgundy,
+  .picker:has(#finish-glacier:checked) .sw-glacier,
+  .picker:has(#finish-silver:checked) .sw-silver,
+  .picker:has(#finish-black:checked) .sw-black,
+  .picker:has(#shell-matched:checked) .sh-matched,
+  .picker:has(#shell-brass:checked) .sh-brass {
+    border-color: var(--khensu);
+  }
+  .picker:has(.sr:focus-visible) .controls {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+    border-radius: 18px;
+  }
+  .dot {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+    display: inline-block;
+  }
+  .dot-matched {
+    background: conic-gradient(#70222e 0 25%, #c4d4df 0 50%, #d4d5d8 0 75%, #2e2f33 0);
+  }
+  .dot-brass {
+    background: radial-gradient(circle at 35% 30%, #e6c98a, #b5925a 55%, #7d6236);
+  }
+  .name {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .note {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shot {
+      transition: none;
+    }
+  }
+</style>

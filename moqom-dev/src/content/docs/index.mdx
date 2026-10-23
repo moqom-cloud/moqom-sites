@@ -1,0 +1,71 @@
+---
+title: MOQOM
+description: End-to-end encrypted real-time media over QUIC — rooms, broadcast, and moderation, with SDKs for Apple platforms and backends.
+template: splash
+hero:
+  tagline: Media Over QUIC Orchestration Mesh. A palindrome on purpose, because it is one relay platform that broadcasts and receives. Interactive video, audio and broadcast over Media over QUIC, end-to-end encrypted in every room. Prepaid, metered, and priced below the incumbents.
+  actions:
+    - text: 5-minute quickstart
+      link: /getting-started/quickstart/
+      icon: right-arrow
+    - text: What is MOQOM?
+      link: /getting-started/what-is-moqom/
+      variant: minimal
+    - text: Sign up on moqom.cloud
+      link: https://moqom.cloud
+      icon: external
+      variant: secondary
+---
+
+import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+
+## Build with MOQOM
+
+<CardGrid>
+	<Card title="Swift SDK — available" icon="seti:swift">
+		`MoqomKit` for iOS, iPadOS, macOS, visionOS and tvOS. Join rooms, publish camera and
+		microphone, watch others, moderate. Open source (Apache 2.0) and pure Swift: its own
+		draft-19 MOQT implementation, no Rust core, no dependencies. Hardware encode and decode,
+		zero-copy from camera to encoder and decoder to screen. [Guide →](/guides/ios-macos/)
+	</Card>
+	<Card title="Backend SDKs — Go & Rust" icon="seti:go">
+		Mint client tokens, create and close rooms, moderate, and follow room events from your
+		own server. [Go →](/guides/backend-go/) · [Rust →](/guides/backend-rust/)
+	</Card>
+	<Card title="Prepaid billing" icon="seti:json">
+		15% under Agora's price at every tier and every volume, and always at least one cent
+		per 1,000 minutes under. [Pricing →](/billing/pricing/)
+	</Card>
+	<Card title="Data tracks" icon="seti:db">
+		Chat, game state and telemetry on the same connection as the video, in a FlatBuffers-style
+		format with zero-copy decode: a 50-entity game tick reads in 5.7 µs against 163 µs for JSON
+		and is 1.9× smaller. Bounds-checked against hostile input, and end-to-end encrypted when the
+		room is. [Timings →](/specs/benchmarks/#data-messages)
+	</Card>
+	<Card title="Web, Android, Desktop, OBS" icon="laptop">
+		Web, Android and Desktop in progress, coming Q4 2026. OBS plugin scoped. [Platform status →](/platforms/status/)
+	</Card>
+</CardGrid>
+
+## At a glance
+
+<Aside type="caution" title="Benchmark note">
+\* Built to scale: a Rust media plane and a Go control plane, each scaling out horizontally. Measured in lab: 6,000 viewers on one 4-vCPU relay, every frame delivered. Full data at moqom.cloud/benchmarks/load-tests.md.
+</Aside>
+
+| | |
+| --- | --- |
+| Glass-to-glass latency | **56–57 ms** median, **70 ms** p95 (720p30 at 1.25 Mbit/s HEVC, two iPhone 15 Pros, relay in Los Angeles) |
+| Fan-out from one relay | **6,000 subscribers** at 5.46 Gbit/s, zero loss, on 4 vCPU |
+| Media encryption cost | **54 µs** per 1080p keyframe ([SFrame](https://www.rfc-editor.org/rfc/rfc9605), AES-256-GCM) |
+
+See [Benchmarks](/specs/benchmarks/) for conditions and method.
+
+## Where to next
+
+<CardGrid>
+	<LinkCard title="Concepts" description="Tenants, rooms, participants, roles, tokens and relays." href="/getting-started/concepts/" />
+	<LinkCard title="Billing & keys API" description="Every REST route, with curl and JSON." href="/reference/billing-api/" />
+	<LinkCard title="Control-plane gRPC API" description="Rooms, Moderation, Tokens and Events." href="/reference/control-plane-grpc/" />
+	<LinkCard title="Architecture" description="Publisher, relay, subscriber — and the standards underneath." href="/architecture/overview/" />
+</CardGrid>

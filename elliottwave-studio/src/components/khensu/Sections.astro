@@ -1,0 +1,995 @@
+---
+// The khėnsu.ñü sections, shared by the home page and the topic pages; each page lists the ones it shows, in order.
+import AppScreen from './AppScreen.astro';
+import Exploded from './Exploded.astro';
+import Finishes from './Finishes.astro';
+import SideView from './SideView.astro';
+import PatentNotice from './PatentNotice.astro';
+import Net from './Net.astro';
+import Orbit from './Orbit.astro';
+import Icon from './Icon.astro';
+import NuMedia from './NuMedia.astro';
+import Creators from './Creators.astro';
+import CreatorPay from './CreatorPay.astro';
+import RingCode from './RingCode.astro';
+import Economics from './Economics.astro';
+import PerAnkh from './PerAnkh.astro';
+import StatStrip from './StatStrip.astro';
+
+const highlights = [
+  { icon: 'lock', href: '/security#security-protections', go: 'How the encryption works', title: 'Post-quantum, end to end', body: 'Every message, call and payment uses encryption built for the age of quantum computers. Not an option you switch on. The only way it works.' },
+  { icon: 'shield', href: 'https://webe.khensu.nu', go: 'How stealth works', title: 'Full stealth mode, beyond a VPN', body: 'Not the network, not the people who run it, not someone watching the whole internet. Your phone looks the same whether you’re talking or not, and the relays carrying you keep switching, so none of them sees a whole conversation.' },
+  { icon: 'feed', href: 'https://webe.khensu.nu', go: 'Explore webË', title: 'Feeds, forums and sites', body: 'Follow people, join forums, publish a site and stream live, on the same private network. Posters sign what they publish; readers stay anonymous.' },
+  { icon: 'wallet', href: 'https://fi.khensu.nu', go: 'See ñũ.Fî', title: 'Pay privately', body: 'Send money in a chat with the amount hidden and no lasting record. The same payments keep the network running.' },
+  { icon: 'sparkle', href: 'https://memory.khensu.nu', go: 'How memory stays private', title: 'Private AI, only for you', body: 'Search, summaries and answers run on your own device. There are no AI nodes or servers for your data to leak to. We can’t sell your data because we don’t have it. Only you do.' },
+  { icon: 'live', href: 'https://shield.khensu.nu', go: 'See suñůlink.shield', title: 'Runs on any connection', body: 'Fibre, cable, 5G, satellite. With no internet at all, phones reach each other at about 100 m, and suñůlink.shield stretches that to 600 m, or 2 km to a rooftop node.' },
+] as const;
+
+const screens = [
+  { screen: 'chats', title: 'Chats', body: 'Liquid Glass, stock iOS 26 controls, folders and disappearing messages.' },
+  { screen: 'chat', title: 'Conversation', body: 'Messages, voice, files and shielded payments in one thread.' },
+  { screen: 'feed', title: 'Feed', body: 'People, forums, sites and live streams. Signed posts, anonymous readers.' },
+  { screen: 'call', title: 'Calls', body: 'Post-quantum voice and video. The route changes as you talk.' },
+  { screen: 'ask', title: 'Ask khensu', body: 'Local private AI for you alone: recall anything you’ve been told, with sources. No AI servers ever see it.' },
+  { screen: 'wallet', title: 'Wallet and node', body: 'A private balance, and the node that carries traffic for people nearby.' },
+] as const;
+
+const statement = 'Every phone keeps the same quiet rhythm, all day. Typing, idle or asleep, it looks identical from outside. Even connecting looks like visiting an ordinary website.'.split(' ');
+
+const specs = [
+  { name: '6 hours', body: 'Relaying on a full charge of its own 7.5 Wh battery. When that runs out, it sips a little of your iPhone’s over the short cable in the box (iPhone 15 or later).' },
+  { name: '15 min', body: 'To 50% over its USB-C from a wall charger or power bank, full in about 45. Your iPhone’s port stays open.' },
+  { name: '0 mm', body: 'Added above the camera: one flat back level with the lens tops, an opening for every lens.' },
+  { name: '95 g', body: 'In titanium. Solid brass is about 136 g.' },
+];
+
+const pages = [
+  { href: 'https://webe.khensu.nu', title: 'webË', body: 'The people-run internet under khėnsu.ñü: stealth, better than a VPN, and built for ten billion people.', go: 'How webË works' },
+  { href: 'https://media.khensu.nu', title: 'ñü.media', body: 'Our codec: 4K at 240 fps, light and green-screen keys, and every measurement.', go: 'See the demos' },
+  { href: 'https://memory.khensu.nu', title: 'Memory and your feed', body: 'Per-Ankh remembers for you, and your recommendations are worked out only on your device.', go: 'How it stays private' },
+  { href: 'https://create.khensu.nu', title: 'For creators', body: 'What artists keep on khėnsu.ñü compared with streaming, studios and labels.', go: 'Compare the cuts' },
+  { href: 'https://shield.khensu.nu', title: 'suñůlink.shield', body: 'A full node on your iPhone, with its own battery and a mesh radio.', go: 'Explore suñůlink.shield' },
+  { href: '/transfer', title: 'Send big files', body: '4K video and huge files, private end to end, with no fee per gigabyte.', go: 'Send privately' },
+  { href: '/quality', title: 'How we measure', body: 'Why VMAF isn’t enough, and how to rerun every number yourself.', go: 'Check our numbers' },
+  { href: '/privacy', title: 'Privacy', body: 'What we never collect, and why we couldn’t if we tried.', go: 'Read the policy' },
+] as const;
+
+type Key = 'intro' | 'highlights' | 'creators' | 'creatorpay' | 'pay' | 'economics' | 'webe' | 'numedia' | 'vpn' | 'ringcode' | 'perankh' | 'stealth' | 'relays' | 'space' | 'exploded' | 'sideview' | 'finishes' | 'specs' | 'cta' | 'design' | 'explore';
+const { show } = Astro.props as { show: Key[] };
+---
+
+{show.map((k) => (
+  <>
+    {k === 'intro' && (
+      <>
+    <section class="section intro" id="intro-section">
+      <div class="wrap">
+        <p class="eyebrow">The first app on <span class="name-case">webË</span></p>
+        <h2 class="big">A messenger with no company in the middle. <em>Because there isn’t one.</em></h2>
+        <p class="lede">
+          khėnsu.ñü runs on a network of small computers in people’s homes, not on a company’s servers. No one can read
+          what you send, see who you send it to, or switch it off. It is the first app on webe, a people-run internet
+          that sits on the one you already use.
+        </p>
+        <div class="btn-row">
+          <a class="btn primary" href="#run-a-node-section">Run a node</a>
+          <a class="btn" href="https://dev.khensu.nu">Developer docs</a>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'highlights' && (
+      <>
+    <section class="section" id="highlights-section">
+      <div class="wrap">
+        <p class="eyebrow">Highlights</p>
+        <ul class="highlights">
+          {highlights.map((h) => (
+            <li>
+              <a class="hl" href={h.href}>
+                <span class="hl-icon"><Icon name={h.icon} size="1.25rem" /></span>
+                <h3>{h.title}</h3>
+                <p>{h.body}</p>
+                <span class="hl-go">{h.go} <span aria-hidden="true">→</span></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'creatorpay' && <CreatorPay />}
+    {k === 'creators' && (
+      <>
+    <Creators />
+      </>
+    )}
+    {k === 'pay' && (
+      <>
+    <section class="section" aria-labelledby="pay-title">
+      <div class="wrap">
+        <p class="eyebrow">How it’s paid for</p>
+        <h2 id="pay-title" class="big">No ads. No data sold. <em>No mining.</em></h2>
+        <p class="lede">
+          People who want more pay a small subscription, privately. That pays the people who run the network, in
+          proportion to the work they can prove they did. Nobody pays for your attention, because nobody gets it.
+        </p>
+        <ol class="flow">
+          <li>
+            <span class="num">01</span>
+            <h3>You pay for more, privately</h3>
+            <p>Messaging is free. Bigger files and more storage come with a small subscription, through the App Store, the web or the token. What you pay is never linked to what you do.</p>
+          </li>
+          <li>
+            <span class="num">02</span>
+            <h3>Subscriptions fund the network</h3>
+            <p>A fixed share of every subscription buys and burns the network’s token. The network pays out new tokens only for verified work, so more use means more income for operators.</p>
+          </li>
+          <li>
+            <span class="num">03</span>
+            <h3>Operators earn for real work</h3>
+            <p>Forwarding, storing and serving, proven by receipts that can’t be linked to anyone. A Pi uses about as much power as a light bulb.</p>
+          </li>
+        </ol>
+        <p class="footnote">Not an offer of securities or a promise of earnings. Pricing and token details are subject to legal review.</p>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'economics' && (
+      <>
+    <Economics />
+      </>
+    )}
+    {k === 'webe' && (
+      <>
+    <section class="section net-host webe-sec" id="webe-section" aria-labelledby="webe-title">
+      <Net />
+      <div class="wrap">
+        <p class="eyebrow">The new internet</p>
+        <h2 id="webe-title" class="webe-name"><span class="name-case">webË</span></h2>
+        <p class="webe-sub">A new internet, alongside the one you use.</p>
+        <StatStrip
+          items={[
+            { n: 5, label: 'Mix network hops for every message' },
+            { n: 2, unit: 's', label: 'One steady burst, so nobody sees when you’re active' },
+            { n: 2, label: 'Relays per call, run by different operators' },
+            { n: 0, label: 'Settings to switch stealth off' },
+          ]}
+        />
+        <p class="lede webe-lede">
+          Same connection, same apps: post-quantum, hidden inside ordinary HTTPS and run by the people who use it.
+        </p>
+        <ul class="webe" role="list">
+          <li><b>Alongside the internet</b><span>Works wherever the web does. Nothing to replace.</span></li>
+          <li><b>Looks like HTTPS</b><span>Post-quantum inside: ML-KEM-1024 and ML-DSA-87.</span></li>
+          <li><b>Always stealth</b><span>No setting, no visible mode. Nobody sees who reads what.</span></li>
+          <li><b>Messages and calls</b><span>One to one and in large groups.</span></li>
+          <li><b>Feeds and content</b><span>Posts, forums, videos, photos, reels and music.</span></li>
+          <li><b>Sites and live</b><span>Publish at your-name.khensu.nu. Stream to a room or a crowd.</span></li>
+          <li><b>Global social</b><span>Follow anyone in any country, translated on your phone. Posts keep spreading phone to phone when the internet is cut.</span></li>
+          <li><b>Private AI and feeds</b><span>Summaries, search and your recommendations run only on your device. What you read and watch never leaves it.</span></li>
+        </ul>
+        <div class="btn-row webe-links">
+          <a class="btn primary" href="https://dev.khensu.nu/webe">webË specification</a>
+          <a class="btn" href="https://dev.khensu.nu/webe#build">Build an app on webË</a>
+          <a class="btn" href="https://dev.khensu.nu/webe#extend">Extend khėnsu.ñü</a>
+        </div>
+        <div class="btn-row webe-links">
+          <a class="btn" href="#stealth-section">Stealth by default</a>
+          <a class="btn" href="#relays-section">Ten billion a day</a>
+          <a class="btn" href="#space-section">Any link</a>
+          <a class="btn" href="#characters-section">Not only English</a>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'numedia' && (
+      <>
+    <NuMedia />
+      </>
+    )}
+    {k === 'vpn' && (
+      <>
+    <section class="section" aria-labelledby="vpn-title">
+      <div class="wrap">
+        <p class="eyebrow">Replaces your VPN</p>
+        <h2 id="vpn-title" class="big webe-title">Better than a VPN. Nothing to switch on.</h2>
+        <p class="lede">
+          A VPN moves your trust from your internet provider to one VPN company, which then sees your address and
+          everything you open. On webe, nobody holds both.
+        </p>
+        <ul class="webe" role="list">
+          <li><b>No one sees both ends</b><span>The first relay knows who you are but not what you open. The last knows what, not who. They’re run by different operators in different countries.</span></li>
+          <li><b>Looks like a normal website</b><span>VPN protocols are easy to recognise and block. webe traffic is ordinary HTTPS.</span></li>
+          <li><b>Hides when, not just where</b><span>A VPN still shows when and how much you use it. khėnsu.ñü keeps the same rhythm all day.</span></li>
+          <li><b>Nothing to log</b><span>“No logs” is a VPN’s promise. Relays never see your content or both ends, so there’s nothing to hand over.</span></li>
+          <li><b>Post-quantum only</b><span>ML-KEM-1024 and ML-DSA-87, so traffic recorded today can’t be decrypted later.</span></li>
+          <li><b>No off switch, no leaks</b><span>No kill switch needed: there is no unprotected mode to fall back to.</span></li>
+        </ul>
+        <p class="footnote">
+          This covers everything on webe: messages, calls, payments, feeds, forums, sites and live streams. For the rest
+          of the internet, webe exit is a VPN profile for iPhone, iPad and Mac that sends all your traffic through two
+          relays from different operators, under the same rules.
+        </p>
+        <div class="btn-row webe-links">
+          <a class="btn" href="https://dev.khensu.nu/webe#vpn">How it compares to a VPN</a>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'ringcode' && (
+      <>
+    <RingCode />
+      </>
+    )}
+    {k === 'perankh' && (
+      <>
+    <PerAnkh />
+      </>
+    )}
+    {k === 'stealth' && (
+      <>
+    <section class="statement" id="stealth-section" data-scene="reveal" aria-labelledby="stealth-title">
+      <div class="wrap">
+        <p class="eyebrow">Stealth by default</p>
+        <h2 id="stealth-title" class="words">
+          {statement.map((w, i) => (
+            <span style={`--i:${i};--n:${statement.length}`}>{w} </span>
+          ))}
+        </h2>
+        <div class="pulse" aria-hidden="true">
+          {['Typing a message', 'Idle', 'Asleep in a pocket', 'Battery at 5%'].map((label) => (
+            <div class="pulse-row">
+              <span>{label}</span>
+              <span class="track"></span>
+            </div>
+          ))}
+        </div>
+        <p class="lede switch">
+          And it’s light on battery. Each beat is one small, fixed-size burst every 2 seconds while the app is open, so
+          the cloak costs little power. It never slows down to save more: not in Low Power Mode, not at 5%. A phone that
+          went quiet when its battery ran low would stand out, so the rhythm stays exactly the same however low it gets.
+        </p>
+        <p class="lede switch">
+          And the path keeps changing. The relays carrying your messages, calls and streams switch at random while you
+          use them, each on its own clock, so no relay and no one watching a few of them ever sees a whole conversation.
+        </p>
+        <p class="lede switch">
+          And it keeps working in the background. Calls use Apple’s VoIP capabilities, PushKit and CallKit, so they ring
+          on your lock screen and stay live when you switch apps, like any phone call. The VoIP itself runs on our own
+          network, not a phone carrier’s: encrypted end to end over HTTP/3, the faster successor to secure WebSockets,
+          and the same goes for live streams you’re in. New messages arrive
+          through a wake-up that carries nothing, then one standard-size fetch. With a sunulink.shield on your phone,
+          the rhythm never stops at all: it’s a full node with its own battery.
+        </p>
+        <p class="footnote">There is no setting to turn this off. Privacy you can switch off is privacy someone can make you switch off.</p>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'relays' && (
+      <>
+    <section class="section relays-sec net-host" id="relays-section" data-scene="reveal" aria-labelledby="relays-title">
+      <Net closeup nodes={170} class="behind" label="A close-up of the relay network: messages move along links, vanish and reappear on other links as relays switch." />
+      <div class="wrap">
+        <div class="relays-copy">
+          <p class="eyebrow">10 billion → ∞</p>
+          <h2 id="relays-title" class="big">Ten billion people a day. <em>And beyond.</em></h2>
+          <p class="lede">
+            khėnsu.ñü is built to carry 10 billion people a day on about 6 million small computers, or 2 in every 100
+            people running a node on ordinary home broadband. There is no central server to outgrow: every node that
+            joins adds capacity, so the network keeps scaling past that without limit.
+          </p>
+          <p class="lede">
+            A single <a href="https://www.raspberrypi.com/products/raspberry-pi-5/">Raspberry Pi 5</a> does its share.
+            An old or unused phone does it even better, and more profitably: you already own it, so there’s nothing to
+            buy and what it earns is yours from day one. Your laptop or desktop can run one too, in the background while you work, using 50% or less of its idle processing power.
+          </p>
+          <dl class="stats">
+            <div><dt>10 billion</dt><dd>people a day, on about 6 million nodes, and it keeps scaling as more join</dd></div>
+          </dl>
+          <ul class="node-cards" role="list">
+            <li>
+              <p class="nc-kind">Old phone</p>
+              <b class="nc-big">3,400</b><span class="nc-unit">people a day</span>
+              <p>An iPhone 11 or later in node mode, plugged in on Wi-Fi. An iPhone 15 Pro sharing half of 2 Gbit fibre over Wi-Fi 6E. Nothing to buy.</p>
+            </li>
+            <li>
+              <p class="nc-kind"><a href="https://www.raspberrypi.com/products/raspberry-pi-5/">Raspberry Pi 5</a></p>
+              <b class="nc-big">1,700</b><span class="nc-unit">people a day</span>
+              <p>Always on, sharing half of a gigabit fibre line, on about 5 kWh of power a month.</p>
+            </li>
+            <li>
+              <p class="nc-kind">Idle computer</p>
+              <b class="nc-big">1,700+</b><span class="nc-unit">people a day</span>
+              <p>Your Mac or PC, in the background while you work, using 50% or less of its idle power. More on faster fibre.</p>
+            </li>
+            <li class="nc-best">
+              <p class="nc-kind">suñůlink.shield <small>Best</small></p>
+              <b class="nc-big">24/7</b><span class="nc-unit">wherever you go</span>
+              <p>A full node on your phone with its own battery and a guard chip, so the rhythm never stops, even in your pocket. Its mesh radio carries the network where there’s no internet.</p>
+              <a class="nc-link" href="https://shield.khensu.nu">Explore suñůlink.shield</a>
+            </li>
+          </ul>
+          <p class="footnote">
+            Figures from the protocol design: 1 hour of app use per person per day, about 2.5 Mbit/s of node capacity for
+            each open phone at peak, each node sharing half its connection. Real capacity depends on connections and
+            use. iPhone is a trademark of Apple Inc.
+          </p>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'space' && (
+      <>
+    <section class="section space" id="space-section" aria-labelledby="space-title">
+      <div class="wrap split rev">
+        <Orbit />
+        <div>
+          <p class="eyebrow">Runs on any link</p>
+          <h2 id="space-title" class="big">Works from anywhere. <em>Even an ET base.</em></h2>
+          <p class="lede">
+            A boat, a castle, a farm estate, the city or the slums, a private lab, a plane, a spaceship or an ET base.
+            A node needs a connection and a power socket, nothing more. One on satellite internet, such as Starlink, is
+            a full node: it relays, stores and earns like any other. Where there is no internet at all, devices reach each other directly and carry messages hop by hop:<br />
+            phone to phone about 100 m outdoors; with sunulink.shield about 600 m on open ground, and up to 2 km to a
+            rooftop node.
+          </p>
+          <ul class="links">
+            <li>Satellite internet</li>
+            <li>5G Ultra Wideband</li>
+            <li>Fibre and cable</li>
+            <li>Node-to-node mesh, no internet</li>
+          </ul>
+          <p class="footnote">Mesh ranges are line of sight outdoors, calculated from each radio’s link budget: phones over Bluetooth and Wi-Fi peer-to-peer reach about 30 m indoors; sunulink.shield’s Wi-Fi HaLow reaches about 100 m between shields in a city and 250–500 m to a rooftop node in towns and suburbs. Ranges in Europe are about a third shorter, under its lower power limit. Starlink is a trademark of SpaceX, and 5G Ultra Wideband of Verizon. Named only as examples; no affiliation or endorsement.</p>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'exploded' && (
+      <>
+    <Exploded />
+      </>
+    )}
+    {k === 'sideview' && (
+      <>
+    <SideView />
+      </>
+    )}
+    {k === 'finishes' && (
+      <>
+    <Finishes />
+      </>
+    )}
+    {k === 'specs' && (
+      <>
+    <section class="section">
+      <div class="wrap">
+        <p class="eyebrow">One suñůlink.shield</p>
+        <ul class="styles">
+          {specs.map((s) => (
+            <li class="card">
+              <h3>{s.name}</h3>
+              <p>{s.body}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="footnote">One model for iPhone 18 Pro and Pro Max, and for iPhone 18 on its release, in your iPhone’s colour, matte titanium or solid brass. Figures for iPhone 18 Pro. Battery life at about 1 W of relaying; charge times with a 20 W or larger USB-C PD charger. Battery life and charge time vary with use and settings. From your iPhone it takes at most 1 W, roughly 5–8% of the iPhone’s battery an hour. It clears every lens, flash and sensor, and every camera’s field of view.</p>
+        <div class="btn-row">
+          <a class="btn" href="https://dev.khensu.nu/shell">Full suñůlink.shield specifications</a>
+        </div>
+        <PatentNotice />
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'characters' && (
+      <>
+    <section class="section" id="characters-section" aria-labelledby="characters-title">
+      <div class="wrap">
+        <p class="eyebrow">Names, links, titles, passwords</p>
+        <h2 id="characters-title">Not only the<br /><span class="dim"> English alphabet.</span></h2>
+        <StatStrip
+          items={[
+            { n: 13, label: 'Full-Unicode characters. 34 times as many names as the P-256 prime' },
+            { n: 39, label: 'Printable ASCII characters to pass that same prime' },
+            { n: 2, unit: 'bytes', label: 'Æ, æ, AE and ae. Four values, the same size' },
+            { n: 1112064, label: 'Scalar values. Each added character multiplies the names by this' },
+          ]}
+        />
+        <p class="lede">
+          A name, a webe address, a title and a password use the whole Unicode repertoire. Æ and æ are different letters, and both are different from AE and ae. ñ is not n. ü is not u.
+        </p>
+        <div class="bits">
+          <h3>Bits of a file in each byte stored</h3>
+          <p class="bits-note">Higher holds more of a file. Raw bytes win. These letters are not a smaller way to store one.</p>
+          <div class="bit"><span>Raw bytes</span><i style="--w:100%"><b></b></i><em>8.00</em></div>
+          <div class="bit"><span>Printable ASCII</span><i style="--w:82.1%"><b></b></i><em>6.57</em></div>
+          <div class="bit"><span>A Unicode letter, 4-byte UTF-8</span><i style="--w:62.8%"><b></b></i><em>5.02</em></div>
+          <div class="bit"><span>Æ, ñ, ü</span><i style="--w:50%"><b></b></i><em>4.00</em></div>
+          <div class="bit"><span>One emoji of 3,790</span><i style="--w:37.1%"><b></b></i><em>2.97</em></div>
+          <h3>Characters to cover a 256-bit name</h3>
+          <p class="bits-note">Fewer characters, the same space. This is a shorter name, not a smaller file.</p>
+          <div class="bit"><span>A to Z</span><i style="--w:100%"><b></b></i><em>55</em></div>
+          <div class="bit"><span>Printable ASCII</span><i style="--w:70.9%"><b></b></i><em>39</em></div>
+          <div class="bit"><span>Every Unicode letter</span><i style="--w:23.6%"><b></b></i><em>13</em></div>
+        </div>
+        <ul class="webe letters" role="list">
+          <li><b>Æ</b><span>U+00C6, stored as c3 86. One letter, two bytes, its own value.</span></li>
+          <li><b>æ</b><span>U+00E6, stored as c3 a6. Different from Æ. The case is already in the letter.</span></li>
+          <li><b>Ñ ñ and Ü ü</b><span>U+00D1, U+00F1, U+00DC, U+00FC. Each is its own letter. n, N, u and U stay different names.</span></li>
+          <li><b>Emoji</b><span>Allowed in a name, a link, a title and a password. One emoji is 4 bytes, about 11.9 bits of choice in 32 bits stored. Not a saving.</span></li>
+        </ul>
+        <p class="lede">
+          The ligature is the smaller way to keep the difference. Æ is 16 bits. AE plus a bit that says “this is the ligature” is 17. The same for æ, and for case.
+          Each added character multiplies the number of names by 1,112,064, which is 11,706 times the step of a printable ASCII character.
+          Thirteen of them pass the P-256 prime. Twelve fall short, at 241 bits. A to Z needs 55 characters to pass the same prime.
+        </p>
+        <p class="lede">
+          Sealed messages, pictures and sound stay raw bytes. A byte holds 8 bits. Ninety-five printable characters hold 6.57 bits in that byte, and Æ, ñ and ü cost 16 bits each, so packing a file into those letters takes more room than the bytes.
+          A character is a digit only when the digit is smaller. These stay letters: in usernames, site links, titles and passwords.
+        </p>
+        <p class="footnote">
+          The P-256 prime is 2²⁵⁶ − 2²²⁴ + 2¹⁹² + 2⁹⁶ − 1, the field prime of secp256r1 in <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf">FIPS 186-4</a>.
+          Thirteen characters over the 1,112,064 Unicode scalar values (17 × 65,536 − 2,048 surrogates) are 261 bits, 34 times that prime, and they also pass the Curve25519 prime 2²⁵⁵ − 19 (<a href="https://www.rfc-editor.org/rfc/rfc7748">RFC 7748</a>).
+          The public DNS host folds the pair: Ægir and ægir both encode as xn--gir-xla. The webe name keeps both.
+          The message key is ML-KEM-1024. The alphabet is the name and the text. <a href="https://dev.khensu.nu/specs/webe#36-characters">Character rules</a>.
+        </p>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'cta' && (
+      <>
+    <section class="section net-host" id="run-a-node-section">
+      <Net />
+      <div class="wrap cta">
+        <h2>Run a node. <em>Be part of the network.</em></h2>
+        <p class="lede">A Raspberry Pi 5, a Mac, or an old iPhone on Wi-Fi. Tell us you’re in and we’ll get you set up.</p>
+        <div class="btn-row">
+          <a class="btn primary" href="https://khensu.nu/buy">Buy suñůlink.shield</a>
+          <a class="btn" href="mailto:hello@elliottwave.studio?subject=khensu.nu%20node">hello@elliottwave.studio</a>
+          <a class="btn" href="https://dev.khensu.nu/node">Node guide</a>
+        </div>
+      </div>
+    </section>
+      </>
+    )}
+    {k === 'design' && (
+      <>
+    <section class="section design" aria-labelledby="design-title">
+      <div class="wrap">
+        <p class="eyebrow">App design</p>
+        <h2 id="design-title" class="big">Feels like iOS. <em>Because it is.</em></h2>
+        <p class="lede">
+          Built only from Apple’s own Liquid Glass controls on iOS, iPadOS and macOS 26, so it looks like it shipped
+          with your iPhone. Scroll through the screens.
+        </p>
+      </div>
+      <ul class="gallery" tabindex="0" aria-label="App screens">
+        {screens.map((s) => (
+          <li>
+            <AppScreen screen={s.screen} label={`${s.title} screen`} />
+            <h3>{s.title}</h3>
+            <p>{s.body}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+      </>
+    )}
+    {k === 'explore' && (
+      <>
+    <section class="section explore" id="explore-section" aria-labelledby="explore-title">
+      <div class="wrap">
+        <p class="eyebrow">Explore</p>
+        <h2 id="explore-title" class="big">One network. <em>Everything on it.</em></h2>
+        <ul class="pages" role="list">
+          {pages.map((p) => (
+            <li>
+              <a href={p.href}>
+                <b>{p.title}</b>
+                <span>{p.body}</span>
+                <span class="go">{p.go} →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+      </>
+    )}
+  </>
+))}
+
+<script>
+  import '../../scripts/scenes.ts';
+</script>
+
+<style>
+  /* One sentence per line: the emphasised second sentence always starts its own line. */
+  .big {
+    font-size: clamp(1.9rem, 3.8vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    max-width: none;
+  }
+  .big em,
+  .cta h2 em {
+    display: block;
+  }
+  .intro .big {
+    font-size: clamp(1.8rem, 3.2vw, 3rem);
+  }
+  .split .big {
+    font-size: clamp(1.8rem, 2.9vw, 2.7rem);
+  }
+  .highlights {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  }
+  .highlights li { display: grid; }
+  .hl {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.7rem;
+    padding: 1.8rem 1.8rem 1.6rem;
+    border-radius: 24px;
+    color: inherit;
+    text-decoration: none;
+    overflow: hidden;
+    isolation: isolate;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(30, 143, 255, 0.14), transparent 55%), rgba(255, 255, 255, 0.035);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s;
+  }
+  .hl::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    z-index: -1;
+    background: radial-gradient(40% 40% at 20% 20%, rgba(34, 245, 154, 0.22), transparent 70%), radial-gradient(40% 40% at 80% 70%, rgba(139, 92, 255, 0.24), transparent 70%), radial-gradient(35% 35% at 55% 40%, rgba(30, 143, 255, 0.22), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.45s;
+    animation: hl-drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes hl-drift { to { transform: translate(8%, -6%) rotate(12deg); } }
+  .hl:hover, .hl:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: inset 0 0 0 1px rgba(143, 198, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 24px 60px -24px rgba(30, 143, 255, 0.45);
+  }
+  .hl:hover::before, .hl:focus-visible::before { opacity: 1; }
+  .hl-icon {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 14px;
+    color: #fff;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    box-shadow: 0 6px 20px -6px rgba(30, 143, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+  .hl h3 {
+    margin: 0.3rem 0 0;
+    font-weight: 500;
+    font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  }
+  .hl p {
+    margin: 0;
+    color: var(--text-dim);
+  }
+  .hl-go {
+    margin-top: 0.4rem;
+    width: fit-content;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: var(--aura);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hl, .hl::before { transition: none; animation: none; }
+  }
+
+  .gallery {
+    list-style: none;
+    margin: 3rem 0 0;
+    padding: 1rem max(var(--gutter), calc((100vw - var(--wrap)) / 2 + var(--gutter))) 2rem;
+    display: flex;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(var(--gutter), calc((100vw - var(--wrap)) / 2 + var(--gutter)));
+    scrollbar-width: thin;
+    --phone-w: clamp(220px, 24vw, 280px);
+  }
+  .gallery li {
+    scroll-snap-align: start;
+    width: var(--phone-w);
+    flex: none;
+  }
+  .gallery h3 {
+    margin: 1.5rem 0 0.3rem;
+    font-weight: 500;
+  }
+  .gallery p {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  .statement {
+    --p: 1;
+    padding: clamp(6rem, 16vw, 12rem) 0;
+    border-top: 1px solid var(--line);
+  }
+  .words {
+    font-size: clamp(1.9rem, 4.6vw, 3.6rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+    max-width: 24ch;
+    margin: 0 0 3rem;
+  }
+  h2.words {
+    font-size: clamp(1.9rem, 4.6vw, 3.6rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    margin: 0 0 3rem;
+  }
+  .words span {
+    opacity: clamp(0.14, calc(var(--p) * var(--n) * 1.25 - var(--i)), 1);
+  }
+  .pulse {
+    display: grid;
+    gap: 0.9rem;
+    max-width: 760px;
+    margin-bottom: 2rem;
+  }
+  .pulse-row {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-faint);
+  }
+  .track {
+    height: 28px;
+    border-radius: 6px;
+    background-color: var(--bg-raised);
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 52px,
+      rgba(242, 241, 236, 0.85) 52px 55px,
+      transparent 55px 58px,
+      rgba(242, 241, 236, 0.85) 58px 61px,
+      transparent 61px 64px,
+      rgba(242, 241, 236, 0.85) 64px 67px,
+      transparent 67px 70px,
+      rgba(242, 241, 236, 0.85) 70px 73px,
+      transparent 73px 120px
+    );
+    background-size: 120px 100%;
+    animation: beat 2s linear infinite;
+    border: 1px solid var(--line);
+  }
+  @keyframes beat {
+    to { background-position: -120px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; }
+  }
+  @media (max-width: 560px) {
+    .pulse-row { grid-template-columns: 1fr; gap: 0.3rem; }
+  }
+
+  .split {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .split {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .stats {
+    display: grid;
+    gap: 1.4rem;
+    margin: 2rem 0;
+  }
+  .stats dt {
+    font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .stats dd {
+    margin: 0.3rem 0 0;
+    color: var(--text-dim);
+  }
+
+  .flow {
+    list-style: none;
+    margin: 3rem 0 2rem;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    counter-reset: f;
+  }
+  .flow li {
+    position: relative;
+    padding: 1.75rem;
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+  }
+  .flow h3 {
+    margin: 1rem 0 0.5rem;
+    font-weight: 500;
+  }
+  .flow p {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  .space {
+    background: radial-gradient(80% 60% at 30% 100%, rgba(40, 60, 95, 0.25), transparent 70%);
+  }
+  @media (min-width: 960px) {
+    .rev {
+      grid-template-columns: 1.1fr 1fr;
+    }
+  }
+  .links {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .links li {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .styles {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+  .styles h3 {
+    margin: 0 0 0.4rem;
+    font-weight: 500;
+  }
+  .styles p {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+
+  /* Frosted glass: the relay network behind shows through, blurred. */
+  h2[id] {
+    scroll-margin-top: 6rem;
+  }
+  .webe-title {
+    max-width: 22ch;
+  }
+  .webe-name {
+    margin: calc(0.2rem - 0.25em) 0 0;
+    padding-top: 0.25em;
+    font-size: clamp(4.5rem, 13vw, 10rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .webe-sub {
+    margin: 0.8rem 0 0;
+    font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+    font-weight: 500;
+  }
+  .webe-lede {
+    max-width: 44rem;
+    margin-top: clamp(1.6rem, 4vw, 2.4rem);
+  }
+  .webe-sec .webe {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  }
+  .webe-sec .webe li {
+    min-height: 0;
+  }
+  .webe {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  }
+  .webe li {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    min-height: 11rem;
+    padding: 1.75rem 1.6rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+    backdrop-filter: blur(22px) saturate(1.6);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 24px 60px rgba(0, 0, 0, 0.3);
+  }
+  .webe b {
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .webe span {
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .webe-links {
+    margin-top: 2rem;
+  }
+  .letters li {
+    min-height: 0;
+  }
+  #characters-section .footnote {
+    max-width: none;
+    margin-top: 2rem;
+  }
+  .bits { margin-top: 2rem; display: grid; gap: 0.65rem; max-width: 46rem; }
+  .bits h3 { margin: 1.4rem 0 0; font-size: 1rem; font-weight: 500; }
+  .bits-note { margin: 0; color: var(--text-dim); font-size: 0.92rem; }
+  .bit { display: grid; grid-template-columns: minmax(8rem, 16rem) 1fr 3.2rem; gap: 0.75rem; align-items: center; font-size: 0.92rem; }
+  .bit i { display: block; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); position: relative; }
+  .bit i b { position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: inherit; background: #f2f1ec; }
+  .bit em { font-style: normal; font-variant-numeric: tabular-nums; text-align: right; }
+  #characters-section .footnote a {
+    color: inherit;
+  }
+
+  .cta h2 {
+    max-width: none;
+  }
+  .relays-copy > :not(.node-cards) {
+    max-width: 52rem;
+  }
+  .node-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.6rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  .node-cards li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.3rem;
+    border-radius: 20px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) saturate(150%);
+  }
+  .node-cards p { margin: 0; color: var(--muted, rgba(255, 255, 255, 0.65)); font-size: 0.92rem; }
+  .node-cards .nc-kind { color: #fff; font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .node-cards .nc-kind a { color: inherit; }
+  .nc-big { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-top: 0.4rem; }
+  .nc-unit { color: var(--muted, rgba(255, 255, 255, 0.6)); font-size: 0.85rem; margin-bottom: 0.4rem; }
+  .node-cards .nc-best {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, rgba(139, 123, 255, 0.22), rgba(79, 209, 197, 0.08)) padding-box,
+      linear-gradient(135deg, #8b7bff, #4fd1c5) border-box;
+    box-shadow: 0 0 40px rgba(139, 123, 255, 0.25);
+  }
+  .nc-best .nc-big {
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .nc-best small {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: linear-gradient(90deg, #8b7bff, #4fd1c5);
+    color: #0b0b10;
+  }
+  .nc-link { margin-top: auto; padding-top: 0.6rem; font-size: 0.88rem; color: #c9c0ff; }
+  @media (max-width: 960px) {
+    .node-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px) {
+    .node-cards { grid-template-columns: 1fr; }
+  }
+
+  .pages {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  }
+  .pages a {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.6rem;
+    border-radius: 22px;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(22px) saturate(1.6);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: transform 0.25s, border-color 0.25s;
+  }
+  .pages a:hover {
+    transform: translateY(-2px);
+    border-color: rgba(185, 176, 255, 0.5);
+  }
+  .pages b {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  .pages span {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+  .pages .go {
+    margin-top: 0.4rem;
+    color: #c9c0ff;
+  }
+</style>

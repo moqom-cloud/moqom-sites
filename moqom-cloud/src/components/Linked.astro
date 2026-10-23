@@ -1,0 +1,15 @@
+---
+// Text with each standard it names linked to where it is published.
+import { linkStandards } from "../lib/standards";
+
+interface Props {
+  text: string;
+  /** Standards already linked on this page, so each is linked once. */
+  seen?: Set<string>;
+}
+
+const { text, seen } = Astro.props;
+const parts = linkStandards(text, seen);
+---
+
+{parts.map((p) => (typeof p === "string" ? p : <a href={p.href} rel="noopener">{p.text}</a>))}

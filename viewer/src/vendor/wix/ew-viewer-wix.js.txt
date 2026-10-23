@@ -1,0 +1,80 @@
+// 3D Viewer for Wix: Velo custom element file. Generated from packages/wix/src by build.mjs.
+// Put it in your site's public/custom-elements/ folder (Dev Mode), then add a Custom Element with
+// Choose Source → Velo file → this file, Tag Name: ew-viewer-wix.
+// Required Notice: Copyright (c) 2026 Elliott Wave LLC (https://elliottwave.studio)
+// Elliott Wave Plugin Licence: use needs a paid licence per domain (https://viewer.elliottwave.studio/pricing/).
+
+const CONFIG = {
+  displayName: '3D Viewer',
+  wixTag: 'ew-viewer-wix',
+  viewerTag: 'ew-viewer',
+  scriptUrl: 'https://cdn.jsdelivr.net/npm/@elliottwave/viewer@0.1.0/dist/ew-viewer.min.js',
+  integrity: 'sha384-KWnwxLSOxp4XkIskC2b2xU5Jd8yZLgF1NQfAoSPc8Bj7C664zdKhqjKb3rZED6y5',
+};
+
+const FORWARD = [
+  'src', 'ios-src', 'poster', 'alt', 'ar', 'ar-label', 'camera-controls', 'auto-rotate',
+  'rotation-per-second', 'shadow-intensity', 'exposure', 'background', 'loading', 'reveal', 'camera-orbit',
+  'license-key',
+];
+
+let loading = null;
+
+// Adds the pinned, SRI-checked bundle once per page.
+function loadViewer() {
+  if (customElements.get(CONFIG.viewerTag)) return Promise.resolve();
+  if (!loading) {
+    loading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.setAttribute('integrity', CONFIG.integrity);
+      script.setAttribute('crossorigin', 'anonymous');
+      script.src = CONFIG.scriptUrl;
+      script.onload = () => customElements.whenDefined(CONFIG.viewerTag).then(resolve);
+      script.onerror = () => {
+        loading = null;
+        reject(new Error(`${CONFIG.displayName}: could not load ${CONFIG.scriptUrl}`));
+      };
+      document.head.append(script);
+    });
+  }
+  return loading;
+}
+
+// Wix sizes the custom element; this fills that box and passes attributes set from page code
+// ($w('#customElement1').setAttribute(...)) through to <ew-viewer>, which validates them.
+class EwViewerWix extends HTMLElement {
+  static get observedAttributes() {
+    return FORWARD;
+  }
+
+  connectedCallback() {
+    if (!this.viewer) {
+      this.style.display = 'block';
+      this.style.width = '100%';
+      this.style.height = '100%';
+      this.viewer = document.createElement(CONFIG.viewerTag);
+      this.viewer.setAttribute('height', '100%');
+      // <ew-viewer> checks the licence key against this site's hostname (cached, no cookies).
+      this.viewer.setAttribute('plugin', 'wix');
+      this.append(this.viewer);
+    }
+    this.sync();
+    loadViewer().catch((error) => console.error(error));
+  }
+
+  attributeChangedCallback() {
+    this.sync();
+  }
+
+  sync() {
+    if (!this.viewer) return;
+    for (const name of FORWARD) {
+      const value = this.getAttribute(name);
+      if (value === null) this.viewer.removeAttribute(name);
+      else this.viewer.setAttribute(name, value);
+    }
+  }
+}
+
+if (!customElements.get(CONFIG.wixTag)) customElements.define(CONFIG.wixTag, EwViewerWix);

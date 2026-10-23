@@ -1,0 +1,547 @@
+---
+interface Props { mode?: string; title?: string }
+const { mode = 'feed', title = 'Creator ecosystem — post, cut, keep your originals' } = Astro.props;
+const samples = [
+  { id: 'sample-hero', name: 'Venice golden hour', src: '/khensu/creators/hero.mp4', poster: '/khensu/creators/hero.webp', type: 'video' },
+  { id: 'sample-fans', name: 'Fans 1080', src: '/khensu/creators/fans-1080.mp4', poster: '/khensu/creators/fans-1080.webp', type: 'video' },
+  { id: 'sample-aura', name: 'Aura runway', src: '/khensu/aura/legacy.aura.mp4', poster: '/khensu/aura/legacy.aura.jpg', type: 'video' },
+];
+---
+<section class="eco" id="ecosystem" data-mode={mode} data-samples={JSON.stringify(samples)} aria-labelledby="eco-title">
+  <div class="wrap">
+    <p class="eyebrow">live now · in your browser</p>
+    <h2 id="eco-title">{title}</h2>
+    <p class="eco-lede">Post to the feed, cut it in ñü.mømëntš, pick your ñü.ævätåřş identity and keep originals in ñü.media. Posts you publish to the shared feed are public; everything else on this page stays on this device. Likes, tips and pack buys here are on-device previews: no money moves on this page, and the ñũ.Fî panel is a demo ledger.</p>
+
+    <div class="eco-profilebar">
+      <div class="eco-avatar" id="eco-avatar" aria-hidden="true">YO</div>
+      <div class="eco-who"><b id="eco-display">You</b><span id="eco-handle">@you.khensu.nu</span></div>
+      <div class="eco-bal"><span>Demo ledger</span><b id="eco-balance">$0.00</b></div>
+      <a class="btn eco-unified" href="/feed/">Open the full-screen feed</a>
+    </div>
+
+    <nav class="eco-tabs" aria-label="Ecosystem">
+      <button type="button" data-tab="feed">▶ Feed <span>nu.network</span></button>
+      <button type="button" data-tab="create">＋ Create <span>ñü.ċřêæțẽ</span></button>
+      <button type="button" data-tab="moments">✦ Moments <span>ñü.mømëntš</span></button>
+      <button type="button" data-tab="avatars">◐ Avatar <span>ñü.ævätåřş</span></button>
+      <button type="button" data-tab="media">▦ Media <span>ñü.media</span></button>
+      <button type="button" data-tab="payouts">＄ Demo ledger <span>ñũ.Fî</span></button>
+    </nav>
+
+    <!-- FEED -->
+    <div class="eco-panel" data-panel="feed">
+      <div class="eco-feedhead">
+        <div><h3>For you</h3><p id="eco-feed-sub">The newest posts from everyone. Tap ♥ or share anywhere.</p></div>
+        <div class="eco-feedtools">
+          <a class="btn primary" href="/feed/">Full screen</a>
+          <button type="button" class="btn" id="eco-export" data-local-only>Export post pack</button>
+          <label class="btn eco-import" data-local-only>Import pack<input id="eco-import" type="file" accept="application/json" hidden /></label>
+        </div>
+      </div>
+      <div class="eco-feed" id="eco-feed" aria-live="polite"></div>
+      <p class="eco-note" id="eco-feed-note"></p>
+    </div>
+
+    <!-- CREATE / MOMENTS EDITOR -->
+    <div class="eco-panel" data-panel="create">
+      <div class="eco-grid">
+        <form class="eco-card" id="eco-post-form">
+          <h3>Post to the feed — right now</h3>
+          <label>Caption<textarea id="eco-caption" rows="3" maxlength="220" placeholder="Shot on my walk. Beat-synced in Moments, zero upload.">Shot on my walk. Beat-synced in ñü.mømëntš — zero upload, all mine.</textarea></label>
+          <label>Use media
+            <select id="eco-sample">
+              {samples.map(s => <option value={s.id}>{s.name} (built-in sample)</option>)}
+              <option value="upload">My upload (pick below)</option>
+            </select>
+          </label>
+          <label class="eco-drop"><span id="eco-drop-label">Drop a photo or video — stored only on this device</span>
+            <input id="eco-file" type="file" accept="video/*,image/*" />
+          </label>
+          <div class="eco-row">
+            <label>Template pack
+              <select id="eco-template">
+                <option>Venice Golden Hour</option><option>90s Film Diary</option>
+                <option>Runway Editorial · nu.aura</option><option>Cyber Glass · nu.glass</option>
+                <option>Scrapbook Dump</option><option>Beat-Cut Reel</option>
+              </select>
+            </label>
+            <label>Look
+              <select id="eco-look">
+                <option value="">Natural</option><option value="sepia(.35) saturate(1.2) contrast(1.05)">Film 35mm</option>
+                <option value="saturate(1.5) contrast(1.1)">Digital Pop</option><option value="blur(.4px) saturate(.85) brightness(1.08)">Haze</option>
+                <option value="grayscale(.2) contrast(1.2)">Printed</option><option value="hue-rotate(18deg) saturate(1.4)">VHS</option>
+              </select>
+            </label>
+          </div>
+          <div class="eco-row">
+            <label>Beat sync
+              <select id="eco-bpm"><option value="120">120 BPM · House</option><option value="92">92 BPM · Lo-Fi</option><option value="140">140 BPM · Garage</option><option value="0">Off</option></select>
+            </label>
+            <label>Pack price (0 = free)
+              <select id="eco-price"><option value="0">Free post</option><option value="9">$9 template pack</option><option value="24">$24 creator pack</option><option value="49">$49 full pack</option></select>
+            </label>
+          </div>
+          <label class="eco-check"><input type="checkbox" id="eco-lift" /> Subject lift — matte travels in ñü.media, original untouched</label>
+          <button class="btn primary eco-postbtn" type="submit" id="eco-postbtn">Post to feed →</button>
+          <div class="eco-progress" id="eco-progress" hidden><i></i></div>
+          <p class="eco-note" id="eco-post-status">Non-destructive recipe. Original kept. Generated detail is off unless you turn it on.</p>
+        </form>
+
+        <div class="eco-card eco-stagecard">
+          <h3>Live preview · ñü.mømëntš</h3>
+          <div class="eco-phone" id="eco-phone">
+            <video id="eco-preview-video" src={samples[0].src} poster={samples[0].poster} autoplay muted loop playsinline preload="metadata"></video>
+            <img id="eco-preview-img" alt="" hidden />
+            <div class="eco-overlay"><span id="eco-overlay-template">Venice Golden Hour</span><b id="eco-overlay-caption">Your moment</b></div>
+            <div class="eco-beats" id="eco-beats" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="eco-chips"><span id="eco-chip-bpm">120 BPM · beat sync on device</span><span id="eco-chip-look">Natural</span><span>Uploads only when you post</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOMENTS panel reuses editor with focus -->
+    <div class="eco-panel" data-panel="moments">
+      <div class="eco-card">
+        <h3>ñü.mømëntš beats Templify — try it, don't read about it</h3>
+        <p>The editor is the Create tab: six designer packs, beat sync, subject lift, captions and looks — all on-device. Templify uploads your clips to score them and paywalls the export; here the export is yours, and nothing uploads until you post.</p>
+        <button type="button" class="btn primary" data-goto="create">Open the Moments editor →</button>
+        <ul class="eco-vs">
+          <li><b>Upload to score a clip</b><span>Templify: yes · ñü.mømëntš: never</span></li>
+          <li><b>Weekly subscription trap</b><span>Templify: $9.99/wk · here: free editor, buy packs once</span></li>
+          <li><b>Originals</b><span>Cloud apps: flattened · here: recipe over the original</span></li>
+          <li><b>Template privacy</b><span>Tracked · here: signed packs over webË / mixnet</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AVATARS -->
+    <div class="eco-panel" data-panel="avatars">
+      <form class="eco-card" id="eco-profile-form">
+        <h3>Your handle & avatar — used on every post</h3>
+        <div class="eco-row">
+          <label>Display name<input id="eco-name" type="text" maxlength="40" value="You" /></label>
+          <label>Handle — 1–64 characters, any diacritics<input id="eco-handle-input" type="text" maxlength="128" value="you" placeholder="ė, ñü, ŵævẽš, 中文…" /></label>
+        </div>
+        <div class="eco-row">
+          <label>Avatar style
+            <select id="eco-style"><option>Glass</option><option>Aura</option><option>Ink</option><option>Toon</option><option>Pixel</option></select>
+          </label>
+          <label>Colour <input id="eco-hue" type="range" min="0" max="360" value="285" /></label>
+        </div>
+        <div class="eco-avatarbig" id="eco-avatar-big">YO</div>
+        <button class="btn primary" type="submit">Save identity</button>
+        <p class="eco-note">Permanent handles are <span class="mono">name.khensu.nu</span> from the key-transparency log; this picks yours on this device today.</p>
+      </form>
+    </div>
+
+    <!-- MEDIA -->
+    <div class="eco-panel" data-panel="media">
+      <div class="eco-card">
+        <h3>ñü.media library — originals on this device</h3>
+        <p>Uploads live in this browser's private store (IndexedDB). Use one in a post, or delete it — it was never on a server.</p>
+        <label class="eco-drop">Add photo / video<input id="eco-media-add" type="file" accept="video/*,image/*" multiple /></label>
+        <div class="eco-library" id="eco-library"></div>
+      </div>
+    </div>
+
+    <!-- PAYOUTS -->
+    <div class="eco-panel" data-panel="payouts">
+      <div class="eco-grid">
+        <div class="eco-card">
+          <h3>ñũ.Fî demo ledger</h3>
+          <p>A demo of how creator earnings add up: tips 100% to you, pack sales 90% to you with the flat 10% commerce. Every figure here is simulated on this device. No money moves on this page.</p>
+          <div class="eco-stats">
+            <div><span>Demo balance</span><b id="eco-pay-avail">$0.00</b></div>
+            <div><span>Demo payouts</span><b id="eco-pay-paid">$0.00</b></div>
+            <div><span>Demo ñũ.Bî</span><b id="eco-pay-bi">$0.00</b></div>
+          </div>
+          <label>Demo payout destination
+            <select id="eco-pay-method"><option>ñũ.Bî wallet</option><option>Bank via ñũ.Fî</option></select>
+          </label>
+          <button type="button" class="btn primary eco-postbtn" id="eco-payout-btn">Run a demo payout</button>
+          <p class="eco-note" id="eco-payout-status">Demo only. Real tips, sales and payouts run in the khėnsu.ñü app.</p>
+          <div class="eco-row">
+            <button type="button" class="btn" id="eco-sim-sale">Simulate $24 pack sale</button>
+            <button type="button" class="btn" id="eco-sim-tip">Simulate $5 tip</button>
+            <button type="button" class="btn" id="eco-csv">Download demo CSV</button>
+          </div>
+        </div>
+        <div class="eco-card">
+          <h3>Demo ledger</h3>
+          <ul class="eco-ledger" id="eco-ledger"></ul>
+        </div>
+      </div>
+    </div>
+
+    <p class="eco-toast" id="eco-toast" role="status" aria-live="polite" hidden></p>
+  </div>
+</section>
+
+<style>
+  .eco{--eco:#f0a8c8;--eco2:#7ee0c8;padding:clamp(3rem,7vw,5rem) 0;background:radial-gradient(90% 60% at 15% 0%,rgba(240,168,200,.14),transparent 55%),radial-gradient(80% 60% at 90% 20%,rgba(126,224,200,.12),transparent 55%)}
+  .eco h2{font-size:clamp(2rem,5vw,3.2rem);letter-spacing:-.03em;margin:.4rem 0 1rem}
+  .eco-lede{max-width:72ch;color:var(--text-dim);font-size:1.08rem;line-height:1.6}
+  .eco-profilebar{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;margin:1.6rem 0 1rem;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:20px;background:var(--bg-raised)}
+  .eco-avatar,.eco-avatarbig{display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:700;background:linear-gradient(140deg,hsl(285 80% 60%),hsl(330 80% 55%));box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 8px 24px rgba(0,0,0,.35)}
+  .eco-avatar{width:52px;height:52px}
+  .eco-avatarbig{width:96px;height:96px;font-size:1.7rem;margin:.6rem 0 1rem}
+  .eco-who{display:grid}.eco-who span{color:var(--text-dim);font-size:.9rem}
+  .eco-bal{margin-left:auto;display:grid;text-align:right}.eco-bal span{color:var(--text-dim);font-size:.8rem}.eco-bal b{font-size:1.35rem;color:var(--eco2)}
+  .eco-tabs{display:flex;gap:.5rem;overflow-x:auto;padding:.4rem 0 1rem;position:sticky;top:64px;z-index:5;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px)}
+  .eco-tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--bg-raised);color:var(--text);border-radius:999px;padding:.6rem 1rem;font:inherit;font-weight:600;cursor:pointer;display:grid;line-height:1.15;text-align:left}
+  .eco-tabs button span{font-weight:400;font-size:.7rem;color:var(--text-dim)}
+  .eco-tabs button[aria-selected="true"]{background:linear-gradient(120deg,rgba(240,168,200,.28),rgba(126,224,200,.25));border-color:rgba(240,168,200,.6)}
+  .eco-panel{margin-top:.6rem}.eco-panel[hidden]{display:none}
+  .eco-card{border:1px solid var(--line);background:var(--bg-raised);border-radius:24px;padding:1.4rem;display:grid;gap:.9rem;align-content:start}
+  .eco-card h3{margin:0;font-size:1.3rem;letter-spacing:-.02em}.eco-card p{color:var(--text-dim);line-height:1.55;margin:0}
+  .eco-grid{display:grid;gap:1rem}@media(min-width:920px){.eco-grid{grid-template-columns:1.05fr .95fr}}
+  .eco-card label{display:grid;gap:.4rem;font-weight:600;font-size:.92rem}
+  .eco-card input[type="text"],.eco-card textarea,.eco-card select{font:inherit;font-weight:400;padding:.7rem .8rem;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%}
+  .eco-row{display:grid;gap:.8rem}@media(min-width:560px){.eco-row{grid-template-columns:1fr 1fr}}
+  .eco-drop{border:1.5px dashed rgba(240,168,200,.55);border-radius:16px;padding:1rem;text-align:center;cursor:pointer;color:var(--text-dim)}
+  .eco-check{display:flex!important;grid-template-columns:auto 1fr;align-items:center;font-weight:400!important}
+  .eco-postbtn{justify-content:center;font-size:1.05rem;padding:.9rem 1.2rem}
+  .eco-note{color:var(--text-faint);font-size:.88rem;line-height:1.5}
+  .eco-phone{position:relative;border-radius:26px;overflow:hidden;aspect-ratio:9/16;max-height:560px;margin:0 auto;width:min(100%,330px);background:#000;border:1px solid rgba(255,255,255,.16)}
+  .eco-phone video,.eco-phone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .eco-overlay{position:absolute;left:12px;right:12px;bottom:44px;color:#fff;display:grid;gap:.25rem;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+  .eco-overlay span{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+  .eco-beats{position:absolute;left:12px;right:12px;bottom:14px;display:flex;gap:3px;align-items:end;height:26px}
+  .eco-beats i{flex:1;background:linear-gradient(180deg,var(--eco),var(--eco2));border-radius:3px 3px 0 0;height:40%;animation:ecoBeat 1s ease-in-out infinite}
+  .eco-beats i:nth-child(3n){animation-delay:.15s}.eco-beats i:nth-child(4n){animation-delay:.3s}.eco-beats i:nth-child(5n){animation-delay:.45s}
+  @keyframes ecoBeat{0%,100%{transform:scaleY(.6)}50%{transform:scaleY(1.15)}}
+  .eco-chips{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}.eco-chips span{font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:.35rem .65rem;color:var(--text-dim)}
+  .eco-feedhead{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:end}.eco-feedhead h3{margin:0;font-size:1.5rem}.eco-feedhead p{color:var(--text-dim);margin:.3rem 0 0}
+  .eco-feedtools{display:flex;gap:.5rem;flex-wrap:wrap}.eco-import{cursor:pointer}
+  .eco-feed{display:grid;gap:1.2rem;margin-top:1.2rem}
+  @media(min-width:760px){.eco-feed{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}}
+  .eco-post{border:1px solid var(--line);border-radius:24px;overflow:hidden;background:#0c0d12;color:#fff}
+  .eco-postmedia{position:relative;aspect-ratio:4/5;background:#111}
+  .eco-postmedia video,.eco-postmedia img{width:100%;height:100%;object-fit:cover;display:block}
+  .eco-postmeta{padding:1rem;display:grid;gap:.55rem}
+  .eco-posthead{display:flex;gap:.65rem;align-items:center}.eco-posthead .eco-avatar{width:38px;height:38px;font-size:.8rem}
+  .eco-posthead span{display:block;color:rgba(255,255,255,.6);font-size:.8rem}
+  .eco-actions{display:flex;gap:.45rem;flex-wrap:wrap}
+  .eco-actions button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:.45rem .75rem;font:inherit;cursor:pointer}
+  .eco-actions button.on{background:rgba(240,168,200,.35);border-color:var(--eco)}
+  .eco-tags{display:flex;gap:.4rem;flex-wrap:wrap}.eco-tags span{font-size:.72rem;color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.16);padding:.2rem .5rem;border-radius:999px}
+  .eco-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}.eco-stats div{border:1px solid var(--line);border-radius:16px;padding:.9rem}.eco-stats span{display:block;color:var(--text-dim);font-size:.78rem}.eco-stats b{font-size:1.25rem}
+  .eco-ledger{list-style:none;margin:0;padding:0;display:grid;gap:.55rem;max-height:420px;overflow:auto}
+  .eco-ledger li{display:flex;justify-content:space-between;gap:1rem;border:1px solid var(--line);border-radius:12px;padding:.65rem .8rem;font-size:.9rem}
+  .eco-ledger span{color:var(--text-dim);display:block;font-size:.78rem}.eco-ledger b.pos{color:var(--eco2)}
+  .eco-library{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+  .eco-lib{border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid}.eco-lib video,.eco-lib img{width:100%;aspect-ratio:1;object-fit:cover;background:#000}
+  .eco-lib button{font:inherit;padding:.5rem;cursor:pointer;background:var(--bg);color:var(--text);border:0;border-top:1px solid var(--line)}
+  .eco-vs{list-style:none;margin:1rem 0 0;padding:0;display:grid;gap:.55rem}.eco-vs li{display:flex;justify-content:space-between;gap:1rem;border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem}.eco-vs span{color:var(--text-dim)}
+  .eco-toast{position:sticky;bottom:16px;margin-top:1rem;background:#101418;border:1px solid rgba(126,224,200,.55);color:#fff;border-radius:14px;padding:.85rem 1rem;z-index:9;pointer-events:none}
+  .eco-progress{height:6px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.eco-progress[hidden]{display:none}
+  .eco-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--eco),var(--eco2));transition:width .2s}
+  .eco-note.err{color:#ff9a9a}
+  [data-local-only][hidden]{display:none}
+  .eco-report{position:relative}.eco-report summary{list-style:none;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:.45rem .75rem;cursor:pointer}
+  .eco-report summary::-webkit-details-marker{display:none}
+  .eco-report div{position:absolute;bottom:calc(100% + 6px);left:0;z-index:3;display:grid;gap:.3rem;padding:.5rem;min-width:9rem;border-radius:14px;background:rgba(20,21,26,.92);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(20px)}
+  .eco-report div button{text-align:left}
+  .mono{font-family:var(--font-mono)}
+  @media(prefers-reduced-motion:reduce){.eco-beats i{animation:none}}
+</style>
+
+<script>
+  import {
+    feedApi, fetchFeed, reportPost, postVideo, stageLabel, FeedError, REPORT_REASONS, showHandle, normHandle, handleProblem,
+    loadLocal, saveLocal, idb, mediaURL, uid, type FeedPost, type LocalPost, type ReportReason,
+  } from '../../scripts/feed-client';
+
+  const root = document.getElementById('ecosystem')!;
+  const samples: { id: string; name: string; src: string; poster: string; type: string }[] = JSON.parse(root.dataset.samples || '[]');
+  const $ = <T extends HTMLElement = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const $$ = <T extends HTMLElement = HTMLElement>(s: string) => [...root.querySelectorAll<T>(s)];
+  const money = (n: number) => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const { api, override } = feedApi();
+
+  const state = loadLocal();
+  const save = () => saveLocal(state);
+
+  function toast(msg: string) { const t = $('#eco-toast'); t.textContent = msg; t.hidden = false; clearTimeout((t as any)._h); (t as any)._h = setTimeout(() => (t.hidden = true), 4200); }
+  function avatarEl(el: HTMLElement | null, display: string, hue: number | string) {
+    if (!el) return;
+    el.textContent = (display || 'Y').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    el.style.background = `linear-gradient(140deg,hsl(${hue} 80% 60%),hsl(${(Number(hue) + 45) % 360} 80% 52%))`;
+  }
+  function credit(kind: string, label: string, gross: number) {
+    const fee = kind === 'sale' ? Math.round(gross * 0.10 * 100) / 100 : 0;
+    const net = Math.round((gross - fee) * 100) / 100;
+    state.ledger.unshift({ id: uid(), kind, label, gross, fee, net, at: new Date().toISOString() });
+    save(); renderPayouts();
+    return net;
+  }
+  const balance = () => state.ledger.reduce((a, e) => a + e.net, 0) - state.payouts.reduce((a, p) => a + p.amount, 0);
+
+  // Tabs
+  function showTab(name: string) {
+    $$('.eco-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    $$('.eco-panel').forEach((p) => (p.hidden = p.dataset.panel !== name));
+    if (name === 'media') renderLibrary();
+    if (name === 'payouts') renderPayouts();
+  }
+  $$('.eco-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab!)));
+  $$('[data-goto]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.goto!)));
+  const mode = root.dataset.mode || 'feed';
+  showTab(mode === 'creators' || mode === 'create' ? 'create' : mode === 'fi' ? 'payouts' : ['feed', 'moments', 'avatars', 'media'].includes(mode) ? mode : 'feed');
+
+  // Profile
+  function renderProfile() {
+    avatarEl($('#eco-avatar'), state.profile.display, state.profile.hue);
+    avatarEl($('#eco-avatar-big'), state.profile.display, state.profile.hue);
+    $('#eco-display').textContent = state.profile.display;
+    $('#eco-handle').textContent = showHandle(state.profile.handle);
+    $('#eco-balance').textContent = money(balance());
+  }
+  $('#eco-profile-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const handle = normHandle($<HTMLInputElement>('#eco-handle-input').value);
+    const problem = handleProblem(handle);
+    if (problem) { toast(problem); return; }
+    $<HTMLInputElement>('#eco-handle-input').value = handle;
+    state.profile = { display: $<HTMLInputElement>('#eco-name').value.trim() || 'You', handle, style: $<HTMLSelectElement>('#eco-style').value, hue: Number($<HTMLInputElement>('#eco-hue').value) };
+    save(); renderProfile(); renderFeed(); toast('Identity saved. It is on every post you make now.');
+  });
+  $('#eco-hue').addEventListener('input', () => avatarEl($('#eco-avatar-big'), $<HTMLInputElement>('#eco-name').value, $<HTMLInputElement>('#eco-hue').value));
+
+  // Feed: the shared feed when a service is configured, otherwise the posts on this device.
+  $$('[data-local-only]').forEach((el) => (el.hidden = !!api));
+  $('#eco-feed-sub').textContent = api ? 'The newest posts from everyone. Tap ♥ or share anywhere.' : 'Local mode: posts on this device. Tap ♥ or share a post pack.';
+  $('#eco-feed-note').textContent = api
+    ? override ? `Test feed: ${api}` : 'Posts on the shared feed are public. Report anything that breaks the rules from the post.'
+    : 'The shared feed isn’t connected on this page, so posts stay on this device. Share a post pack (.json) in any messenger and the receiver imports it here.';
+
+  function card(opts: { id: string; handle: string; display?: string; hue?: number; caption: string; mediaHtml: string; tags: string[]; local: boolean; post?: LocalPost }) {
+    const el = document.createElement('article');
+    el.className = 'eco-post';
+    const p = opts.post;
+    el.innerHTML = `
+      <div class="eco-postmedia">${opts.mediaHtml}</div>
+      <div class="eco-postmeta">
+        <div class="eco-posthead"><div class="eco-avatar"></div><div><b></b><span></span></div></div>
+        <p style="margin:0;line-height:1.5"></p>
+        <div class="eco-tags"></div>
+        <div class="eco-actions">
+          <button type="button" data-act="like" class="${state.liked[opts.id] ? 'on' : ''}">♥ ${(p?.likes || 0) + (state.liked[opts.id] ? 1 : 0)}</button>
+          <button type="button" data-act="tip">Tip</button>
+          ${p?.price ? `<button type="button" data-act="buy">Buy pack ${money(p.price)}</button>` : ''}
+          <button type="button" data-act="share">Share</button>
+          ${opts.local ? `<button type="button" data-act="save" class="${state.saved[opts.id] ? 'on' : ''}">${state.saved[opts.id] ? 'Saved' : 'Save'}</button>` : ''}
+          ${opts.local ? '' : `<details class="eco-report"><summary>Report</summary><div>${REPORT_REASONS.map((r) => `<button type="button" data-reason="${r}">${r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</div></details>`}
+        </div>
+      </div>`;
+    el.querySelector('.eco-posthead b')!.textContent = opts.display || showHandle(opts.handle);
+    el.querySelector('.eco-posthead span')!.textContent = showHandle(opts.handle);
+    el.querySelector('.eco-postmeta p')!.textContent = opts.caption;
+    const tags = el.querySelector('.eco-tags')!;
+    for (const t of opts.tags) { const s = document.createElement('span'); s.textContent = t; tags.append(s); }
+    avatarEl(el.querySelector('.eco-avatar'), opts.display || opts.handle, opts.hue ?? state.profile.hue);
+    el.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((btn) => btn.addEventListener('click', async () => {
+      const act = btn.dataset.act;
+      if (act === 'like') { state.liked[opts.id] = !state.liked[opts.id]; save(); renderFeed(); }
+      if (act === 'save') { state.saved[opts.id] = !state.saved[opts.id]; save(); renderFeed(); toast(state.saved[opts.id] ? 'Saved to your ñü.media collection.' : 'Removed from saved.'); }
+      if (act === 'tip') toast('Tips run in the khėnsu.ñü app through nu.Fi, 100% to the person. Nothing is charged on this page.');
+      if (act === 'buy') toast(`Packs sell in the khėnsu.ñü app: ${money(p!.price! * 0.9)} of ${money(p!.price!)} goes to the creator, flat 10% commerce. Nothing is charged on this page.`);
+      if (act === 'share') {
+        if (opts.local && p) {
+          const pack = JSON.stringify({ nu: 'post-pack-v1', post: { ...p, src: p.mediaId ? '' : p.src } }, null, 2);
+          try { await navigator.share({ title: 'ñü.mømëntš post', text: p.caption, url: location.href }); }
+          catch { await navigator.clipboard?.writeText(pack).catch(() => {}); toast('Post pack copied. Send it anywhere; they import it in the Feed tab.'); }
+        } else {
+          const url = `${location.origin}/feed/`;
+          try { await navigator.share({ title: 'khėnsu.ñü feed', text: opts.caption, url }); }
+          catch { await navigator.clipboard?.writeText(url).catch(() => {}); toast('Link copied.'); }
+        }
+      }
+    }));
+    el.querySelectorAll<HTMLButtonElement>('[data-reason]').forEach((btn) => btn.addEventListener('click', async () => {
+      (el.querySelector('details') as HTMLDetailsElement).open = false;
+      try { await reportPost(api, opts.id, btn.dataset.reason as ReportReason); el.remove(); toast('Reported. It’s hidden and sent for review.'); }
+      catch (e) { toast((e as Error).message); }
+    }));
+    return el;
+  }
+
+  const io = new IntersectionObserver((es) => es.forEach((en) => { const v = en.target as HTMLVideoElement; if (en.isIntersecting) v.play().catch(() => {}); else v.pause(); }), { threshold: 0.45 });
+  let remote: FeedPost[] | null = null;
+
+  async function renderFeed() {
+    const feed = $('#eco-feed');
+    renderProfile();
+    if (api) {
+      if (!remote) {
+        try { remote = (await fetchFeed(api, null, 12)).posts; }
+        catch (e) { feed.innerHTML = '<p class="eco-note err"></p>'; feed.querySelector('p')!.textContent = (e as Error).message; return; }
+      }
+      feed.innerHTML = '';
+      if (!remote.length) { feed.innerHTML = '<p class="eco-note">No posts yet. Post the first one from the Create tab.</p>'; return; }
+      for (const r of remote) {
+        const poster = r.poster_url ? ` poster="${encodeURI(r.poster_url)}"` : '';
+        feed.append(card({ id: r.id, handle: r.handle, caption: r.caption, local: false, tags: [new Date(r.created_at).toLocaleDateString()], mediaHtml: `<video src="${encodeURI(r.video_url)}"${poster} muted loop playsinline preload="metadata"></video>` }));
+      }
+    } else {
+      feed.innerHTML = '';
+      if (!state.posts.length) { feed.innerHTML = '<p class="eco-note">No posts on this device yet. Make one in the Create tab.</p>'; return; }
+      for (const post of state.posts) {
+        const src = post.mediaId ? await mediaURL(post.mediaId) : post.src || '';
+        const look = post.look || 'none';
+        const mediaHtml = post.type === 'image'
+          ? `<img src="${src}" alt="" style="filter:${look}">`
+          : `<video src="${src}" ${post.poster ? `poster="${post.poster}"` : ''} muted loop playsinline preload="metadata" style="filter:${look}"></video>`;
+        const tags = [post.template || 'Original', post.bpm ? post.bpm + ' BPM' : 'No beat sync', post.price ? money(post.price) + ' pack' : 'Free', ...(post.mine ? ['Your post'] : [])];
+        feed.append(card({ id: post.id, handle: post.handle, display: post.display, hue: post.hue, caption: post.caption, local: true, tags, mediaHtml, post }));
+      }
+    }
+    feed.querySelectorAll('video').forEach((v) => io.observe(v));
+  }
+
+  // Editor preview
+  let pendingBlob: Blob | null = null, pendingType = 'video', pendingName = '';
+  const sampleById = (id: string) => samples.find((s) => s.id === id) || samples[0];
+  function syncPreview() {
+    const useUpload = $<HTMLSelectElement>('#eco-sample').value === 'upload' && pendingBlob;
+    const v = $<HTMLVideoElement>('#eco-preview-video'), img = $<HTMLImageElement>('#eco-preview-img');
+    if (useUpload && pendingType.startsWith('image')) { img.src = URL.createObjectURL(pendingBlob!); img.hidden = false; v.hidden = true; }
+    else if (useUpload) { v.src = URL.createObjectURL(pendingBlob!); v.poster = ''; v.hidden = false; img.hidden = true; v.play().catch(() => {}); }
+    else { const s = sampleById($<HTMLSelectElement>('#eco-sample').value); v.src = s.src; v.poster = s.poster; v.hidden = false; img.hidden = true; v.play().catch(() => {}); }
+    const look = $<HTMLSelectElement>('#eco-look'); const filter = look.value || 'none';
+    v.style.filter = filter; img.style.filter = filter;
+    $('#eco-overlay-template').textContent = $<HTMLSelectElement>('#eco-template').value;
+    $('#eco-overlay-caption').textContent = ($<HTMLTextAreaElement>('#eco-caption').value || 'Your moment').slice(0, 64);
+    $('#eco-chip-look').textContent = look.options[look.selectedIndex].text;
+    const bpm = Number($<HTMLSelectElement>('#eco-bpm').value);
+    $('#eco-chip-bpm').textContent = bpm ? bpm + ' BPM · beat sync on device' : 'Beat sync off';
+    $('#eco-beats').style.display = bpm ? 'flex' : 'none';
+    $$('#eco-beats i').forEach((bar, i) => { bar.style.animationDuration = bpm ? (60 / bpm * 2) + 's' : '1s'; bar.style.height = (28 + ((i * 37) % 65)) + '%'; });
+  }
+  ['eco-sample', 'eco-template', 'eco-look', 'eco-bpm', 'eco-caption'].forEach((id) => $('#' + id).addEventListener('input', syncPreview));
+  if (api) $('#eco-drop-label').textContent = 'Choose a video to post to the shared feed';
+  $('#eco-file').addEventListener('change', () => {
+    const f = $<HTMLInputElement>('#eco-file').files?.[0]; if (!f) return;
+    pendingBlob = f; pendingType = f.type; pendingName = f.name;
+    $<HTMLSelectElement>('#eco-sample').value = 'upload'; syncPreview();
+    toast(api ? 'Loaded. It uploads when you post.' : 'Loaded on this device only.');
+  });
+
+  const status = $('#eco-post-status');
+  const bar = $('#eco-progress');
+  let busy = false;
+  $('#eco-post-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    status.classList.remove('err');
+    const useUpload = $<HTMLSelectElement>('#eco-sample').value === 'upload' && pendingBlob;
+    const caption = $<HTMLTextAreaElement>('#eco-caption').value.trim() || 'Untitled moment';
+    if (api) {
+      if (!useUpload) { status.textContent = 'Choose your own video to post to the shared feed. The samples are for trying looks.'; status.classList.add('err'); return; }
+      if (!pendingType.startsWith('video')) { status.textContent = 'The shared feed takes video. Export a reel in the ñü.mømëntš studio below, or choose a video.'; status.classList.add('err'); return; }
+      busy = true; $<HTMLButtonElement>('#eco-postbtn').disabled = true; bar.hidden = false;
+      try {
+        const post = await postVideo(api, {
+          handle: state.profile.handle, caption, video: pendingBlob!,
+          onProgress: (p) => { status.textContent = stageLabel(p); bar.querySelector('i')!.style.width = `${Math.round(p.fraction * 100)}%`; },
+        });
+        remote = [post, ...(remote || [])];
+        status.textContent = 'Posted to the shared feed.';
+        await renderFeed(); showTab('feed');
+        toast('Posted. It is live on the feed for everyone.');
+      } catch (err) {
+        status.textContent = err instanceof FeedError ? err.message : 'Something went wrong while posting. Try again.';
+        status.classList.add('err');
+      } finally {
+        busy = false; $<HTMLButtonElement>('#eco-postbtn').disabled = false; bar.hidden = true; bar.querySelector('i')!.style.width = '0';
+      }
+      return;
+    }
+    let mediaId = '', src = '', poster = '', type: 'video' | 'image' = 'video';
+    if (useUpload) {
+      mediaId = uid(); type = pendingType.startsWith('image') ? 'image' : 'video';
+      await idb('readwrite', (s) => s.put(pendingBlob, mediaId));
+      state.media.unshift({ id: mediaId, name: pendingName || 'upload', type, at: new Date().toISOString() });
+    } else { const s = sampleById($<HTMLSelectElement>('#eco-sample').value); src = s.src; poster = s.poster; type = s.type as 'video'; }
+    state.posts.unshift({
+      id: uid(), mine: true, display: state.profile.display, handle: state.profile.handle, hue: state.profile.hue,
+      caption, template: $<HTMLSelectElement>('#eco-template').value,
+      look: $<HTMLSelectElement>('#eco-look').value, bpm: Number($<HTMLSelectElement>('#eco-bpm').value), price: Number($<HTMLSelectElement>('#eco-price').value),
+      mediaId, src, poster, type, likes: 0, at: new Date().toISOString(),
+    });
+    save();
+    status.textContent = 'Posted on this device. Share its post pack to put it in someone else’s feed.';
+    await renderFeed(); showTab('feed'); renderLibrary();
+    toast('Posted on this device.');
+    window.scrollTo({ top: root.offsetTop - 70, behavior: 'smooth' });
+  });
+
+  // Media library
+  async function renderLibrary() {
+    const lib = $('#eco-library'); if (!lib) return; lib.innerHTML = '';
+    if (!state.media.length) { lib.innerHTML = '<p class="eco-note">Nothing yet. Add a photo or video above, or post from Create.</p>'; return; }
+    for (const m of state.media) {
+      const url = await mediaURL(m.id); const div = document.createElement('div'); div.className = 'eco-lib';
+      div.innerHTML = (m.type === 'image' ? `<img src="${url}" alt="">` : `<video src="${url}" muted playsinline preload="metadata"></video>`) + `<button type="button">Use in Moments</button><button type="button">Delete</button>`;
+      const [use, del] = div.querySelectorAll('button');
+      use.addEventListener('click', async () => { pendingBlob = await idb<Blob>('readonly', (s) => s.get(m.id)); pendingType = pendingBlob?.type || m.type; pendingName = m.name; $<HTMLSelectElement>('#eco-sample').value = 'upload'; syncPreview(); showTab('create'); toast('Loaded into ñü.mømëntš from your ñü.media library.'); });
+      del.addEventListener('click', async () => { await idb('readwrite', (s) => s.delete(m.id)); state.media = state.media.filter((x) => x.id !== m.id); state.posts = state.posts.filter((p) => p.mediaId !== m.id); save(); renderLibrary(); renderFeed(); });
+      lib.appendChild(div);
+    }
+  }
+  $('#eco-media-add').addEventListener('change', async () => {
+    for (const f of $<HTMLInputElement>('#eco-media-add').files || []) { const id = uid(); await idb('readwrite', (s) => s.put(f, id)); state.media.unshift({ id, name: f.name, type: f.type.startsWith('image') ? 'image' : 'video', at: new Date().toISOString() }); }
+    save(); renderLibrary(); toast('Saved to ñü.media on this device.');
+  });
+
+  // Post packs (local mode)
+  $('#eco-export').addEventListener('click', () => {
+    const pack = { nu: 'post-pack-v1', exportedAt: new Date().toISOString(), posts: state.posts.map((p) => ({ ...p, mediaId: '' })) };
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(pack, null, 2)], { type: 'application/json' })); a.download = 'khensu-post-pack.json'; a.click();
+    toast('Post pack exported. Anyone can import it into their feed.');
+  });
+  $('#eco-import').addEventListener('change', async () => {
+    try {
+      const pack = JSON.parse(await $<HTMLInputElement>('#eco-import').files![0].text());
+      const posts: LocalPost[] = pack.posts || [pack.post];
+      posts.forEach((p) => { if (p && p.id && !String(p.id).startsWith('seed-') && !state.posts.some((x) => x.id === p.id)) state.posts.unshift({ ...p, mine: false }); });
+      save(); await renderFeed(); toast('Imported. New posts are in your feed.');
+    } catch { toast('That file was not a khėnsu.ñü post pack.'); }
+  });
+
+  // Demo ledger
+  function renderPayouts() {
+    const avail = balance(); const paid = state.payouts.reduce((a, p) => a + p.amount, 0);
+    const set = (id: string, v: string) => { const el = root.querySelector(id); if (el) el.textContent = v; };
+    set('#eco-pay-avail', money(avail)); set('#eco-pay-paid', money(paid)); set('#eco-pay-bi', money(state.bi)); set('#eco-balance', money(avail));
+    const ul = $('#eco-ledger'); if (!ul) return; ul.innerHTML = '';
+    if (!state.ledger.length && !state.payouts.length) ul.innerHTML = '<li>No demo entries yet. Simulate a tip or a sale to watch 90/10 add up.</li>';
+    state.payouts.slice(0, 6).forEach((p) => { const li = document.createElement('li'); li.innerHTML = `<div>Demo payout ${p.id}<span>${new Date(p.at).toLocaleString()} · ${p.method}</span></div><b>−${money(p.amount)}</b>`; ul.appendChild(li); });
+    state.ledger.slice(0, 14).forEach((en) => { const li = document.createElement('li'); li.innerHTML = `<div></div><b class="pos">+${money(en.net)}</b>`; li.querySelector('div')!.innerHTML = `<span>${en.kind === 'sale' ? 'Sale ' + money(en.gross) + ' − 10% ' + money(en.fee) : 'Tip ' + money(en.gross) + ' − 0%'} · ${new Date(en.at).toLocaleString()}</span>`; li.querySelector('div')!.prepend(en.label); ul.appendChild(li); });
+  }
+  $('#eco-payout-btn').addEventListener('click', () => {
+    const amt = balance();
+    if (amt <= 0) { toast('The demo balance is empty. Simulate a tip or a sale first.'); return; }
+    const method = $<HTMLSelectElement>('#eco-pay-method').value;
+    const p = { id: 'DEMO-' + uid().toUpperCase().slice(0, 8), amount: Math.round(amt * 100) / 100, method, at: new Date().toISOString() };
+    state.payouts.unshift(p);
+    if (method.startsWith('ñũ.Bî')) state.bi += p.amount;
+    save(); renderPayouts(); renderProfile();
+    $('#eco-payout-status').textContent = `Demo payout of ${money(p.amount)} to ${method}. No money moved; real payouts run in the khėnsu.ñü app.`;
+    toast(`Demo payout ${money(p.amount)} recorded. No money moved.`);
+  });
+  $('#eco-sim-sale').addEventListener('click', () => { credit('sale', 'Template pack sale (demo)', 24); toast('Demo sale $24.00: $21.60 to you, $2.40 flat 10%. A 30% store would keep $7.20.'); renderProfile(); });
+  $('#eco-sim-tip').addEventListener('click', () => { credit('tip', 'Tip (demo)', 5); toast('Demo tip $5.00: all $5.00 to you.'); renderProfile(); });
+  $('#eco-csv').addEventListener('click', () => {
+    const rows = [['date', 'kind', 'label', 'gross', 'fee', 'net'], ...state.ledger.map((e) => [e.at, e.kind, '"' + e.label.replaceAll('"', '""') + '"', e.gross, e.fee, e.net])];
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map((r) => r.join(',')).join('\n')], { type: 'text/csv' })); a.download = 'nufi-demo-ledger.csv'; a.click();
+  });
+
+  // Init
+  $<HTMLInputElement>('#eco-name').value = state.profile.display; $<HTMLInputElement>('#eco-handle-input').value = state.profile.handle;
+  $<HTMLSelectElement>('#eco-style').value = state.profile.style; $<HTMLInputElement>('#eco-hue').value = String(state.profile.hue);
+  save();
+  syncPreview(); renderProfile(); renderFeed(); renderPayouts(); renderLibrary();
+</script>

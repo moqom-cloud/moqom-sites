@@ -1,0 +1,382 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const DECK = '/archive/lot-club/lot-club-pitch-deck.pdf';
+
+const funnel = [
+  { value: '1', label: 'cold email to 45,000 entertainment professionals, no follow-ups' },
+  { value: '11%', label: 'applied, 110 times the typical 0.1% of cold emails that book a meeting' },
+  { value: '6,000', label: 'applications in the first month with referrals, each one 15 minutes or more' },
+  { value: '34%', label: 'of applicants shared their referral link with friends' },
+];
+
+const benchmarks = [
+  { label: 'Lot Club: applied', rate: 11, ours: true },
+  { label: 'Typical: meeting booked', rate: 0.1 },
+];
+
+const studios = [
+  'Walt Disney Pictures',
+  'Paramount Pictures',
+  'Warner Bros.',
+  'Universal Pictures',
+  'Sony Pictures',
+  'Lucasfilm',
+  'Regency Enterprises',
+  'Summit Entertainment',
+  'Focus Features',
+];
+
+const features = [
+  { title: 'Verified, by hand', body: 'Every application was reviewed by a person, against real industry credits.' },
+  { title: 'Profiles with official credits', body: 'Past work came from official industry data, plus links and ice breakers.' },
+  { title: 'Next Up', body: 'Members posted current goals and needs; others replied with help, or applause.' },
+  { title: 'A feed worth reading', body: 'Curated industry news about fellow members, ranked by machine learning.' },
+  { title: 'A graph network underneath', body: 'Like Renge’s, but far more powerful and on completely different tech. It found the endorsement paths through people you know to the gig you want.' },
+];
+
+const feedback = [
+  { quote: 'Oh this is super cool! Especially because I’m constantly trying to crew up for different productions. And I’m really trying to diversify crew as well.', who: 'KL, Producer' },
+  { quote: 'Whoa! That looks amazing! I direct commercials and this looks like the ideal dream for all things film and production. Holy hell.', who: 'AU, Director' },
+  { quote: 'I actually love the sound of this and it’s music to my ears! I’ve already submitted my application.', who: 'DA, Actor' },
+];
+---
+
+<Base
+  title="Lot Club · Archive"
+  description="Lot Club, a private community for select entertainment professionals. 45,000 cold emails, an 11% signup rate and 6,000 signups in its first month. Paused, and resuming in due time."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Archive · 2020</p>
+      <img class="logo" src="/archive/lot-club/logo.png" alt="Lot Club" width="220" height="56" />
+      <p class="lede">Find your in. A private community for select entertainment professionals.</p>
+      <p class="status mono">Paused · resuming in due time</p>
+      <div class="btn-row">
+        <a class="btn primary" href={DECK} data-event="pitch_deck_click">Read the pitch deck (PDF)</a>
+        <a class="btn" href="/about">About Elliott</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">What it was</p>
+        <h2>Hollywood runs on who you know. Quarantine closed the room.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          In 2020 the industry went remote, and the parties, sets and festivals where careers get made stopped. Lot Club
+          launched in Santa Monica that August, first as IMDme, as a private community where verified film and TV
+          professionals could meet the right people, keep in touch and find the next gig.
+        </p>
+        <p>
+          Elliott was its CEO and sole creator. He designed and built the app prototype and the website, and ran the
+          marketing strategy and social media, on a budget he put up himself.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">Marketing</p>
+      <h2>One email. 11% applied. 110 times the norm.</h2>
+      <p class="lede small">
+        A single cold email, no follow-ups, to 45,000 people. The ask was bigger than booking a meeting: at least 15
+        minutes to make the case for why you belong, with linked profiles and your past, current and upcoming work, and
+        the studios you made it with. One in nine filled it in. Applicants included people who run TV networks, and some of the biggest names
+        behind the camera. All from one prototype, one website and that email.
+      </p>
+      <dl class="funnel">
+        {funnel.map((f) => (
+          <div>
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <figure class="compare" aria-label="Lot Club 11% applied, against typical cold email reply and meeting rates">
+        {benchmarks.map((b) => (
+          <div class="bar-row">
+            <span class="who">{b.label}</span>
+            <span class="track"><span class:list={['fill', { ours: b.ours }]} style={`--w: ${(b.rate / 11).toFixed(4)}`}></span></span>
+            <span class="pct">{b.rate}%</span>
+          </div>
+        ))}
+        <figcaption>
+          Share of all emails sent that turned into a commitment. For the typical campaign that’s a booked meeting, a
+          minute’s work, usually after several follow-ups. For Lot Club it was a 15-minute application with profiles,
+          credits and a case for membership, from one email. Typical rate from
+          Salesforge’s 2025 cold email benchmark, via{' '}
+          <a href="https://reachoutly.com/cold-email/conversion-rate/" rel="noopener">Reachoutly</a>.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">The app</p>
+        <h2>Built for people who already have credits.</h2>
+        <ul class="features">
+          {features.map((f) => (
+            <li>
+              <h3>{f.title}</h3>
+              <p>{f.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <figure class="shot">
+        <img src="/archive/lot-club/app.jpg" alt="Lot Club app prototype: a member's question and curated news about a fellow member" width="1400" height="1356" loading="lazy" decoding="async" />
+        <figcaption>The 2020 prototype, with sample data.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">Early members</p>
+      <h2>They had worked with</h2>
+      <ul class="chips">
+        {studios.map((s) => <li>{s}</li>)}
+      </ul>
+      <p class="note">And dozens more, including mini-majors and independents. Members’ past work, not partnerships.</p>
+      <ul class="quotes">
+        {feedback.map((f) => (
+          <li>
+            <blockquote>“{f.quote}”</blockquote>
+            <p>{f.who}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Where it stands</p>
+        <h2>Paused, not finished.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Lot Club was self-funded. That money paid for the launch above and got it into startup programs. At the end of
+          2020 a dispute with a business partner turned into legal action. Elliott defended it, and the defence used up
+          the budget meant for building the app.
+        </p>
+        <p>
+          C’est la vie. Lot Club still has its 6,000 applicants, accepted at different membership tiers. The community
+          still makes sense, and it will resume in due time.
+        </p>
+        <div class="btn-row">
+          <a class="btn primary" href={DECK} data-event="pitch_deck_click">Read the pitch deck (PDF)</a>
+          <a class="btn" href="/contact">Get in touch</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .logo {
+    display: block;
+    width: min(220px, 60vw);
+    height: auto;
+    margin: 1rem 0 1.25rem;
+  }
+  .status {
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+  .lede.small {
+    font-size: 1rem;
+    color: var(--text-dim);
+  }
+  .two {
+    display: grid;
+    gap: 1.5rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1.3fr;
+      align-items: start;
+    }
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+
+  .funnel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    margin: 2rem 0;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 900px) {
+    .funnel {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .funnel > div {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.4rem 1.5rem;
+    background: var(--bg-raised);
+  }
+  .funnel dt {
+    order: 2;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .funnel dd {
+    order: 1;
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+  }
+
+  .compare {
+    margin: 0;
+    max-width: 44rem;
+    display: grid;
+    gap: 0.7rem;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 9.5rem 1fr 3.2rem;
+    align-items: center;
+    gap: 0.9rem;
+    font-size: 0.85rem;
+  }
+  .compare .track {
+    height: 0.7rem;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .fill {
+    display: block;
+    height: 100%;
+    width: calc(var(--w) * 100%);
+    border-radius: inherit;
+    background: var(--text-faint);
+    transform-origin: left center;
+    animation: grow 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .fill.ours {
+    background: #8b2cf5;
+    box-shadow: 0 0 16px color-mix(in srgb, #8b2cf5 55%, transparent);
+  }
+  .pct {
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    text-align: right;
+  }
+  .compare figcaption {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+  @keyframes grow {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  .features {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.1rem;
+  }
+  .features h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+  }
+  .features p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .shot {
+    margin: 0;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .shot figcaption {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  .chips {
+    list-style: none;
+    padding: 0;
+    margin: 1.25rem 0 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .chips li {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .note {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+  }
+  .quotes {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 900px) {
+    .quotes {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .quotes li {
+    padding: 1.4rem 1.5rem;
+    border: 1px solid var(--line);
+    border-left: 2px solid #8b2cf5;
+    border-radius: 10px;
+    background: var(--bg-raised);
+  }
+  .quotes blockquote {
+    margin: 0;
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .quotes p {
+    margin: 0.75rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fill {
+      animation: none;
+    }
+  }
+</style>

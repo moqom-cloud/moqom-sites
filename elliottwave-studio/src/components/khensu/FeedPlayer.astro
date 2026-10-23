@@ -1,0 +1,417 @@
+---
+// The /feed player: one video per screen with snap scrolling on phones, a centred column on wider screens. Reads the
+// shared feed when a service is configured (src/data/feed.ts) and the posts on this device otherwise.
+const demo = { src: '/khensu/creators/hero.mp4', poster: '/khensu/creators/hero.webp' };
+---
+<section class="fp" id="feed-player" data-hero aria-label="Feed" data-demo-src={demo.src} data-demo-poster={demo.poster}>
+  <div class="fp-col">
+    <div class="fp-top">
+      <h1 class="fp-title">For you</h1>
+      <span class="fp-mode" id="fp-mode">Shared feed</span>
+      <button type="button" class="fp-postbtn" id="fp-open">＋ Post</button>
+    </div>
+    <div class="fp-scroller" id="fp-scroller" tabindex="0" aria-label="Posts. Swipe or use the arrow keys."></div>
+    <button type="button" class="fp-sound" id="fp-sound">🔇 Tap to unmute</button>
+  </div>
+
+  <dialog class="fp-sheet" id="fp-sheet" aria-labelledby="fp-sheet-title">
+    <form id="fp-form">
+      <h2 id="fp-sheet-title">Post to the feed</h2>
+      <p class="fp-where" id="fp-where"></p>
+      <label class="fp-drop"><span id="fp-file-label">Choose a video</span><input type="file" accept="video/*" id="fp-file" /></label>
+      <video id="fp-preview" muted playsinline loop hidden></video>
+      <label>Handle<input type="text" id="fp-handle" maxlength="128" autocomplete="nickname" /></label>
+      <label>Caption<textarea id="fp-caption" rows="2" maxlength="220" placeholder="Say something about it"></textarea></label>
+      <div class="fp-progress" id="fp-progress" hidden><i></i></div>
+      <p class="fp-status" id="fp-status" role="status" aria-live="polite"></p>
+      <div class="fp-actions">
+        <button type="button" class="btn" id="fp-cancel">Cancel</button>
+        <button type="submit" class="btn primary" id="fp-submit">Post</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="fp-sheet fp-report" id="fp-report" aria-labelledby="fp-report-title">
+    <h2 id="fp-report-title">Report this post</h2>
+    <p class="fp-where">Reports go to the people who moderate the shared feed. The poster isn't told who reported.</p>
+    <div class="fp-reasons" id="fp-reasons"></div>
+    <div class="fp-actions"><button type="button" class="btn" id="fp-report-cancel">Cancel</button></div>
+  </dialog>
+
+  <p class="fp-toast" id="fp-toast" role="status" aria-live="polite" hidden></p>
+</section>
+
+<style>
+  .fp { --fp-top: 65px; position: relative; height: calc(100svh - var(--fp-top)); background: #000; overflow: hidden; }
+  .fp-col { position: relative; height: 100%; margin: 0 auto; width: 100%; }
+  .fp-top { position: absolute; z-index: 3; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 1rem; pointer-events: none; background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent); }
+  .fp-title { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
+  .fp-mode { font-size: 0.75rem; color: rgba(255, 255, 255, 0.75); padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(24, 24, 28, 0.55); border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); }
+  .fp-mode.test { border-color: rgba(255, 200, 90, 0.6); color: #ffd98a; }
+  .fp-postbtn { pointer-events: auto; margin-left: auto; font: inherit; font-weight: 600; color: #04110d; background: var(--accent, #7ee0c8); border: 0; border-radius: 999px; padding: 0.5rem 1rem; cursor: pointer; }
+  .fp-scroller { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; outline: none; }
+  .fp-scroller::-webkit-scrollbar { display: none; }
+  :global(.fp-item) { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: grid; }
+  :global(.fp-media) { position: relative; overflow: hidden; background: #000; cursor: pointer; }
+  :global(.fp-media video), :global(.fp-media img) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  :global(.fp-meta) { position: absolute; left: 0; right: 4.5rem; bottom: 0; padding: 1rem 1rem calc(1.2rem + env(safe-area-inset-bottom)); display: grid; gap: 0.35rem; color: #fff; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7); background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), transparent); pointer-events: none; }
+  :global(.fp-meta b) { font-size: 1rem; }
+  :global(.fp-meta p) { margin: 0; line-height: 1.4; overflow-wrap: anywhere; }
+  :global(.fp-meta small) { color: rgba(255, 255, 255, 0.7); font-size: 0.78rem; }
+  :global(.fp-tag) { width: fit-content; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.35); }
+  :global(.fp-rail) { position: absolute; right: 0.6rem; bottom: calc(1.4rem + env(safe-area-inset-bottom)); display: grid; gap: 0.8rem; justify-items: center; z-index: 2; }
+  :global(.fp-rail button) { display: grid; justify-items: center; gap: 0.15rem; width: 3.2rem; padding: 0.55rem 0; border-radius: 18px; font: inherit; font-size: 0.68rem; color: #fff; cursor: pointer; background: rgba(24, 24, 28, 0.5); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); }
+  :global(.fp-rail button span) { font-size: 1.25rem; line-height: 1; }
+  :global(.fp-rail button.on) { background: rgba(240, 168, 200, 0.4); border-color: #f0a8c8; }
+  :global(.fp-empty) { display: grid; place-content: center; gap: 0.9rem; padding: 2rem; text-align: center; color: var(--text-dim); }
+  :global(.fp-empty b) { color: #fff; font-size: 1.3rem; }
+  :global(.fp-more) { height: 4rem; display: grid; place-items: center; color: var(--text-faint); font-size: 0.85rem; scroll-snap-align: none; }
+  .fp-sound { position: absolute; z-index: 3; left: 50%; top: 3.6rem; translate: -50% 0; font: inherit; font-size: 0.85rem; color: #fff; padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer; background: rgba(24, 24, 28, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); }
+  .fp-sound[hidden] { display: none; }
+  @media (min-width: 760px) {
+    .fp { background: transparent; }
+    .fp-col { width: min(480px, 100%); padding: 0 4.5rem 0 0; }
+    .fp-top { background: none; padding: 0.8rem 0.4rem; }
+    :global(.fp-item) { padding: 3.4rem 0 1rem; }
+    :global(.fp-media) { border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); }
+    :global(.fp-meta) { right: 0; border-radius: 0 0 24px 24px; }
+    :global(.fp-rail) { right: -4rem; bottom: 1.4rem; }
+  }
+  .fp-sheet { width: min(460px, calc(100vw - 2rem)); max-height: calc(100svh - 2rem); overflow: auto; color: var(--text); padding: 1.3rem; border-radius: 24px; background: rgba(20, 21, 26, 0.86); border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6); }
+  .fp-sheet::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); }
+  .fp-sheet form { display: grid; gap: 0.8rem; }
+  .fp-sheet h2 { margin: 0; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .fp-sheet label { display: grid; gap: 0.35rem; font-weight: 600; font-size: 0.9rem; }
+  .fp-sheet input[type='text'], .fp-sheet textarea { font: inherit; font-weight: 400; padding: 0.65rem 0.8rem; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(0, 0, 0, 0.35); color: var(--text); width: 100%; }
+  .fp-where { margin: 0; color: var(--text-dim); font-size: 0.88rem; line-height: 1.45; }
+  .fp-drop { border: 1.5px dashed rgba(240, 168, 200, 0.55); border-radius: 16px; padding: 1rem; text-align: center; cursor: pointer; color: var(--text-dim); font-weight: 500 !important; }
+  .fp-drop input { display: none; }
+  #fp-preview { width: 100%; max-height: 240px; object-fit: contain; border-radius: 14px; background: #000; }
+  .fp-progress { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .fp-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #f0a8c8, #7ee0c8); transition: width 0.2s; }
+  .fp-status { margin: 0; min-height: 1.2em; font-size: 0.88rem; color: var(--text-dim); }
+  .fp-status.err { color: #ff9a9a; }
+  .fp-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.4rem; }
+  .fp-reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.8rem; }
+  .fp-reasons button { font: inherit; padding: 0.7rem; border-radius: 14px; cursor: pointer; color: var(--text); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.14); text-transform: none; }
+  .fp-reasons button:hover { border-color: #f0a8c8; }
+  .fp-toast { position: absolute; z-index: 4; left: 50%; bottom: calc(1.2rem + env(safe-area-inset-bottom)); translate: -50% 0; width: max-content; max-width: calc(100% - 2rem); margin: 0; padding: 0.75rem 1rem; border-radius: 14px; color: #fff; background: rgba(16, 20, 24, 0.9); border: 1px solid rgba(126, 224, 200, 0.55); pointer-events: none; }
+</style>
+
+<script>
+  import {
+    feedApi, fetchFeed, reportPost, postVideo, stageLabel, REPORT_REASONS, FeedError, showHandle, normHandle, handleProblem,
+    loadLocal, saveLocal, mediaURL, addLocalPost, type FeedPost, type ReportReason,
+  } from '../../scripts/feed-client';
+
+  type Item = { id: string; handle: string; caption: string; video?: string; image?: string; poster?: string; at?: string; demo?: boolean; local?: boolean };
+
+  const root = document.getElementById('feed-player')!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const scroller = $('#fp-scroller');
+  const { api, override } = feedApi();
+  const local = loadLocal();
+  const LIKED = 'nu.feed.liked';
+  const HIDDEN = 'nu.feed.hidden';
+  const liked: Record<string, boolean> = JSON.parse(localStorage.getItem(LIKED) || '{}');
+  const hidden: Record<string, boolean> = JSON.parse(localStorage.getItem(HIDDEN) || '{}');
+  let items: Item[] = [];
+  let next: string | null = null;
+  let loading = false;
+  let muted = true;
+  let current = -1;
+
+  const mode = $('#fp-mode');
+  if (!api) mode.textContent = 'Local mode · this device only';
+  else if (override) { mode.textContent = `Test feed · ${new URL(api).host}`; mode.classList.add('test'); }
+
+  function toast(msg: string) {
+    const t = $('#fp-toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout((t as any)._h);
+    (t as any)._h = setTimeout(() => (t.hidden = true), 4200);
+  }
+  const ago = (iso?: string) => {
+    if (!iso) return '';
+    const s = (new Date(iso).getTime() - Date.now()) / 1000;
+    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+    for (const [u, n] of [['year', 31536000], ['month', 2592000], ['day', 86400], ['hour', 3600], ['minute', 60]] as const) {
+      if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+    }
+    return rtf.format(Math.round(s), 'second');
+  };
+  const fromRemote = (p: FeedPost): Item => ({ id: p.id, handle: p.handle, caption: p.caption, video: p.video_url, poster: p.poster_url, at: p.created_at });
+
+  function itemEl(it: Item) {
+    const el = document.createElement('article');
+    el.className = 'fp-item';
+    el.dataset.id = it.id;
+    el.innerHTML = `<div class="fp-media"></div>
+      <div class="fp-meta"><b></b><p></p><small></small></div>
+      <div class="fp-rail">
+        <button type="button" data-act="like" aria-label="Like"><span>♥</span><em></em></button>
+        <button type="button" data-act="tip" aria-label="Tip"><span>＄</span>Tip</button>
+        <button type="button" data-act="share" aria-label="Share"><span>↗</span>Share</button>
+        ${it.local || it.demo ? '' : '<button type="button" data-act="report" aria-label="Report"><span>⚑</span>Report</button>'}
+      </div>`;
+    const media = el.querySelector<HTMLElement>('.fp-media')!;
+    if (it.image) {
+      const img = document.createElement('img');
+      img.alt = it.caption;
+      img.src = it.image;
+      media.append(img);
+    } else {
+      const v = document.createElement('video');
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.preload = 'none';
+      if (it.poster) v.poster = it.poster;
+      v.dataset.src = it.video || '';
+      media.append(v);
+    }
+    el.querySelector('b')!.textContent = it.demo ? 'Demo clip' : showHandle(it.handle);
+    el.querySelector('.fp-meta p')!.textContent = it.caption;
+    el.querySelector('small')!.textContent = it.demo ? 'Demo · not a real post' : it.local ? `On this device · ${ago(it.at)}` : ago(it.at);
+    const likeBtn = el.querySelector<HTMLButtonElement>('[data-act="like"]')!;
+    const paintLike = () => { likeBtn.classList.toggle('on', !!liked[it.id]); likeBtn.querySelector('em')!.textContent = liked[it.id] ? 'Liked' : 'Like'; };
+    paintLike();
+    media.addEventListener('click', () => {
+      const v = media.querySelector('video');
+      if (!v) return;
+      if (muted) { setMuted(false); v.play().catch(() => {}); }
+      else if (v.paused) v.play().catch(() => {});
+      else v.pause();
+    });
+    el.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) => b.addEventListener('click', async () => {
+      const act = b.dataset.act;
+      if (act === 'like') { liked[it.id] = !liked[it.id]; localStorage.setItem(LIKED, JSON.stringify(liked)); paintLike(); }
+      if (act === 'tip') toast('Tips run in the khėnsu.ñü app through nu.Fi, 100% to the person. Nothing is charged on this page.');
+      if (act === 'share') {
+        const url = `${location.origin}/feed/`;
+        try { await navigator.share({ title: 'khėnsu.ñü feed', text: it.caption, url }); }
+        catch { await navigator.clipboard?.writeText(url).catch(() => {}); toast('Link copied.'); }
+      }
+      if (act === 'report') openReport(it);
+    }));
+    return el;
+  }
+
+  // Playback: the post most in view plays, its neighbours load, the rest let go of their video.
+  function load(v: HTMLVideoElement, eager: boolean) {
+    if (!v.src && v.dataset.src) v.src = v.dataset.src;
+    v.preload = eager ? 'auto' : 'metadata';
+  }
+  function unload(v: HTMLVideoElement) {
+    if (!v.getAttribute('src')) return;
+    v.pause();
+    v.removeAttribute('src');
+    v.load();
+  }
+  function activate(i: number) {
+    current = i;
+    const els = [...scroller.querySelectorAll<HTMLElement>('.fp-item')];
+    els.forEach((el, j) => {
+      const v = el.querySelector('video');
+      if (!v) return;
+      if (j === i) { load(v, true); v.muted = muted; v.play().catch(() => {}); }
+      else if (j === i + 1 || j === i - 1) { load(v, j === i + 1); v.pause(); }
+      else if (Math.abs(j - i) > 3) unload(v);
+      else v.pause();
+    });
+    if (api && next && !loading && i >= items.length - 3) more();
+  }
+  const io = new IntersectionObserver((es) => {
+    for (const e of es) if (e.isIntersecting) activate([...scroller.children].indexOf(e.target));
+  }, { root: scroller, threshold: 0.6 });
+
+  function setMuted(m: boolean) {
+    muted = m;
+    $('#fp-sound').hidden = !m;
+    scroller.querySelectorAll('video').forEach((v) => (v.muted = m));
+  }
+  $('#fp-sound').addEventListener('click', () => {
+    setMuted(false);
+    scroller.querySelectorAll<HTMLElement>('.fp-item')[current]?.querySelector('video')?.play().catch(() => {});
+  });
+
+  function append(list: Item[]) {
+    scroller.querySelector('.fp-more')?.remove();
+    for (const it of list) {
+      if (hidden[it.id] || items.some((x) => x.id === it.id)) continue;
+      items.push(it);
+      const el = itemEl(it);
+      scroller.append(el);
+      io.observe(el);
+    }
+    if (api && next) {
+      const m = document.createElement('div');
+      m.className = 'fp-more';
+      m.textContent = 'Loading more…';
+      scroller.append(m);
+    }
+  }
+  function prepend(it: Item) {
+    scroller.querySelector('.fp-empty')?.remove();
+    items.unshift(it);
+    const el = itemEl(it);
+    scroller.prepend(el);
+    io.observe(el);
+    scroller.scrollTo({ top: 0 });
+    activate(0);
+  }
+  function empty(text: string) {
+    const el = document.createElement('div');
+    el.className = 'fp-item fp-empty';
+    el.innerHTML = '<b></b><p></p><button type="button" class="btn primary">Post a video</button>';
+    el.querySelector('b')!.textContent = text;
+    el.querySelector('p')!.textContent = api ? 'Every post here is public and the same for everyone.' : 'In local mode, posts stay on this device.';
+    el.querySelector('button')!.addEventListener('click', openSheet);
+    scroller.append(el);
+  }
+
+  async function more() {
+    if (!api || loading) return;
+    loading = true;
+    try {
+      const page = await fetchFeed(api, next);
+      next = page.next;
+      append(page.posts.map(fromRemote));
+      if (!items.length) empty('No posts yet.');
+    } catch (e) {
+      scroller.querySelector('.fp-more')?.remove();
+      if (!items.length) empty('The feed could not load.');
+      toast((e as Error).message);
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function start() {
+    if (api) return more();
+    const posts = local.posts.filter((p) => p.mediaId || p.src);
+    const list: Item[] = [];
+    for (const p of posts) {
+      const url = p.mediaId ? await mediaURL(p.mediaId) : p.src || '';
+      if (!url) continue;
+      list.push({ id: p.id, handle: p.handle, caption: p.caption, local: true, at: p.at, ...(p.type === 'image' ? { image: url } : { video: url, poster: p.poster }) });
+    }
+    if (!list.length) list.push({ id: 'demo', handle: 'demo', caption: 'A demo clip. Post a video and it appears here, on this device.', video: root.dataset.demoSrc, poster: root.dataset.demoPoster, demo: true });
+    append(list);
+  }
+
+  // Posting
+  const sheet = $<HTMLDialogElement>('#fp-sheet');
+  const file = $<HTMLInputElement>('#fp-file');
+  const preview = $<HTMLVideoElement>('#fp-preview');
+  const status = $('#fp-status');
+  const bar = $('#fp-progress');
+  let busy = false;
+  if (!api) file.accept = 'video/*,image/*';
+  $('#fp-where').textContent = api
+    ? 'Your video, caption and handle are public on the shared feed. The first post from a handle claims it on this device.'
+    : 'Local mode: the shared feed isn’t connected on this page, so the post stays on this device.';
+  function openSheet() {
+    $<HTMLInputElement>('#fp-handle').value = loadLocal().profile.handle;
+    status.textContent = '';
+    status.classList.remove('err');
+    sheet.showModal();
+  }
+  $('#fp-open').addEventListener('click', openSheet);
+  $('#fp-cancel').addEventListener('click', () => !busy && sheet.close());
+  sheet.addEventListener('cancel', (e) => busy && e.preventDefault());
+  file.addEventListener('change', () => {
+    const f = file.files?.[0];
+    if (!f) return;
+    $('#fp-file-label').textContent = f.name;
+    if (f.type.startsWith('video')) { preview.src = URL.createObjectURL(f); preview.hidden = false; preview.play().catch(() => {}); }
+    else preview.hidden = true;
+  });
+  $('#fp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const f = file.files?.[0];
+    const fail = (m: string) => { status.textContent = m; status.classList.add('err'); };
+    status.classList.remove('err');
+    if (!f) return fail('Choose a video first.');
+    const handle = normHandle($<HTMLInputElement>('#fp-handle').value);
+    const problem = handleProblem(handle);
+    if (problem) return fail(problem);
+    const caption = $<HTMLTextAreaElement>('#fp-caption').value.trim();
+    const s = loadLocal();
+    if (s.profile.handle !== handle) { s.profile.handle = handle; saveLocal(s); }
+    busy = true;
+    $<HTMLButtonElement>('#fp-submit').disabled = true;
+    try {
+      if (!api) {
+        const p = await addLocalPost(f, caption, f.name);
+        const url = URL.createObjectURL(f);
+        prepend({ id: p.id, handle, caption: p.caption, local: true, at: p.at, ...(p.type === 'image' ? { image: url } : { video: url }) });
+        sheet.close();
+        toast('Posted on this device.');
+        return;
+      }
+      bar.hidden = false;
+      const post = await postVideo(api, {
+        handle, caption, video: f,
+        onProgress: (p) => { status.textContent = stageLabel(p); bar.querySelector('i')!.style.width = `${Math.round(p.fraction * 100)}%`; },
+      });
+      prepend(fromRemote(post));
+      sheet.close();
+      toast('Posted to the shared feed.');
+      file.value = '';
+      $('#fp-file-label').textContent = 'Choose a video';
+      preview.hidden = true;
+      $<HTMLTextAreaElement>('#fp-caption').value = '';
+    } catch (err) {
+      fail(err instanceof FeedError ? err.message : 'Something went wrong while posting. Try again.');
+    } finally {
+      busy = false;
+      bar.hidden = true;
+      bar.querySelector('i')!.style.width = '0';
+      $<HTMLButtonElement>('#fp-submit').disabled = false;
+    }
+  });
+
+  // Reporting
+  const reportSheet = $<HTMLDialogElement>('#fp-report');
+  let reporting: Item | null = null;
+  const reasons = $('#fp-reasons');
+  for (const r of REPORT_REASONS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = r[0].toUpperCase() + r.slice(1);
+    b.addEventListener('click', async () => {
+      if (!reporting || !api) return;
+      const it = reporting;
+      reportSheet.close();
+      try {
+        await reportPost(api, it.id, r as ReportReason);
+        hidden[it.id] = true;
+        localStorage.setItem(HIDDEN, JSON.stringify(hidden));
+        scroller.querySelector(`[data-id="${CSS.escape(it.id)}"]`)?.remove();
+        items = items.filter((x) => x.id !== it.id);
+        toast('Reported. It’s hidden from your feed and sent for review.');
+      } catch (e) {
+        toast((e as Error).message);
+      }
+    });
+    reasons.append(b);
+  }
+  function openReport(it: Item) {
+    reporting = it;
+    reportSheet.showModal();
+  }
+  $('#fp-report-cancel').addEventListener('click', () => reportSheet.close());
+
+  scroller.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      scroller.scrollBy({ top: (e.key === 'ArrowDown' ? 1 : -1) * scroller.clientHeight, behavior: 'smooth' });
+    }
+    if (e.key === 'm') setMuted(!muted);
+  });
+
+  start();
+</script>

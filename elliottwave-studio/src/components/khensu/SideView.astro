@@ -1,0 +1,90 @@
+---
+// Edge-on side views, path-traced from the CAD (khensu-site/tools/shield/sideview.py, iPhone 18 Pro measured
+// geometry): the phone standing upright seen exactly from the side, alone and with the shield, in the same
+// orthographic frame, so the two images are at the same scale and the added thickness reads directly.
+import sidev from '../../../public/khensu/shell/sidev.json';
+
+const { width: W, height: H } = sidev;
+---
+
+<section class="section side" aria-labelledby="side-title">
+  <div class="wrap">
+    <p class="eyebrow">Side view</p>
+    <h2 id="side-title" class="big">Zero millimetres. <em>No new bump.</em></h2>
+    <p class="lede">
+      The shield covers the whole back, camera included, and stops level with the lens tops, so it adds nothing
+      above the camera. Every lens, the flash and the sensors get their own opening, cut so none of them ever sees
+      it, even the ultra wide at 120°. Inside that depth: a 7.5 Wh battery, about six hours of relaying on its own
+      cells.
+    </p>
+    <p class="lede">
+      Each shield is CNC-machined from titanium for a precise fit, following the iPhone 18 Pro’s own edge curve, so
+      the shield picks up where the phone’s edge leaves off. No step, no lip, one seamless shape.
+    </p>
+
+    <div class="views">
+      {sidev.views.map((v) => (
+        <figure class="view">
+          <img src={v.src} alt={v.alt} width={W} height={H} loading="lazy" decoding="async" />
+          <figcaption>{v.label}</figcaption>
+        </figure>
+      ))}
+    </div>
+
+    <dl class="stats">
+      <div><dt>0 mm</dt><dd>added above the lens tops, clear of every camera’s field of view.</dd></div>
+    </dl>
+    <p class="footnote">
+      Path-traced to scale from the CAD model, on iPhone 18 Pro geometry measured from Apple’s published model; Apple’s
+      accessory drawings take precedence when available. Relay time at about 1 W; battery life varies with use and settings. iPhone is a trademark of Apple Inc.
+    </p>
+  </div>
+</section>
+
+<style>
+  .views {
+    display: flex;
+    justify-content: center;
+    gap: clamp(1.5rem, 6vw, 5rem);
+    margin-top: 3rem;
+    padding: 2.5rem 1rem 2rem;
+    border-radius: 22px;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(255, 255, 255, 0.05), transparent 70%);
+  }
+  .view {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .view img {
+    display: block;
+    height: clamp(380px, 72vh, 760px);
+    width: auto;
+  }
+  figcaption {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    text-transform: lowercase;
+  }
+  .stats {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    margin: 3rem 0 0;
+  }
+  .stats dt {
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .stats dd {
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .footnote {
+    margin-top: 2rem;
+  }
+</style>

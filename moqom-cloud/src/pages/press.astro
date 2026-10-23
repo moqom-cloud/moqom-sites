@@ -1,0 +1,224 @@
+---
+// Copy from sites/_shared/moqom-cloud-press.md (canonical source: sites/elliottwave-studio/src/data/press.ts).
+// Change it there first, then here. The footnote must stay beside the numbers, word for word.
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import BenchFootnote from "../components/BenchFootnote.astro";
+import { SITE } from "../data/site";
+import Linked from "../components/Linked.astro";
+const seen = new Set<string>();
+
+// TODO: the press@elliottwave.studio mailbox must exist before this page is published.
+const PRESS = "press@elliottwave.studio";
+
+// TODO: fill in once the posts are live.
+const launch = [
+  { name: "Hacker News (Show HN)", href: null as string | null },
+  { name: "Product Hunt", href: null as string | null },
+];
+
+const about50 =
+  "MOQOM is real-time video built on Media over QUIC Transport, the IETF’s emerging standard for live media. One open protocol carries two-person calls and live broadcasts to thousands, and every room is post-quantum end-to-end encrypted, with no way to turn it off. In lab tests, 720p30 video runs at 56–57 ms median glass-to-glass, and one 4-vCPU relay served 6,000 concurrent viewers with zero loss.*";
+const about100 =
+  about50 +
+  " SDKs for iOS and macOS are available; web, Android and desktop are in progress, coming Q4 2026, and the OBS plugin is scoped. MOQOM Cloud is prepaid and metered on delivery, at 15% under Agora’s list price. Self-hosted relays pay a platform fee only. Made by elliottwave.studio lab.";
+
+const numbers = [
+  {
+    value: "56–57 ms",
+    body: "Median glass-to-glass at 720p30 (p95 70 ms). Two iPhone 15 Pros on home Wi-Fi, relay in Los Angeles, both directions at once.",
+  },
+  { value: "69 ms", body: "Median glass-to-glass at 540p60, 600 kbps, same relay." },
+  { value: "6,000", body: "Viewers on one 4-vCPU relay with zero loss. The largest size tested, not the ceiling." },
+];
+
+const facts: [string, string][] = [
+  ["Product", "MOQOM, and MOQOM Cloud (the hosted service)"],
+  ["Protocol", "IETF Media over QUIC Transport (draft-ietf-moq-transport, drafts 22 and 19)"],
+  [
+    "Platforms",
+    "iOS and macOS at launch. Android and desktop: in progress, coming Q4 2026. OBS plugin: scoped",
+  ],
+  [
+    "Pricing",
+    "Prepaid, 15% under Agora’s list price at every tier and volume band. Self-hosted relays: platform fee only, $0.05 per GiB",
+  ],
+  ["Security", "TLS 1.3 on every connection; per-frame end-to-end encryption. No independent audit yet"],
+  ["Made by", "elliottwave.studio lab, the brand of Elliott Wave LLC"],
+  ["Founder", "Elliott, Founder of elliottwave.studio lab and Elliott Wave LLC"],
+  ["Intellectual property", "Owned by Elliott Wave LLC. MOQOM™ is a trademark of Elliott Wave LLC. Patents pending"],
+];
+
+const assets: [string, string, string][] = [
+  ["/og.png", "Social card", "PNG, 1200×630, 127 KB"],
+  ["/og.svg", "Social card", "SVG, 1200×630"],
+  ["/favicon.svg", "MOQOM mark", "SVG"],
+];
+---
+
+<Base title="Press" description="MOQOM press kit: boilerplate, headline numbers, facts, brand assets and contacts. Free to quote.">
+  <PageHero
+    eyebrow="Press"
+    title="Writing about MOQOM?"
+    lede="Everything here is free to quote. For interviews and briefings, email the press desk. The full press kit, covering the company, the founder and every product, is at elliottwave.studio/press."
+  >
+    <div class="btn-row">
+      <a class="btn btn-primary" href={`mailto:${PRESS}`}>{PRESS}</a>
+      <a class="btn" href="https://elliottwave.studio/press" rel="noopener">Full press kit ↗</a>
+    </div>
+  </PageHero>
+
+  <section class="section">
+    <div class="container two">
+      <div class="glass card reveal">
+        <span class="eyebrow">About MOQOM · 50 words</span>
+        <p>{about50}</p>
+      </div>
+      <div class="glass card reveal">
+        <span class="eyebrow">About MOQOM · 100 words</span>
+        <p>{about100}</p>
+      </div>
+    </div>
+    <div class="container"><BenchFootnote /></div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Headline numbers</span>
+        <h2 class="text-sweep">Measured in the lab, with the conditions</h2>
+      </div>
+      <div class="grid grid-3">
+        {
+          numbers.map((n) => (
+            <div class="glass card reveal--scale">
+              <div class="num">
+                {n.value}
+                <sup class="star">*</sup>
+              </div>
+              <p class="small muted"><Linked text={n.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <BenchFootnote />
+      <p class="small muted">Method and raw figures: <a href="/benchmarks/">Benchmarks</a>.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Facts</span>
+        <div class="glass glass--strong table-wrap reveal">
+          <table>
+            <tbody>
+              {
+                facts.map(([k, v]) => (
+                  <tr>
+                    <th scope="row">{k}</th>
+                    <td><Linked text={v} seen={seen} /></td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="stack">
+        <div>
+          <span class="eyebrow">Launch</span>
+          <div class="glass glass--strong table-wrap reveal">
+            <table>
+              <tbody>
+                {
+                  launch.map((l) => (
+                    <tr>
+                      <th scope="row">{l.name}</th>
+                      <td class="muted">{l.href ? <a href={l.href} rel="noopener">{l.href}</a> : "Coming soon"}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <span class="eyebrow">Brand assets</span>
+          <div class="glass glass--strong table-wrap reveal">
+            <table>
+              <thead><tr><th>File</th><th>What</th><th>Format</th></tr></thead>
+              <tbody>
+                {
+                  assets.map(([href, what, fmt]) => (
+                    <tr>
+                      <td class="mono"><a href={href}>{href.slice(1)}</a></td>
+                      <td>{what}</td>
+                      <td class="muted">{fmt}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="small faint">Standalone SVG logos (wordmark and mark, light and dark) are coming.</p>
+        </div>
+        <ul class="check-list small">
+          <li>Write “MOQOM” in capitals, and “MOQOM Cloud” for the hosted service.</li>
+          <li>The company is “elliottwave.studio lab”, all lowercase; the legal entity is Elliott Wave LLC.</li>
+          <li>MOQOM accent: cyan <code>#22D3EE</code> on ink <code>#0A0B0D</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="narrow">
+      <h2>Contact</h2>
+      <ul class="contact">
+        <li>Press: <a href={`mailto:${PRESS}`}>{PRESS}</a></li>
+        <li>Security: <a href={`mailto:${SITE.security}`}>{SITE.security}</a></li>
+        <li>Everything else: <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a></li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .two > * {
+    min-width: 0;
+  }
+  @media (max-width: 900px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .card p:last-child {
+    margin-bottom: 0;
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+  .star {
+    color: var(--warn);
+  }
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-muted);
+  }
+  .contact {
+    padding-left: 1.2em;
+    color: var(--text-muted);
+  }
+</style>

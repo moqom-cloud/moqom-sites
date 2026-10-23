@@ -1,0 +1,77 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { EXAMPLE, SCRIPT, exampleHtml } from '../../lib/examples';
+
+allowVisitorModels(Astro);
+const snippet = exampleHtml();
+const selfHosted = exampleHtml({ ...EXAMPLE, src: '/models/chair.glb', iosSrc: '/models/chair.usdz' });
+const npm = `npm install ${SITE.packageName}@${SITE.release.version}
+
+// in your app's entry file
+import '${SITE.packageName}';`;
+---
+
+<Base title="HTML" description={`Add ${SITE.displayName} to any HTML page with one script tag and one element.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Plain HTML</h1>
+  <p><PriceBadge /> Free for any site, including commercial use (Apache-2.0).</p>
+  <div class="prose">
+    <p>Add the script once per page, then one <code>&lt;{SITE.tagName}&gt;</code> per model.</p>
+  </div>
+
+  <Code title="Before </body>, or anywhere in <head>" code={snippet.script} />
+  <Code title="Where the model should appear" code={snippet.element} />
+
+  <div class="prose">
+    <p>
+      The <code>integrity</code> value is the SRI hash of version {SITE.release.version}. If the file on the CDN ever differed, the
+      browser would refuse to run it. Don't edit the hash; when you upgrade, copy the new script tag from these docs.
+    </p>
+
+    <h2>Host the script yourself</h2>
+    <p>
+      Download <code>{SITE.release.file}</code> from the npm package (<code>dist/{SITE.release.file}</code>) or a
+      <a href={SITE.releasesUrl}>GitHub release</a>, put it on your own server, and point the script at it. A same-origin script needs no
+      integrity attribute, but adding it does no harm.
+    </p>
+    <Code title="Self-hosted script and models" code={`<script type="module" src="/js/${SITE.release.file}"></script>\n\n${selfHosted.element}`} />
+
+    <h2>From a bundler</h2>
+    <Code title="npm" code={npm} />
+    <p>
+      For React and Vue there are components that also handle server rendering: <a href="/platforms/react/">React</a>,
+      <a href="/platforms/vue/">Vue</a>. Other frameworks: <a href="/platforms/frameworks/">Svelte, Angular, Astro and more</a>.
+    </p>
+
+    <h2 id="content-security-policy">Content Security Policy</h2>
+    <p>If your site has a CSP, the viewer needs:</p>
+    <ul>
+      <li><code>script-src https://cdn.jsdelivr.net</code> (or your own origin if you host the script)</li>
+      <li><code>connect-src</code> for the origin your models are on</li>
+      <li><code>img-src blob:</code> for textures inside GLB files, plus the poster image's origin</li>
+      <li>
+        <code>worker-src blob:</code> and <code>connect-src https://www.gstatic.com</code> only if your models use Draco or KTX2
+        compression. To avoid Google's CDN, host the decoders yourself; see <a href={`${SITE.repoUrl}/tree/main/packages/core#decoders`}>decoders</a>.
+      </li>
+    </ul>
+    <p>
+      <code>&lt;model-viewer&gt;</code> renders one fixed <code>&lt;style&gt;</code> element inside its shadow DOM. If your
+      <code>style-src</code> has no <code>'unsafe-inline'</code>, add its hash, or the viewer's layout breaks (for example, the AR button
+      shows on desktops):
+    </p>
+    <Code title={`style-src, for <model-viewer> ${SITE.modelViewerVersion}`} code={(SITE.release.styleHashes ?? []).map((h) => `'${h}'`).join(' ')} />
+    <p>
+      The hash changes only when the bundled <code>&lt;model-viewer&gt;</code> version changes; each release lists it in
+      <code>release.json</code>. {SITE.displayName}'s own styles use constructed stylesheets and need nothing extra.
+    </p>
+  </div>
+
+  <Generator platform="html" />
+
+  <p class="footnote">Script URL: <code>{SCRIPT.url}</code></p>
+</Base>

@@ -1,0 +1,116 @@
+---
+// Measured rate-quality ladder from khensu-specs bench/ladder.py, encoded on iPhone Air over USB.
+// Points where the encoder dropped frames are drawn hollow; VMAF 93 with no dropped frames is "same as the original".
+type Pt = { actual_kbps: number; vmaf: number; dropped: number; base?: number[] };
+type Run = { size: string; seconds: number; transparent_vmaf: number; codecs: Record<string, { points: Pt[] }>;
+             same_as_reference: { reference: string; vmaf: number; reference_kbps: number; kbps: Record<string, { kbps: number } | null> };
+             same_as_original: { kbps: Record<string, { kbps: number } | null> } };
+const { run, title, sub, refName } = Astro.props as { run: Run; title: string; sub: string; refName: string };
+
+const SERIES = [
+  { k: 'nu-media', name: 'ñü.media', cls: 'nu' },
+  { k: 'h264-hw', name: 'H.264, iPhone hardware', cls: 'h264' },
+  { k: 'hevc-hw', name: 'H.265 (HEVC), iPhone hardware', cls: 'hevc' },
+  { k: 'av1-svt-rt', name: 'AV1, software on a Mac', cls: 'av1' },
+];
+const all = SERIES.flatMap((s) => run.codecs[s.k].points);
+const kmin = Math.min(...all.map((p) => p.actual_kbps)) * 0.8;
+const kmax = Math.max(...all.map((p) => p.actual_kbps)) * 1.2;
+const W = 720, H = 340, L = 44, R = 704, T = 14, B = 294;
+const x = (k: number) => L + ((Math.log(k) - Math.log(kmin)) / (Math.log(kmax) - Math.log(kmin))) * (R - L);
+const y = (v: number) => B - (v / 100) * (B - T);
+const lines = SERIES.map((s) => {
+  const ps = [...run.codecs[s.k].points].sort((a, b) => a.actual_kbps - b.actual_kbps);
+  return { ...s, d: ps.map((p, i) => `${i ? 'L' : 'M'}${x(p.actual_kbps).toFixed(1)} ${y(p.vmaf).toFixed(1)}`).join(' '),
+           dots: ps.map((p) => ({ cx: x(p.actual_kbps), cy: y(p.vmaf), drop: p.dropped > 0 })) };
+});
+const ticks = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000].filter((k) => k >= kmin && k <= kmax);
+const tl = (k: number) => (k < 1000 ? `${k}k` : `${k / 1000}M`);
+
+const need = SERIES.map((s) => ({ ...s, ref: run.same_as_reference.kbps[s.k]?.kbps ?? null, orig: run.same_as_original.kbps[s.k]?.kbps ?? null }));
+const refMax = Math.max(...need.map((n) => n.ref ?? 0));
+const rate = (k: number) => (k < 1000 ? `${Math.round(k)} kbit/s` : `${(k / 1000).toFixed(1)} Mbit/s`);
+---
+
+<figure class="card wide ladder" data-scene="reveal">
+  <figcaption><b>{title}</b><span>{sub}</span></figcaption>
+  <svg class="rd" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}: quality against bitrate for each codec`}>
+    {[0, 20, 40, 60, 80, 100].map((v) => (
+      <g class="gy"><line x1={L} x2={R} y1={y(v)} y2={y(v)} /><text x={L - 8} y={y(v) + 4}>{v}</text></g>
+    ))}
+    {ticks.map((k) => (
+      <g class="gx"><line x1={x(k)} x2={x(k)} y1={T} y2={B} /><text x={x(k)} y={B + 18}>{tl(k)}</text></g>
+    ))}
+    <g class="mark"><line x1={L} x2={R} y1={y(run.transparent_vmaf)} y2={y(run.transparent_vmaf)} /><text x={R - 4} y={y(run.transparent_vmaf) - 6}>Same as the original (VMAF {run.transparent_vmaf})</text></g>
+    <g class="mark ref"><line x1={L} x2={R} y1={y(run.same_as_reference.vmaf)} y2={y(run.same_as_reference.vmaf)} /><text x={R - 4} y={y(run.same_as_reference.vmaf) - 6}>{refName}</text></g>
+    <g class="plot">
+      {lines.map((l) => (
+        <g class:list={['line', l.cls]}>
+          <path d={l.d} />
+          {l.dots.map((d) => <circle class:list={[{ drop: d.drop }]} cx={d.cx} cy={d.cy} r="3.6" />)}
+        </g>
+      ))}
+    </g>
+    <text class="axis" x={(L + R) / 2} y={B + 38}>bits per second, actual (log scale)</text>
+  </svg>
+  <ul class="key" role="list">
+    {SERIES.map((s) => <li class={s.cls}><i />{s.name}</li>)}
+    <li class="dropkey"><i />Hollow: encoder dropped frames</li>
+  </ul>
+  <div class="need">
+    <p class="nt"><b>Bits for the same picture as {refName}</b></p>
+    <ul role="list">
+      {need.map((n) => (
+        <li class:list={[n.cls]} style={`--w:${n.ref ? (n.ref / refMax) * 100 : 0}`}>
+          <span class="label">{n.name}</span>
+          <span class="track"><span class="fill" /></span>
+          <span class="value">{n.ref ? rate(n.ref) : 'Not reached'}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="note">
+      Same as the original (VMAF {run.transparent_vmaf}, no dropped frames):
+      {need.map((n, i) => <>{i ? '; ' : ' '}<b>{n.name.split(',')[0]}</b> {n.orig ? rate(n.orig) : 'not reached in this test'}</>)}.
+    </p>
+  </div>
+  <slot />
+</figure>
+
+<style>
+  .rd { width: 100%; height: auto; overflow: visible; }
+  .rd text { fill: var(--text-dim); font-size: 11px; }
+  .gy line, .gx line { stroke: rgba(255, 255, 255, 0.07); }
+  .gy text { text-anchor: end; }
+  .gx text, .rd .axis { text-anchor: middle; }
+  .mark line { stroke: rgba(79, 209, 197, 0.6); stroke-dasharray: 5 5; }
+  .mark text { text-anchor: end; fill: rgba(79, 209, 197, 0.9); }
+  .mark.ref line { stroke: rgba(255, 255, 255, 0.3); }
+  .mark.ref text { fill: rgba(255, 255, 255, 0.55); }
+  .plot { clip-path: inset(0 calc((1 - var(--e, 1)) * 100%) 0 0); }
+  .line path { fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linejoin: round; }
+  .line circle { fill: var(--c); stroke: var(--c); stroke-width: 1.6; }
+  .line circle.drop { fill: #0b0b0d; }
+  .nu { --c: #8b7bff; }
+  .nu path { stroke-width: 3.6; filter: drop-shadow(0 0 6px rgba(139, 123, 255, 0.45)); }
+  .h264 { --c: rgba(255, 255, 255, 0.3); }
+  .hevc { --c: rgba(255, 255, 255, 0.6); }
+  .av1 { --c: rgba(255, 255, 255, 0.45); }
+  .key { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; }
+  .key li { display: flex; align-items: center; gap: 0.45rem; }
+  .key i { width: 22px; height: 0; border-top: 3px solid var(--c); }
+  .key .nu { color: #c9c0ff; font-weight: 600; }
+  .key .dropkey i { width: 9px; height: 9px; border: 1.6px solid rgba(255, 255, 255, 0.6); border-radius: 50%; }
+  .need ul { list-style: none; margin: 0.6rem 0; padding: 0; display: grid; gap: 0.7rem; }
+  .need li { display: grid; grid-template-columns: 16rem 1fr 7rem; gap: 1rem; align-items: center; }
+  .nt { margin: 0.6rem 0 0; }
+  .nt b { font-weight: 500; }
+  .track { height: 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+  .fill { display: block; height: 100%; width: calc(var(--w) * 1%); border-radius: inherit; background: var(--c); }
+  .need .nu .fill { background: linear-gradient(90deg, #8b7bff, #4fd1c5); }
+  .value { text-align: right; }
+  .note { margin: 0; font-size: 0.92rem; color: var(--text-dim); }
+  @media (max-width: 760px) {
+    .need li { grid-template-columns: 1fr auto; gap: 0.3rem 0.8rem; }
+    .need .track { grid-column: 1 / -1; grid-row: 2; }
+  }
+</style>

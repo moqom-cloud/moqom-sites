@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+import { FRAMEWORKS } from '../../lib/framework-examples';
+---
+
+<Base title="Svelte, Angular, Astro and static site generators" description={`Use the ${SITE.displayName} custom element in Svelte, Angular, Astro, Hugo, Jekyll and Eleventy.`}>
+  <p class="eyebrow">Platforms · Paste-in</p>
+  <h1>Svelte, Angular, Astro and static site generators</h1>
+  <p><PriceBadge /> Free for any site, including commercial use.</p>
+  <div class="prose">
+    <p>
+      <code>&lt;{SITE.tagName}&gt;</code> is a standard custom element, so any framework that renders HTML can use it: load the script
+      once, then write the element. These examples are short starting points and have not each been tested in the framework; the
+      <a href="/platforms/html/">HTML page</a> has the script tag. For React and Vue, use the <a href="/platforms/react/">React</a> and
+      <a href="/platforms/vue/">Vue</a> components.
+    </p>
+    <p>
+      In server-rendered apps, load the script only in the browser (after mount, or as a script tag), because it defines a custom element
+      and needs <code>window</code>.
+    </p>
+  </div>
+
+  <h2 id="svelte">Svelte and SvelteKit</h2>
+  <Code title="Model.svelte" code={FRAMEWORKS.svelte} />
+
+  <h2 id="angular">Angular</h2>
+  <Code title="model.component.ts" code={FRAMEWORKS.angular} />
+
+  <h2 id="astro">Astro</h2>
+  <Code title="src/components/Viewer.astro" code={FRAMEWORKS.astro} />
+
+  <h2 id="hugo">Hugo</h2>
+  <Code title="layouts/shortcodes/viewer.html" code={FRAMEWORKS.hugo} />
+
+  <h2 id="jekyll">Jekyll</h2>
+  <Code title="_includes/viewer.html" code={FRAMEWORKS.jekyll} />
+
+  <h2 id="eleventy">Eleventy</h2>
+  <Code title="eleventy.config.js" code={FRAMEWORKS.eleventy} />
+</Base>

@@ -1,0 +1,126 @@
+---
+// suñůlink.shield in <ew-viewer> (elliottwave.studio lab's viewer, on Google's <model-viewer>): auto-rotate,
+// drag to turn and "View in your space" AR on by default. The GLBs come from tools/shield/glb.py, one per
+// finish, inlay tier and mode (shield alone or on the iPhone). The page picks one with a `shield:finish`
+// event { finish, tier, phone }, phone being the iPhone colour the shield is shown on; see pages/buy.astro.
+const GLB = '/khensu/shell/3d/glb';
+const first = `${GLB}/maroon-moldavite-shield.glb`;
+---
+
+<div class="viewer" data-glb={GLB}>
+  <ew-viewer
+    src={first}
+    alt="sunulink.shield, a maroon titanium shield for iPhone with the ñü.isheru in stone and platinum on the back"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-scale="fixed"
+    ar-label="View in your space"
+    background="transparent"
+    camera-controls
+    auto-rotate
+    rotation-per-second="18deg"
+    shadow-intensity="1.2"
+    exposure="1.1"
+    camera-orbit="25deg 78deg auto"
+    loading="eager"
+    height="100%"
+  ></ew-viewer>
+  <div class="modes" role="group" aria-label="Show">
+    <button type="button" class="on" data-mode="shield" aria-pressed="true">Shield</button>
+    <button type="button" data-mode="phone" aria-pressed="false">On iPhone</button>
+  </div>
+</div>
+
+<script is:inline type="module" src="/vendor/ew-viewer/ew-viewer.min.js"></script>
+
+<script>
+  type Finish = { finish: string; tier: 'standard' | 'moldavite'; phone?: string };
+  const host = document.querySelector<HTMLElement>('.viewer')!;
+  const viewer = host.querySelector('ew-viewer')!;
+  const state = { finish: 'maroon', tier: 'moldavite', mode: 'shield', phone: 'maroon' };
+
+  // iPhone 18 Pro colours, keyed like the page's finish swatches: [hex, metalness, roughness].
+  const PHONES: Record<string, [string, number, number]> = {
+    maroon: ['#5e1a24', 0.6, 0.34],
+    glacier: ['#b0c2cf', 0.6, 0.32],
+    silver: ['#d4d5d7', 0.6, 0.34],
+    black: ['#232427', 0.6, 0.34],
+  };
+  const linear = (hex: string) =>
+    [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+
+  type Pbr = { setBaseColorFactor(c: number[]): void; setMetallicFactor(v: number): void; setRoughnessFactor(v: number): void };
+  type ModelViewer = HTMLElement & { model?: { getMaterialByName(n: string): { pbrMetallicRoughness: Pbr } | null } };
+  const paintPhone = () => {
+    if (state.mode !== 'phone') return;
+    const mv = (viewer as unknown as { modelViewer: ModelViewer }).modelViewer;
+    const pbr = mv.model?.getMaterialByName('iPhone')?.pbrMetallicRoughness;
+    if (!pbr) return;
+    const [hex, metal, rough] = PHONES[state.phone] ?? PHONES.black;
+    pbr.setBaseColorFactor([...linear(hex), 1]);
+    pbr.setMetallicFactor(metal);
+    pbr.setRoughnessFactor(rough);
+  };
+  customElements.whenDefined('ew-viewer').then(() => {
+    (viewer as unknown as { modelViewer: HTMLElement }).modelViewer.addEventListener('load', paintPhone);
+  });
+
+  const show = () => {
+    viewer.setAttribute('src', `${host.dataset.glb}/${state.finish}-${state.tier}-${state.mode}.glb`);
+  };
+  addEventListener('shield:finish', (e) => {
+    const d = (e as CustomEvent<Finish>).detail;
+    state.finish = d.finish;
+    state.tier = d.tier;
+    if (d.phone) state.phone = d.phone;
+    show();
+  });
+  const choose = (group: Element, b: Element) => {
+    for (const x of group.querySelectorAll('button')) {
+      x.classList.toggle('on', x === b);
+      x.setAttribute('aria-pressed', String(x === b));
+    }
+  };
+  for (const b of host.querySelectorAll<HTMLButtonElement>('.modes button')) {
+    b.addEventListener('click', () => {
+      choose(b.parentElement!, b);
+      state.mode = b.dataset.mode!;
+      show();
+    });
+  }
+</script>
+
+<style>
+  .viewer {
+    position: relative;
+    height: min(72vh, 620px);
+  }
+  ew-viewer { display: block; width: 100%; height: 100%; }
+  .modes {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+  .modes button {
+    padding: 0.35rem 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+    background: none;
+    cursor: pointer;
+  }
+  .modes button.on { color: #fff; background: rgba(255, 255, 255, 0.16); }
+</style>

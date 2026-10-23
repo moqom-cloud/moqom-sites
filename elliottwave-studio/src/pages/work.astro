@@ -1,0 +1,466 @@
+---
+import Base from '../layouts/Base.astro';
+import Wave from '../components/Wave.astro';
+import Metrics from '../components/Metrics.astro';
+import ResolutionTable from '../components/ResolutionTable.astro';
+import { BENCH_LABEL, MOQOM_LINKS, PLATFORMS, WHY_MOQOM } from '../data/moqom';
+import { SIX10NINE } from '../data/six10nine';
+import { UNIFY } from '../data/unify';
+import { KALOPSIA } from '../data/kalopsia';
+
+const outcomes = [
+  {
+    title: 'Conversational latency',
+    body: 'Calls that feel like being in the room. Median glass-to-glass latency in the mid-50s of milliseconds, measured end to end: camera, network, screen.',
+  },
+  {
+    title: 'Broadcast scale',
+    body: 'The same stream that carries a two-person call carries an audience of thousands, from a single modest relay, without dropping anyone.',
+  },
+  {
+    title: 'Built on the standard',
+    body: 'An independent implementation of the IETF’s Media over QUIC Transport, speaking drafts 22 and 19 of draft-ietf-moq-transport, over QUIC and WebTransport.',
+  },
+  {
+    title: 'Resilient on real networks',
+    body: 'Built for mobile networks that drop, switch and congest. Calls survive a move from Wi-Fi to cellular, video steps down before it stalls, and the SDKs reconnect and restore the room on their own.',
+  },
+  {
+    title: 'Durable playback',
+    body: 'Every relay keeps the last seconds of every stream. Late joiners see a picture instantly, viewers who drop come back to a full screen, and anyone can replay the moment they missed.',
+  },
+  {
+    title: 'Self-hostable',
+    body: 'Run relays on MOQOM Cloud or on your own servers, anywhere. Relays shard across cores, scale out and chain to other relays like a CDN.',
+  },
+];
+
+const security = [
+  {
+    title: 'End-to-end encrypted, required',
+    body: 'Every room, every call, every broadcast. There is no switch to turn it off. Media is encrypted per frame on the sender’s device with AES-256-GCM and opened only on the receiver’s, so relays forward ciphertext they can’t read. 54 µs per 1080p keyframe, against a 33 ms frame budget.',
+  },
+  {
+    title: 'Post-quantum, today',
+    body: 'Room keys are agreed over ML-KEM-1024, and group membership, join tokens and device proofs are signed with ML-DSA-87, the NIST standards. Recording traffic now to decrypt it later with a quantum computer doesn’t work, and AES-256 media keys already hold up against quantum attack.',
+  },
+  {
+    title: 'Point to point, no relay',
+    body: '1:1 calls and small private rooms connect device to device over QUIC, so the media never touches a server, ours included. Still end-to-end encrypted, still post-quantum. Prefer not to share your IP address with the other side? Choose relay-only for that call.',
+  },
+  {
+    title: 'Tokens bound to the device',
+    body: 'Every join token is bound to an ML-DSA-87 key held in the device’s Secure Enclave, and every connection proves it holds that key with a single-use proof tied to the server’s certificate. Stricter than DPoP: a token lifted from logs or memory works nowhere else.',
+  },
+  {
+    title: 'Zero trust, pinned',
+    body: 'Phones pin the relays’ certificates, so a forged certificate from a hijacked domain gets nowhere. Our domains carry CAA records and DNSSEC, and certificate transparency logs are watched for any certificate we didn’t issue.',
+  },
+  {
+    title: 'Open-source security libraries',
+    body: 'The cryptography is public: moqom-token, moqom-proof, moqom-sframe and moqom-mls, in Swift, Go and Rust, under Apache-2.0, with shared test vectors every language must pass.',
+  },
+];
+
+const GITHUB_ORG = 'https://github.com/elliott-wave-labs';
+
+const contribute = [
+  {
+    title: 'Contribute on GitHub',
+    body: 'Pick an issue in moqom-go, moqom-rust, moqom-swift or six10nine and open a pull request. Contributors sign the Copyright Assignment Agreement linked from each repository.',
+  },
+  {
+    title: 'Rewards',
+    body: 'Merged contributions are credited in the release notes, and we send a reward: swag in the mail or a tip to your crypto wallet.',
+  },
+  {
+    title: 'Paid work',
+    body: 'As the lab grows, we look first to the people already contributing. Regular contributors may be offered paid contract work.',
+  },
+  {
+    title: 'Bug bounty on HackerOne',
+    body: 'Our bug bounty runs on HackerOne, launching as a vulnerability disclosure program. Cash bounties are funded by donations to the open-source projects until paying customers adopt MOQOM. Every valid report gets public credit.',
+  },
+];
+---
+
+<Base title="Work — MOQOM, six10nine, Unify and Kalopsia" description="MOQOM: end-to-end encrypted real-time video on Media over QUIC with sub-60 ms glass-to-glass latency. six10nine: the same ⌘ chords in every Mac app. Unify: perfect group photos in one tap, featured by Apple. Kalopsia: real spaces you walk through, not a feed you swipe. Created by elliottwave.studio lab.">
+  <section class="page-head moqom">
+    <div class="wrap">
+      <p class="eyebrow">Work · Flagship 00000000</p>
+      <h1>MOQOM</h1>
+      <p class="lede">
+        Media Over QUIC Orchestration Mesh. Real-time video that does the job of a video call and the job of a live
+        broadcast, on one open standard, with sub-60 ms glass-to-glass latency.
+      </p>
+      <div class="btn-row">
+        <a class="btn primary" href={MOQOM_LINKS.cloud}>Get started · moqom.cloud</a>
+        <a class="btn" href={MOQOM_LINKS.docs}>Documentation · moqom.dev</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="moqom band" aria-hidden="true">
+    <Wave strands={14} height={260} labels={false} />
+  </div>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">The category</p>
+        <h2>Live video has been sold in two halves.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          One half is fast and small: video calls that feel live but strain past a room’s worth of people. The other is
+          big and slow: broadcast that reaches everyone, seconds behind. Every product picks a half and iterates on it.
+        </p>
+        <p>
+          Media over QUIC is the IETF’s answer to that split, a standard designed for both. MOQOM is our bet that the
+          category it creates deserves a platform built for it from the first line, rather than retrofitted onto either half.
+        </p>
+        <p>
+          It began as a way to test <a href="https://github.com/microsoft/mlvc" rel="noopener">MLVC</a>, Microsoft’s
+          learned video codec. Development started the same day Microsoft released it, in July 2026. MLVC’s encoder and
+          decoder aren’t fully ready yet, so MOQOM runs on the device’s hardware codecs, H.264 and HEVC. Of those, HEVC
+          was the fastest in our tests.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section moqom">
+    <div class="wrap">
+      <p class="eyebrow">Outcomes</p>
+      <h2>What it delivers.</h2>
+      <div class="grid outcomes">
+        {outcomes.map((o) => (
+          <article class="card">
+            <h3>{o.title}</h3>
+            <p>{o.body}</p>
+          </article>
+        ))}
+      </div>
+      <div class="metrics-wrap">
+        <Metrics details />
+      </div>
+    </div>
+  </section>
+
+  <section class="section moqom">
+    <div class="wrap">
+      <p class="eyebrow">Security</p>
+      <h2>Private by construction.</h2>
+      <p class="lede">
+        End-to-end encryption isn’t a setting in MOQOM. It is how every room works, post-quantum from the first key,
+        and 1:1 calls skip the relay entirely.
+      </p>
+      <div class="grid outcomes">
+        {security.map((c) => (
+          <article class="card">
+            <h3>{c.title}</h3>
+            <p>{c.body}</p>
+          </article>
+        ))}
+      </div>
+      <p>
+        <a href="https://moqom.cloud/security/">How MOQOM security works →</a> ·
+        <a href="https://github.com/moqom-cloud/moqom-security" rel="noopener">Security libraries on GitHub →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">By resolution</p>
+        <h2>Led by 4K, built for tiles.</h2>
+        <p class="lede">
+          Co-host sizes matter most: shared video calls use smaller boxes, so each person publishes at 360p–540p.
+        </p>
+      </div>
+      <ResolutionTable />
+    </div>
+  </section>
+
+  <section class="section moqom">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Why MOQOM</p>
+        <h2>How it compares.</h2>
+      </div>
+      <div class="prose">
+        <ul class="why">
+          {WHY_MOQOM.map((w) => <li>{w}</li>)}
+        </ul>
+        <img class="graphic" src="/images/compare/fanout.svg" alt="WebRTC platforms move big audiences to a slower path; MoQ relays forward one stream to everyone" loading="lazy" />
+        <img class="graphic" src="/images/compare/headroom.svg" alt="Headroom drawn as an Elliott wave: 2, a few dozen, 2,000 and 6,000 tested, 1 million next" loading="lazy" />
+        <p class="footnote">* {BENCH_LABEL}</p>
+        <p><a href={MOQOM_LINKS.compare}>Sourced comparison with Agora, Tencent RTC, Google Cloud, AWS and Cloudflare →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Platforms</p>
+        <h2>Where it runs.</h2>
+        <p class="lede">
+          Client SDKs for every screen, and server-side SDKs in Go and Rust for the backends that run rooms.
+        </p>
+      </div>
+      <table class="platforms">
+        <thead>
+          <tr><th scope="col">Platform</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          {PLATFORMS.map((p) => (
+            <tr>
+              <td>{p.name}</td>
+              <td class:list={[p.status === 'Available' ? 'ok' : 'soon']}>{p.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">The studio’s role</p>
+        <h2>Conceived, designed and built in the lab.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Elliott Wave LLC created MOQOM and owns all of its intellectual property, the open-source SDKs included. Patents
+          pending. The SDKs and security libraries developers build on are open source; the engine that makes MOQOM fast, from the relays to the player, is licensed.
+        </p>
+        <p><a href="/approach">How the studio works →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Partnerships</p>
+        <h2>Shipped now, partnering next.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          We plan to partner with Cloudflare, Google Cloud, AWS and other CDNs and content providers. We don’t wait to
+          ship: MOQOM runs on Google Cloud today, and customers can self-host relays anywhere. No partnership is signed yet.
+        </p>
+        <p>
+          MOQOM already works with Cloudflare’s MoQ relays: point the SDK at them and media flows across Cloudflare’s
+          network, still end-to-end encrypted. Cloudflare runs draft-16 of the standard, published in January 2026, while
+          moqom.cloud and self-hosted relays run draft-22 from October 2026, with the features that came after. We’ve
+          proposed improvements to the IETF MoQ specification for wider adoption. Until they land and others catch up,
+          MOQOM is the first and only platform with all of its patent-pending technology shipped.
+          <a href="https://moqom.dev/guides/cloudflare/">MOQOM on Cloudflare →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="six10nine">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Work · Project 02</p>
+        <h2 class="project-name">{SIX10NINE.name}</h2>
+        <p class="sub mono">macOS · <a href={SIX10NINE.site}>{SIX10NINE.site.replace('https://', '')}</a></p>
+      </div>
+      <div class="prose">
+        <p>{SIX10NINE.summary}</p>
+        <p class="lede">Ripples in spacetime.</p>
+        <p>{SIX10NINE.research} <a href={SIX10NINE.researchUrl} rel="noopener">einsteinathome.org ↗</a></p>
+        <p>{SIX10NINE.licence}</p>
+        <p>{SIX10NINE.install}</p>
+        <p class="footnote">
+          <code>{SIX10NINE.repo.replace('https://', '')}</code> · {SIX10NINE.repoStatus}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="unify">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Work · Project 03</p>
+        <h2 class="project-name">{UNIFY.name}</h2>
+        <p class="sub mono">iOS · Featured by Apple</p>
+      </div>
+      <div class="prose">
+        <p>{UNIFY.summary}</p>
+        <p>{UNIFY.story}</p>
+        <p>{UNIFY.next}</p>
+        <div class="btn-row">
+          <a class="btn primary" href={UNIFY.appStore} rel="noopener">App Store</a>
+          <a class="btn" href={UNIFY.url} rel="noopener">weunify.app</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="kalopsia">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Work · Project 04</p>
+        <h2 class="project-name">{KALOPSIA.name}</h2>
+        <p class="sub mono">{KALOPSIA.status}</p>
+      </div>
+      <div class="prose">
+        <p class="lede">{KALOPSIA.tagline}</p>
+        <p>{KALOPSIA.summary}</p>
+        <p>{KALOPSIA.platforms}</p>
+        <p>{KALOPSIA.story}</p>
+        <div class="btn-row"><a class="btn" href="/kalopsia">About Kalopsia</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="ticketing">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Work · Project 05</p>
+        <h2 class="project-name">Ticketing, <em>rebuilt.</em></h2>
+        <p class="sub mono">Coming this month or this quarter · Q4 2026</p>
+      </div>
+      <div class="prose">
+        <p class="lede">Ticketing for live and digital events, without fee gouging.</p>
+        <p>
+          Ticketing has been iterated on for decades and still frustrates the people on both sides of the ticket. We
+          didn’t add another feature to the old model. We started over, the way the lab approaches every category.
+        </p>
+        <p>The name and how it works stay private until launch. It changes the game, and we’d rather show you than tell you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="contribute">
+    <div class="wrap">
+      <p class="eyebrow">Contribute</p>
+      <h2>Build it with us.</h2>
+      <p class="lede">
+        The SDKs and six10nine are open on GitHub. Fix a bug, improve the docs or port to a new platform.
+      </p>
+      <div class="grid outcomes">
+        {contribute.map((c) => (
+          <article class="card">
+            <h3>{c.title}</h3>
+            <p>{c.body}</p>
+          </article>
+        ))}
+      </div>
+      <div class="btn-row">
+        <a class="btn primary" href={GITHUB_ORG} rel="noopener">GitHub · elliott-wave-labs</a>
+        <a class="btn" href="https://elliottwave.dev/open-source#contribute">How to contribute</a>
+        <a class="btn" href="https://elliottwave.dev/security">Security and bug bounty</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap lab">
+      <span class="num">Next</span>
+      <h2>More in the lab, <em>unannounced.</em></h2>
+      <p class="lede">Nothing to show yet, by design. We announce work when it is ready to define its category.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .graphic { width: 100%; height: auto; border-radius: 22px; margin: 1.25rem 0; display: block; }
+  .page-head h1 {
+    font-size: clamp(3.5rem, 10vw, 8rem);
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .band {
+    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+  }
+  .two {
+    display: grid;
+    gap: 2rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1.2fr;
+    }
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+  .outcomes {
+    margin: 2.5rem 0 3rem;
+  }
+  .outcomes p {
+    color: var(--text-dim);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .why {
+    margin: 0 0 1rem;
+    padding-left: 1.1rem;
+    color: var(--text-dim);
+  }
+  .why li {
+    margin-bottom: 0.6rem;
+  }
+  .platforms {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    align-self: start;
+  }
+  .platforms th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 400;
+    padding: 0 0 0.75rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .platforms td {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .platforms td:first-child {
+    font-weight: 500;
+    padding-right: 1rem;
+  }
+  .ok {
+    color: var(--moqom);
+  }
+  .soon {
+    color: var(--text-dim);
+  }
+  .project-name {
+    font-size: clamp(2.6rem, 6vw, 4.5rem);
+    margin-bottom: 0.15em;
+  }
+  .project-name em {
+    color: var(--accent);
+  }
+  .sub {
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+  }
+  .lab {
+    text-align: center;
+  }
+  .lab .lede {
+    margin: 0 auto;
+  }
+  .lab h2 em {
+    color: var(--text-dim);
+  }
+</style>

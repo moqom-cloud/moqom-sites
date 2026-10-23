@@ -1,0 +1,28 @@
+---
+// "Free" for anything that doesn't need a licence; "Paid" with the price for the plugins.
+import { PRICES, usd, type PaidPlugin } from '../data/pricing';
+
+interface Props {
+  plugin?: PaidPlugin;
+  /** Show the price next to "Paid". */
+  price?: boolean;
+}
+const { plugin, price = true } = Astro.props;
+---
+
+{
+  plugin ? (
+    <a class="tag amber" href={`/pricing/?plugin=${plugin}`}>
+      Paid{price && ` · ${usd(PRICES.yearly)}/yr or ${usd(PRICES.lifetime)}`}
+    </a>
+  ) : (
+    <span class="tag ok">Free</span>
+  )
+}
+
+<style>
+  a.tag:hover {
+    text-decoration: none;
+    border-color: var(--amber);
+  }
+</style>

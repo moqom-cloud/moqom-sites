@@ -1,0 +1,215 @@
+---
+import Analytics from '../components/Analytics.astro';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+}
+
+const SITE_NAME = 'elliottwave.studio lab Developers';
+const DEFAULT_DESC =
+  'The developer hub for elliottwave.studio lab products: SDKs, open-source repositories, platform status and security for MOQOM, and six10nine for macOS.';
+
+const { title, description = DEFAULT_DESC, noindex = false, type = 'website' } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME}: build on elliottwave.studio lab`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+
+const nav = [
+  { href: '/open-source', label: 'open-source' },
+  { href: '/status', label: 'status' },
+  { href: '/security', label: 'security' },
+  { href: '/blog', label: 'blog' },
+  { href: '/donate', label: 'donate' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0A0B0D" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a href="/" class="brand" aria-label="elliottwave.dev, the elliottwave.studio lab developer hub, home">
+          <svg viewBox="0 0 48 24" width="34" height="17" aria-hidden="true">
+            <path d="M2 20 L9 11 L13 15 L22 3 L26 10 L36 2 L40 9 L46 6" fill="none" stroke="var(--cyan)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="36" cy="2.5" r="2.2" fill="var(--amber)" />
+          </svg>
+          <span>elliottwave<span class="tld">.dev</span></span>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            {nav.map((n) => (
+              <li>
+                <a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <ul class="foot-links">
+          <li><a href="https://moqom.dev">moqom.dev</a></li>
+          <li><a href="https://moqom.cloud">moqom.cloud</a></li>
+          <li><a href="https://github.com/moqom-cloud">github.com/moqom-cloud</a></li>
+          <li><a href="https://elliottwave.studio">elliottwave.studio lab</a></li>
+          <li><a href="/about">about</a></li>
+          <li><a href="https://elliottwave.studio/legal">legal</a></li>
+          <li><a href="/security">security</a></li>
+          <li><a href="/open-source#contribute">contribute</a></li>
+          <li><a href="/donate">donate</a></li>
+        </ul>
+        <p class="legal">
+          © 2026 Elliott Wave LLC. All rights reserved. MOQOM™, six10nine™, Unify™, Kalopsia™, Elliott Wave™ and
+          elliottwave.studio lab™ are trademarks of Elliott Wave LLC. Patents pending. MOQOM · Media Over QUIC Orchestration Mesh.
+        </p>
+        <p class="legal">Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its projects, the open-source projects included.</p>
+      </div>
+    </footer>
+    <Analytics site="elliottwave.dev" />
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 10;
+    background: var(--cyan);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    gap: 1rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .brand:hover {
+    text-decoration: none;
+  }
+  .tld {
+    color: var(--cyan);
+  }
+  nav ul {
+    display: flex;
+    gap: clamp(0.75rem, 2.4vw, 1.75rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a {
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    color: var(--text-dim);
+  }
+  nav a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+  nav a[aria-current='page'] {
+    color: var(--cyan);
+  }
+  nav a[aria-current='page']::before {
+    content: '/';
+    color: var(--amber);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding: 2.5rem 0;
+    background: var(--bg-sunk);
+  }
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+  }
+  .foot-links a {
+    color: var(--text-dim);
+  }
+  .legal {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    max-width: none;
+    margin: 0;
+  }
+  .legal + .legal {
+    margin-top: 0.4rem;
+  }
+  @media (max-width: 600px) {
+    .brand > span {
+      display: none;
+    }
+  }
+</style>

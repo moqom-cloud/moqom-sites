@@ -1,0 +1,411 @@
+---
+import RevealText from './RevealText.astro';
+import StatStrip from './StatStrip.astro';
+
+// Eight copies of one chunk. They start stacked and spread as the hero scrolls.
+const pieces = [
+  { x: 8, y: 58 },
+  { x: 22, y: 78 },
+  { x: 36, y: 62 },
+  { x: 50, y: 86 },
+  { x: 63, y: 58 },
+  { x: 76, y: 80 },
+  { x: 88, y: 64 },
+  { x: 58, y: 72 },
+];
+---
+
+<div class="void">
+  <section class="vx-hero" data-scene="stage" data-hero aria-labelledby="vx-title">
+    <div class="vx-stage">
+      <div class="vx-field" aria-hidden="true">
+        <div class="ring"></div>
+        {pieces.map((p, i) => (
+          <span class="piece" style={`--x:${p.x};--y:${p.y};--i:${i}`}>64 KiB</span>
+        ))}
+      </div>
+      <div class="wrap vx-copy">
+        <p class="eyebrow">ñü.vœîð</p>
+        <h1 id="vx-title">A file leaves<br /><em>with no name.</em></h1>
+        <RevealText
+          parts={[
+            ['Eight copies, each with its own key. ', false],
+            ['The wrong key opens nothing.', true],
+          ]}
+        />
+        <nav class="beats" aria-label="On this page">
+          <a href="#stealth-section"><b>Stealth</b><span>0 names a node can read</span></a>
+          <a href="#speed-section"><b>Speed</b><span>10.9 µs to seal a chunk</span></a>
+          <a href="#wire-section"><b>On the wire</b><span>16 bytes of tag, then eight copies</span></a>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="stealth-section" data-scene="reveal">
+    <div class="wrap">
+      <p class="eyebrow">Stealth</p>
+      <h2>A node holds ciphertext.<br /><span class="dim"> It cannot name the file.</span></h2>
+      <p class="lede">
+        Elliott first built this shape in 2010. nu.void is that design on this network. It is a bag, not a vault.
+        What you put in it lives as nameless 64 KiB pieces. Only the map on your phone knows how they go back together.
+      </p>
+      <ul class="cards" role="list">
+        <li><b>One node</b><span>65,536 bytes of ciphertext and an address. Not the name, the length of the file, the owner, or the other seven copies.</span></li>
+        <li><b>One relay</b><span>A fixed-size mixnet packet, the same shape as the cover. The next chunk takes a different set of relays. No relay from the previous chunk is reused.</span></li>
+        <li><b>One wrong key</b><span>The AES-256-GCM tag fails. That chunk returns no bytes, so the file cannot be pieced together from it. Measured: 200 of 200 wrong keys rejected.</span></li>
+        <li><b>One right key</b><span>That one chunk. The footer says where its bytes sit. It does not open the rest of the file, and it does not point at the next chunk.</span></li>
+        <li><b>A different map per person</b><span>A private send re-seals every chunk under new keys. Their addresses are not yours. View once deletes their map after it opens.</span></li>
+        <li><b>A camera in the room</b><span>View once draws on a surface the screenshot buffer does not include. A second camera still sees the screen.</span></li>
+      </ul>
+      <p class="footnote">
+        An unlocked phone opens the map, because the map is meant to open for the person who can unlock it.
+        Someone who watches every link still learns that a device is sending cover. The mixnet already assumes that.
+        There is no claim that a file is impossible to read, and no claim that traffic is untraceable.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="speed-section">
+    <div class="wrap">
+      <p class="eyebrow">Speed · benchmark</p>
+      <h2>The cipher is not the wait.<br /><span class="dim"> The mixnet is.</span></h2>
+      <StatStrip
+        items={[
+          { n: 10.9, dec: 1, unit: 'µs', label: 'To seal one 64 KiB chunk', kind: 'benchmark' },
+          { n: 6, dec: 2, unit: 'GB/s', label: 'AES-256-GCM seal throughput', kind: 'benchmark' },
+          { n: 11.7, dec: 1, unit: 'µs', label: 'To open that chunk', kind: 'benchmark' },
+          { n: 1.8, dec: 1, unit: 'ms', label: 'Cipher time for a 10 MiB file, 161 seals', kind: 'calculated' },
+        ]}
+      >
+        Seal and open were measured on 12 October 2026 on a MacBook Pro (MacBookPro18,3, M1 Pro, macOS 26.4) with Python
+        cryptography, 5,000 rounds of a 65,520-byte plaintext. Seal was 10.9 µs, 6.00 GB/s. Open was 11.7 µs, 5.62 GB/s.
+        A wrong key was rejected on 200 of 200 opens, in 12.4 µs, and produced no plaintext. 161 × 10.9 µs is 1.8 ms,
+        calculated from that seal time. This is that machine. It is not a phone, and it is not the network. Each chunk
+        takes its own mixnet route. That wait was not measured here.
+      </StatStrip>
+    </div>
+  </section>
+
+  <section class="section" id="wire-section" data-scene="reveal">
+    <div class="wrap">
+      <p class="eyebrow">On the wire</p>
+      <h2>Sixteen bytes of tag.<br /><span class="dim"> The name stays on the phone.</span></h2>
+      <p class="lede">
+        A sealed chunk is 65,536 bytes, every time. The 48-byte nu.feet footer is inside the encryption, so the wire
+        does not grow by a header a node can read. The only bytes outside the padded plaintext are the 16-byte tag.
+      </p>
+      <figure class="chunk" aria-label="One 64 KiB chunk: 65,472 bytes of file and padding, then a 48-byte footer, then a 16-byte tag.">
+        <div class="bar">
+          <span class="file">File, then zeros<span>65,472 bytes</span></span>
+          <span class="feet">ñü.fêět<span>48 bytes, inside</span></span>
+          <span class="tag">Tag<span>16 bytes</span></span>
+        </div>
+        <figcaption>A node sees one block of 64 KiB. The footer is in the ciphertext. The address is a hash of that block, not a file name.</figcaption>
+      </figure>
+
+      <div class="split">
+        <div>
+          <h3>Stays on the phone</h3>
+          <ul class="plain" role="list">
+            <li>The name you gave the file</li>
+            <li>The type, and any note you wrote</li>
+            <li>Who it belongs to</li>
+            <li>The order of the chunks</li>
+            <li>The key for each chunk</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Crosses the mixnet</h3>
+          <ul class="plain" role="list">
+            <li>65,536 bytes of ciphertext</li>
+            <li>An address derived from those bytes</li>
+            <li>Eight separate puts, on eight routes</li>
+            <li>No session to a storage node</li>
+            <li>No filename, type, length or owner</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bits">
+        <h3>A 10 MiB file, counted</h3>
+        <div class="bit"><span>The file</span><i style="--w:12.4%"><b></b></i><em>10 MiB</em></div>
+        <div class="bit"><span>One sealed copy</span><i style="--w:12.5%"><b></b></i><em>10.1 MiB</em></div>
+        <div class="bit"><span>Eight copies</span><i style="--w:100%"><b></b></i><em>80.5 MiB</em></div>
+      </div>
+      <p class="lede">
+        10,485,760 file bytes divided by 65,472 is 160.15, so the file is 161 chunks. One copy is 161 × 65,536 =
+        10,551,296 bytes, which is 65,536 bytes more than the file: the padding, the footer and the tag, together
+        the size of one chunk. Eight copies are 80.5 MiB. The ratio is 8.01. Almost all of that is the eight copies.
+        The tag is 16 bytes in each 64 KiB, and the name is not among the bytes at all.
+      </p>
+      <p class="footnote">
+        Cover traffic on the mixnet is extra and is not in these figures. A node that has run
+        <span class="mono">~node void off</span> is not in the set of eight. This is not a smaller file. It is a file
+        whose name, type and owner never leave the phone, stored eight times at one fixed size.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="protocol-section">
+    <div class="wrap">
+      <p class="eyebrow">Format</p>
+      <h2>The chunk, written out.</h2>
+      <p class="lede">
+        This is the wire format. An implementation can follow it. It has not been submitted to the IETF.
+      </p>
+      <pre class="spec"><code>{`struct {
+  opaque body[65472];     // file bytes, then zeros
+  uint32 magic;           // 0x74656566, the bytes of "feet"
+  uint32 used;            // file bytes in body, 0..65472
+  uint32 index;           // this chunk, from 0
+  uint32 count;           // chunks in the file
+  opaque object_id[32];
+} ChunkPlain;             // 65,520 bytes
+
+k_chunk    = random 32
+sealed     = AES-256-GCM(k_chunk, zero_nonce,
+               ChunkPlain, aad = object_id || uint32(index))
+chunk_addr = H256(Label("nv chunk addr") || sealed)
+// sealed is 65,536 bytes`}</code></pre>
+      <ul class="cards" role="list">
+        <li><b>Zero nonce</b><span>One key encrypts one chunk, once. The key is never reused, so the zero nonce is safe.</span></li>
+        <li><b>No convergent encryption</b><span>The same file stored twice, or by two people, gets unrelated addresses.</span></li>
+        <li><b>Mixnet only</b><span>Each put and each get is its own mixnet message. nu.void does not open a session to a storage node.</span></li>
+        <li><b>The map</b><span>For each chunk: the used length, the 32-byte key, the 32-byte address. The map is wrapped by the Secure Enclave. It is not on a node.</span></li>
+      </ul>
+      <p class="footnote">
+        A map handed to one person is sealed to their identity key with ML-KEM-1024, inside an ordinary MLS message.
+        Their chunks are sealed again under new keys. Deleting theirs does not touch yours.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="patents-section">
+    <div class="wrap">
+      <p class="eyebrow">Patents</p>
+      <h2>Published. Not filed.</h2>
+      <p class="lede">
+        Nothing on this page is patent pending. A filing has not been made. The design is public so it can be built.
+        Prior systems a later filing would have to stand beside: Tahoe-LAFS, IPFS, Cryptomator, age, Signal
+        attachments, and Padmé padding.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="https://webe.khensu.nu#characters-section">Not only the English alphabet</a>
+        <a class="btn" href="https://webe.khensu.nu#run-a-node-section">Run a node</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import '../../scripts/scenes.ts';
+</script>
+
+<style>
+  .void { --p: 1; }
+  .vx-hero {
+    --p: 1;
+    position: relative;
+    min-height: 150vh;
+    border-top: 0;
+  }
+  .vx-stage {
+    position: sticky;
+    top: 64px;
+    min-height: calc(100vh - 64px);
+    display: grid;
+    align-items: start;
+    overflow: visible;
+  }
+  .vx-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ring {
+    position: absolute;
+    left: 50%;
+    top: 74%;
+    width: min(980px, 88%);
+    height: min(340px, 42vh);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    translate: -50% -50%;
+    scale: calc(0.82 + var(--p) * 0.18);
+    background:
+      radial-gradient(closest-side, transparent 68%, rgba(255, 255, 255, 0.03) 69%, transparent 74%);
+  }
+  .piece {
+    position: absolute;
+    left: calc((50% + (var(--x) - 50) * var(--p) * 1%));
+    top: calc((74% + (var(--y) - 74) * var(--p) * 1%));
+    width: 5.4rem;
+    height: 2rem;
+    margin: -1rem 0 0 -2.7rem;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    translate: 0 calc(var(--p) * -0.4rem);
+  }
+  .vx-copy {
+    position: relative;
+    z-index: 1;
+    padding-top: clamp(3.5rem, 8vh, 6rem);
+  }
+  .vx-copy h1 {
+    font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.045em;
+    font-weight: 500;
+    margin: 0 0 1.1rem;
+    max-width: 12ch;
+    translate: 0 calc(var(--p) * -1.1rem);
+  }
+  .vx-copy h1 em {
+    font-style: normal;
+    color: var(--accent, #7ee0c8);
+  }
+  .vx-copy :global(.reveal-text) {
+    margin: 0 0 1.75rem;
+    text-align: left;
+    max-width: 36rem;
+  }
+  .beats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 16rem));
+    gap: 0.75rem;
+    max-width: 52rem;
+    translate: 0 calc(var(--p) * 1.4rem);
+  }
+  .beats a {
+    display: grid;
+    gap: 0.3rem;
+    padding: 1rem 1.05rem 1.05rem;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 18px;
+    background: rgba(18, 18, 20, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+  .beats a:hover { border-color: rgba(255, 255, 255, 0.32); }
+  .beats b { font-weight: 500; font-size: 1.02rem; }
+  .beats span { color: var(--text-dim); font-size: 0.88rem; line-height: 1.35; }
+  .void h2 {
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    max-width: 18ch;
+  }
+  .dim { color: var(--text-dim); }
+  .cards {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+  .cards li {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    padding: 1.5rem 1.4rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .cards b { font-weight: 500; font-size: 1.05rem; }
+  .cards span { color: var(--text-dim); line-height: 1.45; }
+  .chunk { margin: 2rem 0 0; }
+  .bar {
+    display: flex;
+    height: 4.5rem;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  .bar > span {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 0.8rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+  .bar > span span { font-size: 0.75rem; color: var(--text-dim); }
+  .file { flex: 65472 1 0; background: rgba(255, 255, 255, 0.08); }
+  .feet { flex: 48 1 5.5rem; background: #f2f1ec; color: #111; }
+  .feet span { color: #333; }
+  .tag { flex: 16 1 3.6rem; background: rgba(255, 255, 255, 0.22); }
+  .chunk figcaption { margin-top: 0.7rem; color: var(--text-dim); font-size: 0.92rem; max-width: 62ch; }
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2.2rem;
+  }
+  .split h3 { margin: 0 0 0.7rem; font-size: 1.05rem; font-weight: 500; }
+  .plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  .plain li {
+    padding-left: 0.9rem;
+    position: relative;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  .plain li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 99px;
+    background: var(--accent, #7ee0c8);
+  }
+  .bits { margin-top: 2rem; display: grid; gap: 0.7rem; max-width: 40rem; }
+  .bits h3 { margin: 0.4rem 0 0.2rem; font-size: 1rem; font-weight: 500; }
+  .bit { display: grid; grid-template-columns: 9rem 1fr auto; gap: 0.75rem; align-items: center; font-size: 0.92rem; }
+  .bit i { display: block; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); position: relative; }
+  .bit i b { position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: inherit; background: #f2f1ec; }
+  .bit em { font-style: normal; font-variant-numeric: tabular-nums; }
+  .spec {
+    margin: 1.5rem 0 0;
+    padding: 1.25rem 1.4rem;
+    overflow: auto;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+  .mono { font-family: var(--font-mono, ui-monospace, monospace); }
+  @media (max-width: 800px) {
+    .beats { grid-template-columns: 1fr; }
+    .split { grid-template-columns: 1fr; }
+    .vx-copy h1 { max-width: 14ch; }
+    .ring { height: 220px; top: 78%; }
+  }
+  @media (max-width: 640px) {
+    .bit { grid-template-columns: 1fr; }
+    .bar > span { font-size: 0.72rem; }
+    .piece { width: 4.2rem; margin-left: -2.1rem; font-size: 0.64rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vx-copy h1, .beats, .piece, .ring { translate: none; }
+  }
+</style>

@@ -1,0 +1,295 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import Base from '../layouts/Base.astro';
+import Career from '../components/Career.astro';
+import { FAVORITED } from '../data/past-work';
+
+// TODO(Elliott): add your portrait at public/images/elliott.jpg (square, at least 640×640). Until it exists the page
+// renders the "E" monogram instead; the check runs at build time, so rebuild after adding it.
+const hasPortrait = fs.existsSync(path.join(process.cwd(), 'public/images/elliott.jpg'));
+
+const profiles = [
+  { href: 'https://github.com/elliott-io', label: 'GitHub', handle: 'elliott-io', icon: 'github' },
+  { href: 'https://github.com/elliott-wave-labs', label: 'GitHub organisation', handle: 'elliott-wave-labs', icon: 'github' },
+  { href: 'https://www.linkedin.com/in/elliottio/', label: 'LinkedIn', handle: 'elliottio', icon: 'linkedin' },
+  { href: 'https://www.instagram.com/khensu.nu', label: 'Instagram', handle: 'khensu.nu', icon: 'instagram' },
+];
+---
+
+<Base title="About" description="elliottwave.studio lab makes technology and art, and blurs the line between the two. Founded by Elliott. Creators of MOQOM, six10nine, Unify and Kalopsia.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">About</p>
+      <h1>elliottwave.studio lab</h1>
+      <p class="lede">
+        An independent technology lab and studio. We create technology in categories of its own, starting with MOQOM.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">The company</p>
+        <h2>A lab, and the owner of its work.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          elliottwave.studio lab is the brand of Elliott Wave LLC, the company behind MOQOM, six10nine, Unify and Kalopsia.
+        </p>
+        <p>
+          Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its projects — the
+          open-source projects included: the code, the designs, the trademarks, and the inventions. An open-source licence
+          lets you use the code; it does not transfer ownership. Patents pending.
+        </p>
+        {/* TODO(Elliott): optional, a line on why the studio is called Elliott Wave. */}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div class="founder-head">
+        <p class="eyebrow">Founder</p>
+        {hasPortrait ? (
+          <img class="portrait" src="/images/elliott.jpg" alt="Justin Elliott Staffer in Tangier, Morocco" width="240" height="240" loading="lazy" decoding="async" />
+        ) : (
+          <div class="portrait monogram" role="img" aria-label="Elliott">E</div>
+        )}
+        <h2 class="founder-name">About Elliott <span class="full-name">Justin Elliott Staffer</span></h2>
+      </div>
+      <div class="prose">
+        <p><strong>Elliott — Founder of elliottwave.studio lab and Elliott Wave LLC.</strong></p>
+        <p>Founder and sole engineer, building technology in categories of its own. Elliott is the sole author of the studio’s first-party technology, including MOQOM, six10nine, Unify and Kalopsia.</p>
+        <p>
+          His newest project, <a href="/khensu">khensu.nu</a>, a post-quantum private messenger, was inspired by Pavel,
+          Telegram’s founder, for its style, and by Moxie Marlinspike, for the security of Signal. Moxie’s Signal
+          Protocol was the best in class when WhatsApp adopted it, and Brian, WhatsApp’s co-founder, later sounded the
+          alarm over what was happening to WhatsApp, left, and co-founded the Signal Foundation with Moxie.
+          khensu.nu is built to supersede that work: post-quantum end to end, signatures included, with every message
+          carried through a mixnet so no one can see who talks to whom, on a network run by its people. With credit and
+          thanks to Moxie, Pavel and Brian. khensu.nu is not affiliated with Telegram, Signal or WhatsApp.
+        </p>
+        <p>
+          Avidly product- and UX-minded, he builds security, AI and quality in from the start, with compliance designed
+          in from day one: SOC 2 (all five trust criteria), ISO 27001, GDPR, CCPA/CPRA and data subject access requests
+          (controls mapped; not yet audited or certified). He has written his own encryption
+          and archival platform, built for clients including Disney.
+        </p>
+        <p>
+          He also wrote the visual search that won Disney’s archive contract and kept it for years. It covered all of
+          their archive data, new and old, including the original Star Wars footage, with full DNxHD downloads over
+          internal, secured networks.
+        </p>
+        <p>Born in Toronto and raised in Los Angeles from a toddler, he loves travel and connecting people, in the hope of making the world a better place where everyone wins and has fun doing it. He loves learning new things, and mentoring others while he does. When he isn’t building, he cooks.</p>
+        <p>
+          Elliott is also a Member of Technical Staff at <a href={FAVORITED.site} rel="noopener">Favorited</a>, where the
+          team just launched the native apps with{' '}
+          <a href={FAVORITED.event} rel="noopener">Spooky Season 2026</a> on the App Store: hunt ghosts live, find the amulet.
+          He spearheaded Favorited’s international live captions and translations: <strong>streamers can go live in
+          their own language and reach audiences across the world</strong>, and viewers follow along in theirs as it
+          happens. As far as we know, Favorited is the only livestream app that has it. Favorited’s full plans are
+          unfolding rapidly, with incredible results from the entire team.
+          His work there includes several new technologies and improvements on existing ones, now in an exploratory patent
+          phase; that work belongs to Favorited, not the lab. The MOQOM work was done about a month ago, but Favorited’s
+          launch came first, so its release waited until now.
+        </p>
+        <p>
+          Right before Favorited, he was CTO of LIVEr / Aioli, where he built a RAG engine and custom agents working with 50,000 restaurants
+          across America, with live updates, on Google’s APIs and other publicly available data. He got Aioli into Google’s
+          startup program for AI companies. As a hands-on CTO he led a team of ten developers through Aioli’s full Agora
+          implementation. Favorited, where he works now, is the second company where he has worked with Agora. Aioli also livestreamed, so restaurants and shops could sell food on air: the full
+          food ordering system, with agents that learned from each customer and made custom recommendations, was working, tested and launched before he left, and shops were partly built. Favorited
+          recruited him away as Aioli’s funding ran low. He started there in April 2025, a birthday present to himself,
+          trading the Bay Area tech scene for Los Angeles, where he was raised, and Silicon Beach, his favourite.
+        </p>
+        <p>
+          In 2024 he also started <a href="https://getvarasa.com" rel="noopener">Varasa</a>, human-centred AI, with Sonia
+          Talati. He is its founder and sole creator, with patents on private AI workflows.
+        </p>
+        <p>
+          Before that, as lead iOS engineer at Banter Media, he built the same idea for messages you answer later: video,
+          audio, text and documents, transcribed and translated automatically, with groups, AI summaries and AI
+          functions. He built it while living in Morocco for nearly two years. Banter ran out of funding when Silicon Valley Bank collapsed and
+          couldn’t raise again. Then came travel: a captain’s sailing licence in Cartagena, Colombia, and time exploring
+          São Paulo. The sailing bug goes back to Greece in 2015: two weeks sailing between the islands, and a kiss on the
+          floor of the Temple of Demeter on Naxos.
+        </p>
+        <p>
+          When LiDAR on the iPhone Pro was brand new, he built the AR engine for{' '}
+          <a href="https://the3dapp.com" rel="noopener">The3dApp</a>, before Matterport had anything as good on a phone.
+          He grew the team from just himself to 20 in about six months, and mentored the design team on the UI. The UI
+          was later redesigned; the engine experience stayed the same. The3dApp partnered with The Real Deal and Corcoran. After four internal alpha releases, and with the scope
+          still growing faster than anyone could ship it, he left to travel. The company never launched and later went
+          under; he and its founder are still friends.
+        </p>
+        <p>
+          Before that came a run of startups he co-founded or built from the first line. At Renge, as CTO and co-founder, he
+          designed, specified and built a location-based social app for meeting people wherever you are. Renge sponsored a
+          Grammy Week party at the Roxy on the Sunset Strip, where Larry King received a lifetime achievement award. After
+          that the marketing fell through, COVID emptied the places people met, and Renge ran out of users and funding.
+          Its last idea was to let members send each other real toilet paper when the shelves were bare: a genuine help
+          in hard times, with a smile attached. Apple rejected anything that could read as a joke about COVID, so it never
+          shipped. At InnerJam, also
+          as CTO and co-founder, he customised low-level C++ audio processing to tune each affirmation, wave by wave, so it
+          played unheard under the user’s own music. InnerJam was completed, then sadly stopped during COVID, when the
+          co-founder whose idea it was passed away. At <a href="/archive/lot-club">Lot Club</a>, as CEO and sole creator, he
+          built the prototype, the website and the marketing for a private community for entertainment professionals, on a
+          graph network like Renge’s, but far more powerful and on completely different tech.
+          One cold email to 45,000 people, with no follow-ups, got 11% of them through an application that took at least
+          15 minutes, with linked profiles, past, current and upcoming work, the studios behind it, and a case for why they
+          belonged: 110 times the 0.1% of cold emails that typically book a meeting. With referrals, that made 6,000
+          signups in the first month. Applicants included heads of TV networks, and early
+          members came from Disney, Universal, Warner Bros., Sony, the mini-majors and indie studios.
+          At Genius Inc. he built the full stack of a mobile education platform,
+          led about ten developers overseas, and mentored its UX and IT staff.
+        </p>
+        <p>
+          Earlier still, he founded Covalent Media Systems, back when it was a film services platform. He architected,
+          prototyped and led development of its digital asset management cloud, which kept studio media secure for
+          viewing and collaboration from pre-production through production, post-production, screeners and archival,
+          for clients such as Disney, Fox Regency and The Weinstein Company, in the US and abroad. His technology has
+          securely handled more than 700 films, including over 35 Academy Award–winning projects, from Harry Potter to
+          Birdman, The Revenant and Star Wars. Some it carried from production through archival; for others it delivered
+          the final cut securely, in place of DVDs, helping move the industry off discs. Covalent held
+          contracts with every major studio, and with mini-majors and independents alike. Its security was proven by
+          penetration tests and rated best in class in the quarterly reviews those contracts require: no breaches, no
+          leaks.
+        </p>
+        <p>
+          His first paid programming job came in his early teens, for a private tech millionaire. He started designing
+          newsletters and magazines at 15, and was paid for his first design work at 16, the year he
+          graduated high school two years early with a 4.0 GPA, the highest his small private school offered. He has been
+          shipping software and design since 2006, when he started building websites freelance. Across
+          twenty years of startup and executive work, in business development, product, architecture, iOS, full stack
+          and design, he has led development teams of up to 50, reviewing every new developer’s code himself and
+          mentoring them as they ramp up. He was also the first engineering hire for startup projects founded by a Forbes 400
+          billionaire. He is also good at web scraping, and has written custom bots for jobs other platforms couldn’t
+          support, or ran too slowly to be useful.
+        </p>
+        <ul class="profiles">
+          {profiles.map((p) => (
+            <li>
+              <a href={p.href} rel="me noopener" aria-label={`${p.label}: ${p.handle}`}>
+                {p.icon === 'github' && (
+                  <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                  </svg>
+                )}
+                {p.icon === 'linkedin' && (
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+                    <rect x="2" y="2" width="20" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="1.8" />
+                    <rect x="6.2" y="10" width="2.4" height="7.5" />
+                    <circle cx="7.4" cy="7.1" r="1.4" />
+                    <path d="M11 10h2.3v1.1c.4-.7 1.3-1.3 2.6-1.3 2.2 0 2.9 1.4 2.9 3.4v4.3h-2.4v-3.9c0-1-.3-1.8-1.3-1.8s-1.7.7-1.7 1.9v3.8H11z" />
+                  </svg>
+                )}
+                {p.icon === 'instagram' && (
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="18" height="18" rx="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
+                  </svg>
+                )}
+                <span>{p.label} <span class="handle">{p.handle}</span></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <Career />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="btn-row">
+        <a class="btn primary" href="/contact">Get in touch</a>
+        <a class="btn" href="/work">See the work</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .founder-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+  }
+  .full-name {
+    display: block;
+    margin-top: 0.35em;
+    font-family: var(--font-sans);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.5em;
+    letter-spacing: 0;
+    color: var(--text-dim);
+  }
+  .two {
+    display: grid;
+    gap: 1.5rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+  .prose strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .portrait {
+    display: block;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--line-strong);
+    margin: 0.5rem 0 1.5rem;
+  }
+  .monogram {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    line-height: 1;
+    color: var(--accent);
+    background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--accent) 18%, var(--bg-raised)), var(--bg-raised) 70%);
+    user-select: none;
+  }
+  .profiles {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .profiles a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .profiles a:hover .handle {
+    color: var(--accent);
+  }
+  .profiles svg {
+    flex: none;
+    color: var(--text-dim);
+  }
+  .handle {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-left: 0.35rem;
+  }
+</style>

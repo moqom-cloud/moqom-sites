@@ -1,0 +1,105 @@
+/*
+ * Apple-style scroll effects, CSS only (scroll-driven animations).
+ *
+ * Progressive enhancement: everything is fully visible and static unless the browser supports
+ * animation-timeline AND the visitor has not asked for reduced motion. Never hide content
+ * behind an effect that might not run.
+ *
+ * Classes
+ *   .reveal            fades and rises as it enters the viewport
+ *   .reveal--scale     same, growing from 92%
+ *   .depth-1/2/3       parallax layers; higher drifts further against the scroll
+ *   .hero-zoom         hero that scales down and fades as it scrolls away
+ *   .pin-stage         tall section whose .pin-sticky child stays put while
+ *     .pin-step          its steps light up one by one (scrollytelling)
+ *   .text-sweep        headline whose gradient fill sweeps in with scroll
+ */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal,
+    .reveal--scale {
+      animation: scroll-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 28%;
+    }
+    .reveal--scale { animation-name: scroll-reveal-scale; }
+
+    .depth-1, .depth-2, .depth-3 {
+      animation: scroll-depth linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform;
+    }
+    .depth-1 { --depth: 40px; }
+    .depth-2 { --depth: 90px; }
+    .depth-3 { --depth: 160px; }
+
+    .hero-zoom {
+      animation: scroll-hero linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 90%;
+      transform-origin: 50% 30%;
+    }
+
+    .text-sweep {
+      background: linear-gradient(90deg, currentColor 0 50%, rgb(255 255 255 / 0.22) 50% 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: scroll-sweep linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 55%;
+    }
+    /* Keep the real colour as the fill source. */
+    .text-sweep { -webkit-text-fill-color: transparent; }
+
+    .pin-stage {
+      view-timeline-name: --pin;
+      view-timeline-axis: block;
+    }
+    .pin-step {
+      animation: scroll-step linear both;
+      animation-timeline: --pin;
+    }
+    .pin-step:nth-child(1) { animation-range: contain 0% contain 33%; }
+    .pin-step:nth-child(2) { animation-range: contain 33% contain 66%; }
+    .pin-step:nth-child(3) { animation-range: contain 66% contain 100%; }
+  }
+}
+
+.pin-stage { position: relative; min-height: 260vh; }
+.pin-sticky {
+  position: sticky;
+  top: 12vh;
+  min-height: 76vh;
+  display: grid;
+  align-content: center;
+}
+
+@keyframes scroll-reveal {
+  from { opacity: 0; transform: translate3d(0, 48px, 0); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+@keyframes scroll-reveal-scale {
+  from { opacity: 0; transform: scale(0.92) translate3d(0, 32px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes scroll-depth {
+  from { transform: translate3d(0, var(--depth), 0); }
+  to   { transform: translate3d(0, calc(var(--depth) * -1), 0); }
+}
+@keyframes scroll-hero {
+  from { transform: none; opacity: 1; filter: none; }
+  to   { transform: scale(0.86) translate3d(0, -6vh, 0); opacity: 0; filter: blur(8px); }
+}
+@keyframes scroll-sweep {
+  from { background-position: 100% 0; }
+  to   { background-position: 0 0; }
+}
+@keyframes scroll-step {
+  0%   { opacity: 0.25; transform: translate3d(0, 12px, 0); }
+  15%  { opacity: 1;    transform: none; }
+  85%  { opacity: 1;    transform: none; }
+  100% { opacity: 0.25; transform: translate3d(0, -12px, 0); }
+}

@@ -1,0 +1,149 @@
+---
+// Horizontal bar chart rendered to inline SVG at build time. No client JS.
+interface Bar {
+  label: string;
+  value: number;
+  display?: string;
+  muted?: boolean;
+}
+interface Props {
+  title: string;
+  description: string;
+  bars: Bar[];
+  max?: number;
+  /** Optional vertical reference line, in data units. */
+  reference?: { value: number; label: string };
+  axisLabel?: string;
+  ticks?: number[];
+}
+
+const { title, description, bars, reference, axisLabel, ticks = [] } = Astro.props;
+const max = Astro.props.max ?? Math.max(...bars.map((b) => b.value)) * 1.1;
+
+const width = 640;
+const labelWidth = 230;
+const valueWidth = 96;
+const rowHeight = 34;
+const barHeight = 18;
+const top = reference ? 26 : 8;
+const axisHeight = ticks.length || axisLabel ? 34 : 8;
+const plotWidth = width - labelWidth - valueWidth;
+const height = top + bars.length * rowHeight + axisHeight;
+const x = (v: number) => labelWidth + (Math.max(0, v) / max) * plotWidth;
+
+const uid = `bc-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`;
+---
+
+<figure class="chart">
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    role="img"
+    aria-labelledby={`${uid}-t ${uid}-d`}
+    preserveAspectRatio="xMinYMin meet"
+  >
+    <title id={`${uid}-t`}>{title}</title>
+    <desc id={`${uid}-d`}>{description}</desc>
+    <defs>
+      <linearGradient id={`${uid}-g`} x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#22D3EE"></stop>
+        <stop offset="1" stop-color="#8B5CF6"></stop>
+      </linearGradient>
+    </defs>
+
+    {
+      ticks.map((t) => (
+        <g>
+          <line x1={x(t)} x2={x(t)} y1={top - 4} y2={top + bars.length * rowHeight} stroke="#23272F" stroke-width="1" />
+          <text x={x(t)} y={top + bars.length * rowHeight + 16} text-anchor="middle" class="tick">
+            {t.toLocaleString("en-US")}
+          </text>
+        </g>
+      ))
+    }
+
+    {
+      bars.map((b, i) => {
+        const y = top + i * rowHeight + (rowHeight - barHeight) / 2;
+        const w = Math.max(x(b.value) - labelWidth, b.value > 0 ? 3 : 0);
+        return (
+          <g>
+            <text x={labelWidth - 12} y={y + barHeight / 2 + 4} text-anchor="end" class="label">
+              {b.label}
+            </text>
+            <rect x={labelWidth} y={y} width={plotWidth} height={barHeight} rx="4" fill="#15181D" />
+            {w > 0 && (
+              <rect x={labelWidth} y={y} width={w} height={barHeight} rx="4" fill={b.muted ? "#323843" : `url(#${uid}-g)`} />
+            )}
+            <text x={labelWidth + plotWidth + 10} y={y + barHeight / 2 + 4} class="value">
+              {b.display ?? b.value.toLocaleString("en-US")}
+            </text>
+          </g>
+        );
+      })
+    }
+
+    {
+      reference && (
+        <g>
+          <line
+            x1={x(reference.value)}
+            x2={x(reference.value)}
+            y1={top - 6}
+            y2={top + bars.length * rowHeight}
+            stroke="#F59E0B"
+            stroke-width="1.5"
+            stroke-dasharray="4 4"
+          />
+          <text x={x(reference.value)} y={top - 12} text-anchor="middle" class="ref">
+            {reference.label}
+          </text>
+        </g>
+      )
+    }
+
+    {
+      axisLabel && (
+        <text x={labelWidth + plotWidth} y={height - 2} text-anchor="end" class="axis">
+          {axisLabel}
+        </text>
+      )
+    }
+  </svg>
+  <figcaption class="small muted">{title}</figcaption>
+</figure>
+
+<style>
+  .chart {
+    margin: 0;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  svg :global(text) {
+    font-family: var(--font-sans);
+  }
+  .label {
+    fill: #c4c8cd;
+    font-size: 12.5px;
+  }
+  .value {
+    fill: #e8eaed;
+    font-size: 12.5px;
+    font-family: var(--font-mono) !important;
+    font-weight: 600;
+  }
+  .tick,
+  .axis {
+    fill: #6b7178;
+    font-size: 11px;
+  }
+  .ref {
+    fill: #f59e0b;
+    font-size: 11px;
+  }
+  figcaption {
+    margin-top: var(--space-2);
+  }
+</style>

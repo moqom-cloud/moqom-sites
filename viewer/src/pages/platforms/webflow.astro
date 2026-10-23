@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { exampleFor } from '../../lib/examples';
+
+allowVisitorModels(Astro);
+const [footer, embed] = exampleFor('webflow').blocks;
+---
+
+<Base title="Webflow" description={`Add ${SITE.displayName} to a Webflow site with footer code and a Code Embed.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Webflow</h1>
+  <p><PriceBadge /> Free for any site, including commercial use.</p>
+  <div class="note">
+    <p>
+      <strong>Plan:</strong> Webflow requires a paid Site plan, or a Core, Growth, Agency or Freelancer Workspace, for custom code and the
+      Code Embed element.
+    </p>
+  </div>
+  <div class="prose">
+    <ol>
+      <li><a href="/quick-start/">Host your model</a> and check its URL.</li>
+      <li>
+        <strong>Site settings → Custom code → Footer code</strong>: paste the script. For one page only, use that page's settings →
+        Custom code → Before <code>&lt;/body&gt;</code> tag.
+      </li>
+      <li>
+        From the Add panel, drag a <strong>Code Embed</strong> where the model should appear and paste the element with your URL and alt
+        text. A Code Embed holds up to 50,000 characters; this snippet is a few hundred.
+      </li>
+      <li>Publish. Custom code runs on the published site, not in the Designer canvas.</li>
+    </ol>
+  </div>
+
+  {footer && <Code title="Footer code" code={footer.code} />}
+  {embed && <Code title="Code Embed" code={embed.code} />}
+
+  <Generator platform="webflow" fixed />
+</Base>

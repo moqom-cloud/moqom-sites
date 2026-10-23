@@ -1,0 +1,133 @@
+---
+// Account actions for a licence. The key appears in client sites' HTML, so every action needs
+// the purchase email too, and takes effect only through a link we email to that address.
+// ?confirm=<id> is that link: the change is applied when the visitor presses the button, never
+// on load, so mail scanners that open links don't confirm anything.
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+---
+
+<Base title="Manage a licence" description={`Move a ${SITE.displayName} licence to another domain, change its staging subdomain, manage billing or resend keys.`}>
+  <p class="eyebrow">Pricing</p>
+  <h1>Manage a licence</h1>
+
+  <section data-confirm hidden>
+    <div class="note">
+      <p>Confirm the change you asked for by email.</p>
+      <button type="button" class="btn primary" data-confirm-button>Confirm change</button>
+      <p data-confirm-result aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div class="prose">
+    <p>
+      Each action needs the licence key and the email address you bought it with. We send a link to that address; nothing changes until
+      you open it. For your safety, the reply is the same whether or not the key and email match.
+    </p>
+  </div>
+
+  <div class="prose"><h2 id="move">Move to another domain</h2><p>Twice in any 365 days. The old domain stops being covered when you confirm. If the staging subdomain isn’t under the new domain, it is removed.</p></div>
+  <form class="form" data-action="move" data-kind="host" novalidate>
+    <label><span>Licence key</span><input type="text" name="key" required spellcheck="false" autocomplete="off" placeholder="EWV-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="64" /></label>
+    <label><span>Purchase email</span><input type="email" name="email" required autocomplete="email" maxlength="254" /></label>
+    <label><span>New domain</span><input type="text" name="value" required spellcheck="false" inputmode="url" placeholder="new-example.com" maxlength="253" /></label>
+    <div><button type="submit" class="btn primary">Email me a confirmation link</button></div>
+    <span class="hint" data-result aria-live="polite"></span>
+  </form>
+
+  <div class="prose"><h2 id="staging">Change the staging subdomain</h2><p>Three times in any 365 days. Leave it empty to remove it.</p></div>
+  <form class="form" data-action="move" data-kind="staging" novalidate>
+    <label><span>Licence key</span><input type="text" name="key" required spellcheck="false" autocomplete="off" placeholder="EWV-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="64" /></label>
+    <label><span>Purchase email</span><input type="email" name="email" required autocomplete="email" maxlength="254" /></label>
+    <label><span>Staging subdomain</span><input type="text" name="value" spellcheck="false" inputmode="url" placeholder="staging.example.com" maxlength="253" /></label>
+    <div><button type="submit" class="btn primary">Email me a confirmation link</button></div>
+    <span class="hint" data-result aria-live="polite"></span>
+  </form>
+
+  <div class="prose"><h2 id="billing">Billing, cancelling and invoices</h2><p>Opens Stripe’s customer portal from a link we email you. Cancelling a yearly licence keeps it working until the end of the paid year.</p></div>
+  <form class="form" data-action="portal" novalidate>
+    <label><span>Licence key</span><input type="text" name="key" required spellcheck="false" autocomplete="off" placeholder="EWV-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="64" /></label>
+    <label><span>Purchase email</span><input type="email" name="email" required autocomplete="email" maxlength="254" /></label>
+    <div><button type="submit" class="btn primary">Email me a billing link</button></div>
+    <span class="hint" data-result aria-live="polite"></span>
+  </form>
+
+  <div class="prose"><h2 id="resend">Lost your key?</h2><p>We email every key bought with this address.</p></div>
+  <form class="form" data-action="resend" novalidate>
+    <label><span>Purchase email</span><input type="email" name="email" required autocomplete="email" maxlength="254" /></label>
+    <div><button type="submit" class="btn primary">Email my keys</button></div>
+    <span class="hint" data-result aria-live="polite"></span>
+  </form>
+
+  <div class="prose">
+    <p>Anything else, including more domain moves: <a href={`mailto:${SITE.licensingEmail}`}>{SITE.licensingEmail}</a>.</p>
+  </div>
+</Base>
+
+<script>
+  import { LICENSING } from '../../vendor/core/licensing-config';
+
+  async function post(path: string, body: Record<string, string>) {
+    const response = await fetch(`${LICENSING.api}/v1/${path}`, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = (await response.json().catch(() => ({}))) as { message?: string; error?: string; host?: string; staging?: string; hosts?: string[] };
+    return { code: response.status, data };
+  }
+
+  const MESSAGES: Record<number, string> = {
+    202: 'If the key and email match a licence, we’ve sent an email with the next step. It can take a few minutes.',
+    429: 'Too many requests. Try again in a minute.',
+  };
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('form[data-action]')) {
+    const result = form.querySelector<HTMLElement>('[data-result]')!;
+    const button = form.querySelector<HTMLButtonElement>('button')!;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fields = Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()]));
+      if ((form.querySelector('[name=key]') && !fields.key) || !fields.email) {
+        result.textContent = 'Fill in the key and email.';
+        return;
+      }
+      const action = form.dataset.action!;
+      const body = action === 'move' ? { ...fields, kind: form.dataset.kind! } : fields;
+      button.disabled = true;
+      try {
+        const { code, data } = await post(action, body);
+        result.textContent = MESSAGES[code] ?? (code === 400 || code === 409 ? (data.message ?? 'Check the values.') : 'Something went wrong. Try again later.');
+      } catch {
+        result.textContent = 'Could not reach the licence server. Try again later.';
+      }
+      button.disabled = false;
+    });
+  }
+
+  const token = new URLSearchParams(location.search).get('confirm') ?? '';
+  if (/^[A-Za-z0-9_-]{16,128}$/.test(token)) {
+    const section = document.querySelector<HTMLElement>('[data-confirm]')!;
+    const button = section.querySelector<HTMLButtonElement>('[data-confirm-button]')!;
+    const result = section.querySelector<HTMLElement>('[data-confirm-result]')!;
+    section.hidden = false;
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      try {
+        const { code, data } = await post('move/confirm', { token });
+        if (code === 200) {
+          history.replaceState(null, '', location.pathname);
+          result.textContent = `Done. The licence now covers: ${(data.hosts ?? []).join(', ')}. Sites update at their next licence check (WordPress: within a week; other plugins: within about a week, as cached answers expire).`;
+          return;
+        }
+        result.textContent =
+          code === 404 ? 'This link has expired or was already used. Ask for a new one below.' : code === 409 ? 'This licence has used its changes for the last 12 months.' : 'Something went wrong. Try again later.';
+      } catch {
+        result.textContent = 'Could not reach the licence server. Try again later.';
+      }
+      button.disabled = false;
+    });
+  }
+</script>

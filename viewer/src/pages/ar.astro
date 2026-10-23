@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+
+<Base title="AR on iOS and Android" description="How the View in your space button works on iPhone, iPad and Android, and what your model needs.">
+  <p class="eyebrow">Guides</p>
+  <h1>AR on iOS and Android</h1>
+  <div class="prose">
+    <p>
+      With the <code>ar</code> attribute, a “View in your space” button appears on devices that can place the model in the room. It is
+      hidden everywhere else, including desktop browsers. {SITE.displayName} uses <code>&lt;model-viewer&gt;</code>'s AR modes, tried in
+      this order:
+    </p>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Device</th><th>AR mode</th><th>Model used</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Android, Chrome with WebXR</td>
+          <td>WebXR, in the page</td>
+          <td>The GLB (<code>src</code>)</td>
+        </tr>
+        <tr>
+          <td>Android, other browsers (not Firefox)</td>
+          <td>Google Scene Viewer</td>
+          <td>The GLB. Scene Viewer downloads it itself, so the URL must be public; <code>localhost</code> does not work.</td>
+        </tr>
+        <tr>
+          <td>iPhone and iPad, Safari</td>
+          <td>AR Quick Look</td>
+          <td>The USDZ (<code>ios-src</code>). Without one, a USDZ is generated from the GLB on the device when AR starts.</td>
+        </tr>
+        <tr>
+          <td>iPhone and iPad, Chrome, Edge, Firefox and other browsers</td>
+          <td>AR Quick Look</td>
+          <td>Only with an <code>ios-src</code>; these browsers do not get the generated USDZ.</td>
+        </tr>
+        <tr>
+          <td>Google app on iOS</td>
+          <td>None</td>
+          <td>The button stays hidden.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>
+      Android AR needs a device that supports Google Play Services for AR (ARCore). iOS AR Quick Look needs an iPhone or iPad with iOS 12 or
+      later. AR needs the page on HTTPS.
+    </p>
+
+    <h2>Preparing the model</h2>
+    <ul>
+      <li><strong>Scale:</strong> AR shows the model at real size. Export with 1 unit = 1 metre.</li>
+      <li><strong>Origin:</strong> put the model's base at the origin, so it sits on the floor rather than floating or sinking.</li>
+      <li>
+        <strong>USDZ:</strong> a USDZ exported from your 3D tool (Blender, Reality Composer, Reality Converter) usually matches materials
+        better than the one generated on the device, and loads faster. Serve it with <code>Content-Type: model/vnd.usdz+zip</code>.
+      </li>
+      <li><strong>Size:</strong> keep files small; phones download the model again for AR in Scene Viewer and Quick Look.</li>
+    </ul>
+
+    <h2>What visitors see</h2>
+    <p>
+      While a WebXR session looks for a surface, a phone icon moves in a figure-of-eight to prompt the visitor to scan the floor. Quick
+      Look and Scene Viewer show their own instructions.
+    </p>
+
+    <h2>Testing</h2>
+    <ul>
+      <li>Use a real device. Desktop browsers and simulators do not offer AR.</li>
+      <li>Serve over HTTPS, from a public URL for Scene Viewer.</li>
+      <li>On iOS, test in Safari and in one other browser if you skip <code>ios-src</code>.</li>
+      <li>
+        Change the button text with <code>ar-label</code>. To change placement (for example on a wall), set
+        <code>ar-placement="wall"</code> on the inner viewer from script: <code>document.querySelector('{SITE.tagName}').modelViewer.setAttribute('ar-placement', 'wall')</code>.
+      </li>
+    </ul>
+  </div>
+</Base>

@@ -1,0 +1,144 @@
+---
+import Base from '../layouts/Base.astro';
+import { INSTALL, LINKS, AT_RELEASE, EMAIL } from '../data/six10nine';
+
+const facts = [
+  {
+    title: 'Chords, per app',
+    body: 'Each app can give the same chord its own action: a menu item six10nine clicks for you. Menu items keep working when an app’s shortcuts change.',
+  },
+  {
+    title: 'Record in a second',
+    body: 'Hold ⌘67 for a second, play the chord, then press the shortcut a menu item shows or type to search the app’s menus, and press ↩.',
+  },
+  {
+    title: 'AI that carries meaning across apps',
+    body: 'Play a chord in an app where it isn’t set yet and on-device AI picks the menu item that does the same job. It asks first in each app.',
+  },
+  {
+    title: 'Out of the way',
+    body: 'It lives in the menu bar. Keys it doesn’t use reach your apps untouched, and its overlays never take focus.',
+  },
+  {
+    title: 'For AI agents',
+    body: 'A bundled MCP server lets Cursor, Claude and other agents read and change your chords. It never uses the network.',
+  },
+  {
+    title: 'Playful',
+    body: 'It treats your keyboard a little like an instrument, and a little like a game. There are surprises.',
+  },
+];
+---
+
+<Base>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">elliottwave.studio lab · macOS</p>
+      <h1>The same ⌘ chords<br /><em>in every Mac app.</em></h1>
+      <p class="lede">
+        Hold ⌘ and play keys together like a piano chord (<kbd>⌘8</kbd>, <kbd>⌘⇧8K</kbd>) or one after another
+        (<kbd>⌘P·O·O·P</kbd>). six10nine clicks the menu item you chose for that chord in the app you’re in. Set a chord once, and on-device AI finds the matching menu item in the next app, asking you first.
+      </p>
+      <p class="lede">Free and source-available under the PolyForm Noncommercial License 1.0.0.</p>
+      <div class="btn-row">
+        <a class="btn primary" href="#install">Install</a>
+        <a class="btn" href="/getting-started">Getting started</a>
+      </div>
+      <p class="footnote">
+        Requires macOS 14 Sonoma or later on Apple silicon. AI matching and the ⌘69 assistant need macOS 26 with Apple
+        Intelligence; everything else works without it.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">What it does</p>
+      <ul class="grid facts">
+        {facts.map((f) => (
+          <li class="card">
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="install">
+    <div class="wrap prose">
+      <p class="eyebrow">Download and install</p>
+      <h2>Install <span class="badge">{AT_RELEASE}</span></h2>
+      <div class="note">
+        <p>
+          The first notarized release isn’t out yet, so the commands below won’t find a download until it is. They’re
+          listed so you know what to expect. Watch the <a href="/changelog">changelog</a>.
+        </p>
+      </div>
+
+      <h3>Homebrew</h3>
+      <pre><code>{INSTALL.brew}</code></pre>
+
+      <h3>One-line installer</h3>
+      <p>
+        Downloads the latest release from GitHub, checks its SHA-256 and code signature, installs to
+        <code>/Applications</code> (or <code>~/Applications</code> if that needs admin rights), and opens it. It only uses
+        <code>sudo</code> if you pass <code>--sudo</code>. The script is in the repository for you to read first.
+      </p>
+      <pre><code>{INSTALL.script}</code></pre>
+
+      <h3>Disk image</h3>
+      <p>
+        Download <code>Six10Nine-&lt;version&gt;.dmg</code> from the GitHub releases page, open it, and drag 6(78)9 to
+        Applications. <code>checksums.txt</code> on each release lists the SHA-256 of every file.
+      </p>
+
+      <h3>Uninstall</h3>
+      <pre><code>{INSTALL.uninstallScript}
+# or
+{INSTALL.uninstallBrew}</code></pre>
+
+      <p class="footnote">
+        Source: <span class="mono">{LINKS.repo}</span>, public at release. Commercial licensing:
+        <a href={`mailto:${EMAIL.licensing}`}>{EMAIL.licensing}</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap prose">
+      <p class="eyebrow">Also</p>
+      <h2>Your idle Mac can help find ripples in spacetime.</h2>
+      <p class="lede">
+        If you choose to, six10nine lends idle CPU and GPU time to <a href={LINKS.einstein}>Einstein@home</a>, the
+        volunteer search for new pulsars and the first continuous gravitational waves. Only while your Mac is idle and
+        plugged in, and off with one click from the menu bar.
+      </p>
+      <div class="btn-row"><a class="btn" href="/privacy#idle-computing">How it’s limited</a></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding: clamp(4.5rem, 12vw, 8rem) 0 clamp(3rem, 8vw, 5rem);
+  }
+  .hero h1 em {
+    color: var(--accent);
+  }
+  .hero .footnote {
+    margin-top: 2rem;
+  }
+  .facts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .facts p {
+    color: var(--text-dim);
+    margin: 0;
+  }
+  h2 .badge {
+    margin-left: 0.5rem;
+  }
+</style>

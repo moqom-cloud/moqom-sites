@@ -1,0 +1,253 @@
+---
+import Base from '../layouts/Base.astro';
+import { SECURITY_EMAIL } from '../data/moqom';
+import { SIX10NINE } from '../data/six10nine';
+
+type Repo = { name: string; what: string; licence: string; status: string; tone: 'ok' | 'cyan' | 'amber' | '' };
+
+// TODO(Elliott): every row marked "Public" assumes the OPEN-CORE.md blockers (IP assignment, patent filings
+// against each repository's history, hardcoded dev relays, CI secrets, private links) are cleared first.
+// Until then these repositories are private and the links will 404. Update status when each one flips.
+const open: Repo[] = [
+  {
+    name: 'moqom-go',
+    what: 'Go server-side SDK. Lets your backend administer rooms, moderation and client tokens through the MOQOM control plane API.',
+    licence: 'Apache-2.0',
+    status: 'Public',
+    tone: 'ok',
+  },
+  {
+    name: 'moqom-rust',
+    what: 'Rust server-side SDK (crate moqom-sdk) with the same scope as moqom-go. No QUIC stack in its dependency graph.',
+    licence: 'Apache-2.0',
+    status: 'Public',
+    tone: 'ok',
+  },
+  {
+    name: 'moqom-security',
+    what: 'The security libraries: device-bound ML-DSA-87 tokens, device proofs, SFrame media encryption and post-quantum MLS, in Swift, Go and Rust, with shared test vectors.',
+    licence: 'Apache-2.0',
+    status: 'Public',
+    tone: 'ok',
+  },
+  // TODO(Elliott): moqom-rust has no LICENSE file at the repository root (only a workspace licence field); add one before it goes public.
+  {
+    name: 'moqom-swift',
+    what: 'MoqomKit for Apple platforms: the open SDK shell for rooms, publishing, capture, transport and the wire codec. Includes the MoqomRoom sample app.',
+    licence: 'Apache-2.0',
+    status: 'Public, after the player split',
+    tone: 'cyan',
+  },
+  // TODO(Elliott): confirm moqom-swift goes public only after playback moves into the private player package (OPEN-CORE.md order of operations, step 3-4).
+  {
+    name: 'moqom-web · moqom-android · moqom-desktop',
+    what: 'Client SDKs for browsers (over WebTransport), Android, and Windows/macOS/Linux. Open SDK shell; playback ships as a binary.',
+    licence: 'Apache-2.0 + player binary',
+    status: 'In progress, coming Q4 2026',
+    tone: 'amber',
+  },
+  {
+    name: 'moqom-obs',
+    what: 'OBS Studio output plugin. Publish-side only.',
+    licence: 'GPL-2.0-or-later',
+    status: 'Scoped, work ongoing',
+    tone: 'amber',
+  },
+  // TODO(counsel): LICENSING.md notes the distributed OBS binary likely resolves to GPLv3 because Apache-2.0 is not GPLv2-compatible; confirm before first release.
+];
+
+const closed: Repo[] = [
+  {
+    name: 'Player',
+    what: 'Playback for every client platform. Signed binary, licensed for use with MOQOM Cloud or a licensed self-hosted (BYOC) relay.',
+    licence: 'Proprietary EULA',
+    status: 'Binary only',
+    tone: '',
+  },
+  {
+    name: 'Relay and control plane',
+    what: 'The MOQOM service itself. Run for you on MOQOM Cloud, or licensed to self-hosting (BYOC) customers as signed binaries. The source isn’t distributed.',
+    licence: 'Proprietary, commercial licence',
+    status: 'Binary only',
+    tone: '',
+  },
+  {
+    name: 'Congestion controller',
+    what: 'Linked by the client SDKs as a prebuilt binary. Apache-only builds, such as the OBS plugin, use a stock controller instead.',
+    licence: 'Proprietary EULA',
+    status: 'Binary only',
+    tone: '',
+  },
+];
+---
+
+<Base title="Open source" description="Which elliottwave.studio lab repositories are open source or source-available, under which licences, which cores ship as binaries under commercial terms, and how to contribute.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">open-source</p>
+      <h1>What’s open source, and what isn’t.</h1>
+      <p class="lede">
+        The SDKs and security libraries you build with are open source. The engine that makes MOQOM fast, from the relays
+        to the player, is licensed and ships as binaries under commercial terms. Here is exactly which is which.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Open source</h2>
+      <p class="intro">
+        Published at <a href="https://github.com/moqom-cloud">github.com/moqom-cloud</a>. Apache-2.0 was chosen over MIT
+        for its explicit patent grant and patent-termination terms.
+      </p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th scope="col">Repository</th><th scope="col">What</th><th scope="col">Licence</th><th scope="col">Status</th></tr>
+          </thead>
+          <tbody>
+            {open.map((r) => (
+              <tr>
+                <td><code>{r.name}</code></td>
+                <td>{r.what}</td>
+                <td class="lic">{r.licence}</td>
+                <td><span class:list={['tag', r.tone]}>{r.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Licensed components</h2>
+      <p class="intro">
+        Not open source, and not source-available: these ship only as signed binaries. You don’t need their source to
+        check MOQOM’s security. Media is end-to-end encrypted before it reaches a relay, and the cryptography that protects
+        it lives in the open-source security libraries above.
+      </p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th scope="col">Component</th><th scope="col">What</th><th scope="col">Terms</th><th scope="col">Distribution</th></tr>
+          </thead>
+          <tbody>
+            {closed.map((r) => (
+              <tr>
+                <td><strong>{r.name}</strong></td>
+                <td>{r.what}</td>
+                <td class="lic">{r.licence}</td>
+                <td><span class="tag">{r.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="six10nine">
+    <div class="wrap">
+      <h2>Source-available</h2>
+      <p class="intro">
+        Free to use and modify for noncommercial purposes, but not OSI open source, and we don’t describe it as such.
+      </p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th scope="col">Repository</th><th scope="col">What</th><th scope="col">Licence</th><th scope="col">Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>{SIX10NINE.name}</code></td>
+              <td>
+                {SIX10NINE.summary}
+                <br /><br />
+                {SIX10NINE.licenceNote} {SIX10NINE.install}
+                <br /><br />
+                <code>{SIX10NINE.repo.replace('https://', '')}</code>
+              </td>
+              <td class="lic">{SIX10NINE.licence}</td>
+              <td><span class="tag amber">{SIX10NINE.repoStatus}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="ownership">
+    <div class="wrap prose">
+      <h2>Who owns the code</h2>
+      <p><strong>Elliott — Founder of elliottwave.studio lab and Elliott Wave LLC.</strong> Elliott is the sole author.</p>
+      <p>
+        Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its projects — the
+        open-source projects included. An open-source licence lets you use the code; it does not transfer ownership.
+        Patents pending.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="contribute">
+    <div class="wrap prose">
+      <h2>Contribute</h2>
+      <p>Bug reports, fixes, examples and documentation are welcome on the open repositories.</p>
+      <h3>Copyright Assignment Agreement</h3>
+      <p>
+        Outside contributors sign a Copyright Assignment Agreement, assigning copyright in their contribution to Elliott
+        Wave LLC, with a permanent licence back to use their own work for anything. Your first pull request asks you to
+        sign it by leaving a comment. We have contacted legal counsel to review the agreement.
+      </p>
+      {/* TODO(Elliott): link the Copyright Assignment Agreement (.github/CLA.md in each repository) once the repositories are public; finish CLA_SIGNATURES_TOKEN setup. */}
+      <h3>Build and test</h3>
+      <p>No account or network access is needed; the tests run against an in-process fake of the control plane.</p>
+      <pre><code># moqom-go
+go test ./...
+
+# moqom-rust
+cargo test --workspace</code></pre>
+      <h3>Where to start</h3>
+      <ul>
+        <li>Look for the <code>good first issue</code> label. Documentation fixes, examples and clearer error messages are always useful.</li>
+        <li>Open an issue first for anything bigger than a bug fix.</li>
+      </ul>
+      <h3>Code of conduct</h3>
+      <p>Be kind, be specific, assume good faith. Harassment of any kind gets you removed from the project.</p>
+      <h3>Vulnerabilities</h3>
+      <p>
+        Don’t open a public issue. Email <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>; see
+        <a href="/security">/security</a>.
+      </p>
+      <h3>Support the work</h3>
+      <p><a href="/donate">Donations</a> fund open-source maintenance and the bug bounty.</p>
+
+      <h2>Third-party code</h2>
+      <p>
+        Repositories that include third-party components credit them in their <code>NOTICE</code> files, and those
+        components remain under their original licences.
+      </p>
+      <p class="footnote">Licences are as stated in each repository; where this page and a repository’s licence file differ, the licence file governs.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  h2 {
+    margin-bottom: 0.4em;
+  }
+  .intro {
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+  table.data td:nth-child(2) {
+    color: var(--text-dim);
+    min-width: 280px;
+  }
+  .lic {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+</style>

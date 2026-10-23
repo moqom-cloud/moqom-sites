@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found" noindex>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">404</p>
+      <h1>No such route.</h1>
+      <pre><code>$ curl -I {Astro.url.pathname}
+HTTP/2 404</code></pre>
+      <div class="btn-row"><a class="btn primary" href="/">cd ~</a></div>
+    </div>
+  </section>
+</Base>

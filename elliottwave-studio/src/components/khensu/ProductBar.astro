@@ -1,0 +1,52 @@
+---
+// Sticky glass product bar under the site header: product name, Explore and the primary action. Hidden while the
+// page's hero ([data-hero]) is on screen.
+interface Props { name: string; action: string; href: string; explore?: string }
+const { name, action, href, explore } = Astro.props;
+---
+
+<div class="pbar">
+  <div class="pbar-in">
+    <b>{name}</b>
+    <span class="pbar-actions">
+      {explore && <a class="pill ghost" href={explore}>Explore</a>}
+      <a class="pill buy" href={href}>{action}</a>
+    </span>
+  </div>
+</div>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('.pbar');
+  const hero = document.querySelector('[data-hero]');
+  if (bar && hero) {
+    new IntersectionObserver(([e]) => bar.classList.toggle('away', e.intersectionRatio > 0.35), { threshold: [0, 0.35, 1] }).observe(hero);
+  }
+</script>
+
+<style>
+  .pbar { position: sticky; top: 74px; z-index: 4; height: 0; padding: 0 clamp(0.6rem, 2vw, 1.2rem); }
+  .pbar-in {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 56px;
+    padding: 0 0.6rem 0 1.3rem;
+    border-radius: 18px;
+    background: rgba(24, 24, 28, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), translate 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .pbar.away .pbar-in { opacity: 0; translate: 0 -12px; pointer-events: none; }
+  .pbar b { font-size: 1.05rem; font-weight: 600; }
+  .pbar-actions { display: flex; gap: 0.5rem; }
+  .pill { display: inline-flex; align-items: center; height: 34px; padding: 0 1rem; border-radius: 999px; font-size: 0.9rem; text-decoration: none; }
+  .pill.ghost { color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); }
+  .pill.buy { color: #04110d; background: var(--accent, #7ee0c8); font-weight: 500; }
+  @media (prefers-reduced-motion: reduce) { .pbar-in { transition: none; } }
+</style>

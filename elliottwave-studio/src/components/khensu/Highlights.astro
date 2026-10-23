@@ -1,0 +1,125 @@
+---
+// "Get the highlights": a scroll-snap row of large photoreal cards, advancing on its own while visible, with
+// dots and a pause button. Stops under reduced motion, on hover and on focus.
+interface Card { img: string; alt: string; text: string; fit?: 'cover' | 'contain' }
+interface Props { title: string; cards: Card[] }
+const { title, cards } = Astro.props;
+---
+
+<section class="hl-section">
+  <div class="wrap"><h2 class="hl-title">{title}</h2></div>
+  <div class="hl-row" tabindex="0" aria-label={title}>
+    {cards.map((c) => (
+      <figure class="hl-card">
+        <img src={c.img} alt={c.alt} loading="lazy" decoding="async" class:list={[c.fit ?? 'contain']} />
+        <figcaption>{c.text}</figcaption>
+      </figure>
+    ))}
+  </div>
+  <div class="hl-controls">
+    <div class="hl-dots" role="group" aria-label="Choose a highlight">
+      {cards.map((_, i) => <button type="button" class:list={{ on: i === 0 }} aria-label={`Highlight ${i + 1}`}></button>)}
+    </div>
+    <button type="button" class="hl-play" aria-label="Pause">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path class="ico-pause" d="M4 2h3v12H4zM9 2h3v12H9z" fill="currentColor" /><path class="ico-play" d="M4 2l10 6-10 6z" fill="currentColor" /></svg>
+    </button>
+  </div>
+</section>
+
+<script>
+  for (const s of document.querySelectorAll<HTMLElement>('.hl-section')) {
+    const row = s.querySelector<HTMLElement>('.hl-row')!;
+    const cards = [...row.querySelectorAll<HTMLElement>('.hl-card')];
+    const dots = [...s.querySelectorAll<HTMLButtonElement>('.hl-dots button')];
+    const play = s.querySelector<HTMLButtonElement>('.hl-play')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let current = 0, paused = reduce, visible = false, held = false;
+    const go = (i: number) => {
+      current = (i + cards.length) % cards.length;
+      const c = cards[current];
+      row.scrollTo({ left: c.offsetLeft - (row.clientWidth - c.clientWidth) / 2, behavior: reduce ? 'auto' : 'smooth' });
+    };
+    const mark = () => {
+      const mid = row.scrollLeft + row.clientWidth / 2;
+      let best = 0;
+      cards.forEach((c, i) => { if (Math.abs(c.offsetLeft + c.clientWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].clientWidth / 2 - mid)) best = i; });
+      current = best;
+      dots.forEach((d, i) => d.classList.toggle('on', i === best));
+    };
+    row.addEventListener('scroll', () => requestAnimationFrame(mark), { passive: true });
+    dots.forEach((d, i) => d.addEventListener('click', () => go(i)));
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+    });
+    const setPaused = (p: boolean) => {
+      paused = p;
+      s.classList.toggle('paused', p);
+      play.setAttribute('aria-label', p ? 'Play' : 'Pause');
+    };
+    setPaused(paused);
+    play.addEventListener('click', () => setPaused(!paused));
+    for (const ev of ['pointerenter', 'focusin']) row.addEventListener(ev, () => (held = true));
+    for (const ev of ['pointerleave', 'focusout']) row.addEventListener(ev, () => (held = false));
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.5 }).observe(row);
+    setInterval(() => { if (!paused && visible && !held) go(current + 1); }, 5000);
+  }
+</script>
+
+<style>
+  .hl-section { padding: clamp(4rem, 10vw, 8rem) 0 clamp(3rem, 6vw, 5rem); background: #0b0b0d; }
+  .hl-title { margin: 0 0 2rem; font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 600; letter-spacing: -0.03em; }
+  .hl-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(86vw, 1120px);
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0 max(1.25rem, calc((100vw - min(86vw, 1120px)) / 2));
+    scrollbar-width: none;
+    outline: none;
+  }
+  .hl-row::-webkit-scrollbar { display: none; }
+  .hl-card {
+    position: relative;
+    margin: 0;
+    height: min(70vh, 680px);
+    border-radius: 28px;
+    overflow: hidden;
+    scroll-snap-align: center;
+    background: radial-gradient(80% 70% at 50% 60%, #1a1a1f, #000 75%);
+  }
+  .hl-card img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hl-card img.contain { object-fit: contain; padding: 4.5rem 1rem 1rem; }
+  .hl-card img.cover { object-fit: cover; }
+  .hl-card figcaption {
+    position: absolute;
+    inset: 0 0 auto;
+    padding: clamp(1.5rem, 4vw, 2.6rem) clamp(1.5rem, 5vw, 4rem);
+    font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+  }
+  .hl-controls { display: flex; justify-content: center; gap: 0.8rem; margin-top: 1.4rem; }
+  .hl-dots, .hl-play {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    height: 52px;
+    padding: 0 1.3rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+  .hl-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.4); cursor: pointer; transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.4s; }
+  .hl-dots button.on { width: 44px; background: #fff; }
+  .hl-play { width: 52px; padding: 0; justify-content: center; color: #fff; cursor: pointer; }
+  .hl-play .ico-play { display: none; }
+  .paused .hl-play .ico-play { display: inline; }
+  .paused .hl-play .ico-pause { display: none; }
+</style>

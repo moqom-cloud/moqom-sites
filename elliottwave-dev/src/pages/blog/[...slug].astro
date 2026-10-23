@@ -1,0 +1,73 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const date = post.data.date.toISOString().slice(0, 10);
+---
+
+<Base title={post.data.title} description={post.data.description} type="article" noindex={post.data.draft}>
+  <article class="wrap post">
+    <header>
+      {post.data.draft && <p class="draft-banner">Draft · not published</p>}
+      <p class="eyebrow">blog · {date}</p>
+      <h1>{post.data.title}</h1>
+      <p class="lede">{post.data.description}</p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <p class="back"><a href="/blog">← all posts</a></p>
+  </article>
+</Base>
+
+<style>
+  .post {
+    padding-top: clamp(3rem, 7vw, 5rem);
+    padding-bottom: 4rem;
+  }
+  .post header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .post h1 {
+    font-size: clamp(2rem, 4.4vw, 3.2rem);
+    max-width: 22ch;
+  }
+  .prose :global(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5rem 0 0.75rem;
+    font-size: 0.92rem;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .prose :global(th) {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .prose :global(td strong) {
+    color: var(--cyan);
+  }
+  .back {
+    margin-top: 3rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+</style>

@@ -1,0 +1,43 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lede?: string;
+}
+const { eyebrow, title, lede } = Astro.props;
+---
+
+<section class="page-hero">
+  <div class="orb orb-cyan depth-2 o1" aria-hidden="true"></div>
+  <div class="orb orb-violet depth-3 o2" aria-hidden="true"></div>
+  <div class="container hero-zoom">
+    {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+    <h1 class="text-sweep">{title}</h1>
+    {lede && <p class="lede">{lede}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-hero {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+    padding-block: var(--space-8) var(--space-7);
+  }
+  h1 {
+    max-width: 22ch;
+  }
+  .o1 {
+    width: 420px;
+    height: 420px;
+    right: 8%;
+    top: -120px;
+  }
+  .o2 {
+    width: 320px;
+    height: 320px;
+    right: 30%;
+    bottom: -160px;
+  }
+</style>

@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+
+<Base title="Security" description={`How ${SITE.displayName} handles URLs and scripts, and how to report a vulnerability.`}>
+  <p class="eyebrow">Project</p>
+  <h1>Security</h1>
+  <div class="prose">
+    <h2>Reporting a vulnerability</h2>
+    <p>
+      Email <a href={`mailto:${SITE.securityEmail}`}>{SITE.securityEmail}</a> with the affected package and version, steps to reproduce,
+      and the impact you expect. Please do not open a public issue for a vulnerability. Our
+      <a href="/.well-known/security.txt">security.txt</a> has the same contact.
+    </p>
+
+    <h2>What the viewer does</h2>
+    <ul>
+      <li>
+        <strong>URLs:</strong> model, USDZ, poster and decoder URLs must be <code>https://</code> (or <code>http://localhost</code> for
+        testing) or relative. <code>javascript:</code>, <code>data:</code>, <code>blob:</code>, <code>file:</code>, protocol-relative URLs,
+        URLs with a user name or password, and URLs with control characters are rejected.
+      </li>
+      <li>
+        <strong>Values:</strong> colours, lengths, angles and camera orbits are checked against strict patterns before they reach CSS. The
+        snippet generators escape every attribute.
+      </li>
+      <li>
+        <strong>Model files:</strong> models are parsed by three.js as 3D data. Nothing in them is run as code. The WordPress upload option
+        checks each file's first bytes.
+      </li>
+      <li>
+        <strong>Scripts:</strong> every snippet that loads the viewer from a CDN pins the exact version with a Subresource Integrity hash.
+        The WordPress plugin and the Shopify extension ship the script themselves.
+      </li>
+      <li>
+        <strong>Data:</strong> the viewer sets no cookies and sends no analytics. The browser downloads models from the URLs you give it.
+        <code>&lt;model-viewer&gt;</code> fetches Draco or KTX2 decoders from <code>www.gstatic.com</code> only when a model uses them.
+      </li>
+      <li>
+        <strong>Hosting tools:</strong> <code>viewer-upload</code> runs your installed Firebase or Google Cloud CLI as a child process, without a
+        shell, and never reads or stores credentials. The checker reads at most 16 bytes of a file.
+      </li>
+    </ul>
+
+    <h2>Supported versions</h2>
+    <p>Fixes go into the latest release. Upgrade by copying the new snippet, which carries the new integrity hash.</p>
+  </div>
+</Base>

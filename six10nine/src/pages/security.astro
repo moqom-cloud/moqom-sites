@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { EMAIL, LINKS } from '../data/six10nine';
+---
+
+<Base title="Security" description="How to report a vulnerability in six10nine." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Security</h1>
+  <p class="lede">
+    six10nine sees key presses, clicks menu items in other apps through Accessibility, and runs a bundled BOINC client,
+    so security reports matter.
+  </p>
+
+  <h2>Report a vulnerability</h2>
+  <p>
+    Email <a href={`mailto:${EMAIL.security}`}>{EMAIL.security}</a>. Please don’t open a public issue. Include:
+  </p>
+  <ul>
+    <li>what’s affected: the version, macOS version, and Apple silicon or Intel;</li>
+    <li>how to reproduce it, and what an attacker could do;</li>
+    <li>whether you’d like credit, and under what name.</li>
+  </ul>
+  <p>
+    We aim to acknowledge reports within 3 business days and to keep you updated until there’s a fix. Please give us
+    reasonable time to release a fix before disclosing publicly; we’ll agree a date with you.
+  </p>
+
+  <h2>Bug bounty</h2>
+  <p>Not live yet, and there are no paid rewards yet. Until a programme launches, report by email.</p>
+
+  <h2>Scope</h2>
+  <p>In scope:</p>
+  <ul>
+    <li>the six10nine app (<code>Six10Nine.app</code>) and its bundled <code>six10nine-mcp</code> server;</li>
+    <li>the installers: <code>install.sh</code>, the build scripts and the Homebrew cask;</li>
+    <li>how six10nine configures, starts and talks to the bundled BOINC client (<code>127.0.0.1:31418</code>).</li>
+  </ul>
+  <p>
+    Out of scope: vulnerabilities in BOINC itself or in Einstein@home’s servers (report those to
+    <a href={LINKS.boinc}>BOINC</a> and <a href={LINKS.einstein}>Einstein@home</a>), in macOS, or in AI clients that run
+    <code>six10nine-mcp</code>.
+  </p>
+
+  <h2>Supported versions</h2>
+  <p>Only the latest release gets security fixes.</p>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li>
+      <code>six10nine-mcp</code> only speaks over stdio to the process that started it, and can only read and change
+      six10nine’s chord settings. Treat an MCP client that runs it as trusted to change your chords.
+    </li>
+    <li>
+      The BOINC client runs with <code>--insecure</code>, so Einstein@home’s science apps run as your user rather than in
+      BOINC’s separate sandbox user. Setting up that sandbox needs an administrator password, as BOINC’s own installer
+      does.
+    </li>
+  </ul>
+  <p class="footnote"><a href="/.well-known/security.txt">security.txt</a></p>
+</Base>

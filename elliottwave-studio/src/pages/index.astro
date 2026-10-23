@@ -1,0 +1,323 @@
+---
+import Base from '../layouts/Base.astro';
+import Wave from '../components/Wave.astro';
+import Hero from '../components/khensu/Hero.astro';
+import Net from '../components/khensu/Net.astro';
+import Metrics from '../components/Metrics.astro';
+import { MOQOM_LINKS } from '../data/moqom';
+import { SIX10NINE } from '../data/six10nine';
+import { UNIFY } from '../data/unify';
+import { KALOPSIA } from '../data/kalopsia';
+
+const practice = [
+  {
+    n: '01',
+    title: 'Find the wrong shape',
+    body: 'We look for markets where every product is an iteration on an assumption that no longer holds. That is where a new category is waiting.',
+  },
+  {
+    n: '02',
+    title: 'Build the whole stack',
+    body: 'Protocol to pixel, in-house. When the outcome depends on a layer, we own that layer instead of renting someone else’s decisions.',
+  },
+  {
+    n: '03',
+    title: 'Ship the category, not a feature',
+    body: 'A product, the SDKs to build on it, the documentation, and the language to describe it. Released when the numbers say it is ready.',
+  },
+];
+---
+
+<Base>
+  <Hero />
+
+  <section class="section khensu flag-k net-host" id="khensu">
+    <Net />
+    <div class="wrap flagship">
+      <div>
+        <p class="eyebrow">Work · Flagship 00000000</p>
+        <h2>khensu.nu</h2>
+        <p class="sub mono">Private messenger · the first app on webË</p>
+        <p class="lede">
+          A post-quantum messenger on a network run by people instead of a company. No one can read what you send or
+          see who you send it to, and there are no servers processing your data. Messages, calls, feeds, forums, sites
+          and private payments, carried by small computers in people’s homes: <strong>one Raspberry Pi carries about
+          1,700 people a day</strong>. Operators are paid for the work they do, and a node runs on any connection, satellite
+          internet included.
+        </p>
+        <div class="btn-row">
+          <a class="btn primary" href="/khensu">Explore khensu.nu</a>
+          <a class="btn" href="https://khensu.nu">Visit khensu.nu</a>
+        </div>
+      </div>
+      <a class="shell-teaser" href="/khensu#shell-title" aria-label="See the khensu shell">
+        <img src="/khensu/shell/shadow.png" alt="" width="1600" height="1600" loading="lazy" decoding="async" />
+        {['phone', 'suction_film', 'base', 'magnet_ring', 'pcb', 'battery', 'window_inserts', 'housing'].map((f, i) => (
+          <img src={`/khensu/shell/${f}.png`} alt="" width="1600" height="1600" style={`--i:${i}`} loading="lazy" decoding="async" />
+        ))}
+        <img class="camera" src="/khensu/shell/camera.png" alt="" width="1600" height="1600" loading="lazy" decoding="async" />
+        <span class="teaser-cap">khensu shell: your iPhone becomes a node</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="wrap hero-copy">
+      <p class="eyebrow">elliottwave.studio lab · Lab &amp; Studio</p>
+      <h2 class="studio-h">We don’t enter categories.<br /><em>We define them.</em></h2>
+      <p class="lede">
+        elliottwave.studio lab makes technology and art, and blurs the line between the two. We skip crowded markets and
+        incremental products, and build
+        foundational technology where the existing category is the wrong shape. We build it on open standards, measure
+        it in public terms, and own it end to end.
+      </p>
+      <div class="btn-row">
+        <a class="btn primary" href="/work">See the work</a>
+        <a class="btn" href="/approach">How we work</a>
+      </div>
+    </div>
+    <div class="hero-wave" aria-hidden="false">
+      <Wave strands={22} height={560} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">What the studio does</p>
+      <h2>A lab that ships.</h2>
+      <p class="lede">
+        Research lab rigour, design studio finish. Every project starts from a first-principles question and ends as a
+        product people can build on.
+      </p>
+      <ol class="grid practice">
+        {practice.map((p) => (
+          <li class="card">
+            <span class="num">{p.n}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section moqom" id="work">
+    <div class="wrap">
+      <p class="eyebrow">Work · Flagship 02</p>
+      <div class="flagship">
+        <div>
+          <h2>MOQOM</h2>
+          <p class="sub mono">Media Over QUIC Orchestration Mesh</p>
+          <p class="lede">
+            Real-time video built on Media over QUIC, the new IETF standard for live media. Conversational latency at
+            broadcast scale, with <strong>sub-60 ms glass-to-glass</strong> latency from one phone’s camera to another phone’s
+            screen. End-to-end encrypted and post-quantum in every room, required rather than optional, so the relays carry media they can’t read, and 1:1 calls go point to point without a relay at all. Resilient on the mobile
+            networks people actually use, with durable playback: late joiners see a picture instantly and viewers who
+            drop come straight back.
+          </p>
+          <div class="btn-row">
+            <a class="btn primary" href={MOQOM_LINKS.cloud}>moqom.cloud</a>
+            <a class="btn" href={MOQOM_LINKS.docs}>Docs · moqom.dev</a>
+            <a class="btn" href="/work">Read the case</a>
+          </div>
+        </div>
+        <Metrics />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap project">
+      <p class="eyebrow">Work · Project 03</p>
+      <h2>{SIX10NINE.name}</h2>
+      <p class="lede">
+        A macOS menu bar app that gives every app the same ⌘ chords, with on-device AI. While your Mac is idle, it
+        helps Einstein@home search for ripples in spacetime. Free and source-available for noncommercial use. Release
+        planned October 2026.
+      </p>
+      <div class="btn-row"><a class="btn" href="/work#six10nine">About six10nine</a></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap project">
+      <p class="eyebrow">Work · Project 04</p>
+      <h2>{UNIFY.name}</h2>
+      <p class="lede">
+        Perfect group photos in one tap, from your Live Photos, with every face really yours. Featured by Apple, and
+        now being updated and promoted from the lab.
+      </p>
+      <div class="btn-row"><a class="btn" href="/work#unify">About Unify</a></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap project">
+      <p class="eyebrow">Work · Project 05</p>
+      <h2>{KALOPSIA.name}</h2>
+      <p class="lede">
+        Whole real spaces you explore instead of scroll. No feed to swipe: walk through, then teleport to the next,
+        in VR, AR, visionOS, on mobile and on the web. In the lab since 2015, coming this month or this quarter.
+      </p>
+      <div class="btn-row"><a class="btn" href="/kalopsia">About Kalopsia</a></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap project">
+      <p class="eyebrow">Work · Project 06</p>
+      <h2>Ticketing, <em>rebuilt.</em></h2>
+      <p class="lede">
+        Ticketing for live and digital events, without fee gouging. Ticketing has been iterated on for decades and still
+        frustrates the people on both sides of the ticket. We started over instead. How, we’ll show at launch.
+        Coming this month or this quarter (October or Q4 2026).
+      </p>
+      <div class="btn-row"><a class="btn" href="/work#ticketing">About the platform</a></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap lab">
+      <span class="num">Next</span>
+      <h2>More in the lab, <em>unannounced.</em></h2>
+      <p class="lede">We don’t preview work before it is ready to define its category. When it is, it will be here.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap cta">
+      <h2>Building something that needs a new category?</h2>
+      <div class="btn-row">
+        <a class="btn primary" href="mailto:hello@elliottwave.studio">hello@elliottwave.studio</a>
+        <a class="btn" href="/contact">Contact</a>
+        <a class="btn" href="/work#contribute">Contribute on GitHub</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import '../scripts/scenes.ts';
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    padding: clamp(4.5rem, 12vw, 9rem) 0 0;
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+  }
+  .studio-h {
+    font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  }
+  .flag-k h2 {
+    font-weight: 600;
+    letter-spacing: -0.05em;
+  }
+  .shell-teaser {
+    container-type: inline-size;
+    position: relative;
+    display: block;
+    width: min(100%, 520px);
+    aspect-ratio: 1 / 1.12;
+    margin-inline: auto;
+    text-decoration: none;
+  }
+  .shell-teaser img {
+    position: absolute;
+    left: 0;
+    bottom: 3rem;
+    width: 100%;
+    height: auto;
+    transition: translate 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .shell-teaser:hover img,
+  .shell-teaser:focus-visible img {
+    translate: 0 calc(var(--i, 0) * -2.6cqw);
+  }
+  .shell-teaser .camera {
+    transition: opacity 0.15s;
+  }
+  .shell-teaser:hover .camera,
+  .shell-teaser:focus-visible .camera {
+    opacity: 0;
+  }
+  .teaser-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shell-teaser img {
+      transition: none;
+    }
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 1;
+  }
+  .hero h1 em {
+    color: var(--accent);
+  }
+  .hero-wave {
+    margin-top: clamp(-2rem, -4vw, 0rem);
+    mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+  }
+  .practice {
+    list-style: none;
+    padding: 0;
+    margin: 3rem 0 0;
+  }
+  .practice h3 {
+    margin-top: 1rem;
+  }
+  .practice p {
+    color: var(--text-dim);
+    margin: 0;
+  }
+  .flagship {
+    display: grid;
+    gap: 3rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 960px) {
+    .flagship {
+      grid-template-columns: 1.1fr 1fr;
+      align-items: center;
+    }
+  }
+  .flagship h2 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    letter-spacing: 0.02em;
+    margin-bottom: 0.15em;
+  }
+  .sub {
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .lede strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .lab {
+    text-align: center;
+  }
+  .lab .lede {
+    margin: 0 auto;
+  }
+  .project h2 em {
+    color: var(--accent);
+  }
+  .lab h2 em {
+    color: var(--text-dim);
+  }
+  .cta h2 {
+    max-width: 22ch;
+  }
+</style>

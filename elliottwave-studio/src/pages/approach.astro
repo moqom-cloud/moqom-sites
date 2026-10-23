@@ -1,0 +1,117 @@
+---
+import Base from '../layouts/Base.astro';
+import { BENCH_LABEL } from '../data/moqom';
+
+const principles = [
+  {
+    title: 'Build the impossible or overlooked',
+    body: [
+      'We start where others have stopped: problems written off as impossible, or never looked at closely because the market settled on an answer long ago.',
+      'Both are where categories are waiting. Live video has long been sold in two halves: fast calls for a room, or broadcast for everyone, seconds behind. MOQOM does both on one standard.',
+    ],
+  },
+  {
+    title: 'Own the category',
+    body: [
+      'We don’t build a better version of what already exists. We pick problems where the incumbent framing is the obstacle, and build the thing that makes the old framing unnecessary.',
+      'That means owning the layers the outcome depends on. If latency is the product, the transport is ours. If trust is the product, the security model is ours.',
+    ],
+  },
+  {
+    title: 'Ship standards-based technology',
+    body: [
+      'New categories last when they are built on open ground. We implement open standards ourselves, from the specification, rather than forking someone else’s interpretation.',
+      'MOQOM targets the IETF’s Media over QUIC Transport draft. Standards give customers longevity and an exit; our implementation gives them the outcomes.',
+    ],
+  },
+  {
+    title: 'Open-source SDKs, licensed engine',
+    body: [
+      'The SDKs you build with are open source under permissive licences, in Swift, Go and Rust, and so are the security libraries behind our tokens, device proofs and encryption. You can read the code you integrate, and anyone can check our cryptography.',
+      'The parts that make MOQOM fast are licensed, not open source: the relays and control plane, the player and the congestion controller. They run on our cloud, or ship as signed binaries under commercial terms. elliottwave.dev lists exactly what is open and what isn’t.',
+    ],
+  },
+  {
+    title: 'Security first',
+    body: [
+      'Security is part of the architecture, not a later review. Encrypted transport everywhere, short-lived credentials, and moderation that takes effect immediately.',
+      'We publish a responsible disclosure policy and treat reports from researchers as a gift.',
+      'Our HackerOne program launches as a vulnerability disclosure program. Cash bounties are funded by donations to the open-source projects until paying customers adopt MOQOM. Until then, every valid report gets public credit and our thanks — in the hall of fame and release notes — and we’ll send you something: swag in the mail or a tip to your crypto wallet.',
+    ],
+    links: [
+      { href: 'https://elliottwave.dev/security', label: 'Security policy and bug bounty →' },
+      { href: 'https://elliottwave.dev/donate', label: 'Fund the bounty →' },
+    ],
+  },
+  {
+    title: 'Automated and turnkey',
+    body: [
+      'Every company out of the lab runs itself. Customers start without a sales call or an onboarding project, and the day-to-day needs no one to approve it.',
+      'MOQOM is the first: signup, billing, top-ups, API keys and spend limits are all self-serve and automated. When you do need a person, support is there, from the people who built it.',
+    ],
+  },
+  {
+    title: 'Measured claims',
+    body: [
+      'Every number we publish comes from a run we can point to, with the conditions stated beside it. A number without a run behind it does not get published.',
+      `Lab results are labelled as lab results. Every benchmark we publish carries this note: “* ${BENCH_LABEL}”`,
+    ],
+  },
+];
+---
+
+<Base title="Approach" description="How elliottwave.studio lab works: build the impossible or overlooked, own the category, ship standards-based technology, open-source SDKs with a licensed engine, security first, automated and turnkey, measured claims.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Approach</p>
+      <h1>Seven rules,<br /><em>no exceptions.</em></h1>
+      <p class="lede">How the studio decides what to build, how to build it, and what to say about it.</p>
+    </div>
+  </section>
+
+  {principles.map((p, i) => (
+    <section class="section">
+      <div class="wrap principle">
+        <div>
+          <span class="num">{String(i + 1).padStart(2, '0')}</span>
+          <h2>{p.title}</h2>
+        </div>
+        <div class="prose">
+          {p.body.map((para) => <p>{para}</p>)}
+          {p.links && (
+            <p class="links">
+              {p.links.map((l) => <a href={l.href}>{l.label}</a>)}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .page-head h1 em {
+    color: var(--accent);
+  }
+  .principle {
+    display: grid;
+    gap: 1.5rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .principle {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .principle h2 {
+    margin-top: 0.75rem;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+  }
+</style>

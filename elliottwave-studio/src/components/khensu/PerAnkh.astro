@@ -1,0 +1,471 @@
+---
+// Per-Ankh, the on-device memory layer (khensu-specs PLAN.md, Local search and memory; code name KhensuMemory).
+// The answer card draws the trip on a dot-matrix globe with three.js; the app draws it with RealityKit.
+const lanes = [
+  { name: 'Words', note: 'Full-text search' },
+  { name: 'Meaning', note: 'On-device embeddings' },
+  { name: 'Connections', note: 'People, places, plans' },
+  { name: 'Time', note: '“In May”' },
+];
+const points = [
+  { t: 'Remembers what matters', b: 'Plans, dates, decisions, places and the things people asked you, each linked to the message it came from.' },
+  { t: 'Answers with sources', b: 'Ask anything and get an answer that cites the exact messages, voice notes and photos it read.' },
+  { t: 'Post-quantum encrypted, never exported', b: 'Kept under AES-256 with a key the Secure Enclave never releases. Never backed up, synced or sent anywhere, so there’s no traffic to see.' },
+  { t: 'Built on Apple Intelligence', b: 'Apple’s on-device model only, after Face ID. No cloud, ever. Delete a message and everything learned from it goes too.' },
+];
+// Points with `via` are unlabelled waypoints that keep the route at sea (round Cape Sounion, pass east of Ios).
+const stops = [
+  { name: 'Athens', date: '12 May', lat: 37.912, lon: 23.708 },
+  { via: true, lat: 37.62, lon: 24.03 },
+  { name: 'Kea', date: '12 May', lat: 37.665, lon: 24.33 },
+  { name: 'Syros', date: '13 May', lat: 37.444, lon: 24.943 },
+  { name: 'Mykonos', date: '14 May', lat: 37.446, lon: 25.328 },
+  { name: 'Paros', date: '15 May', lat: 37.124, lon: 25.236 },
+  { name: 'Ios', date: '16 May', lat: 36.723, lon: 25.282 },
+  { name: 'Santorini', date: '17 May', lat: 36.417, lon: 25.432 },
+  { via: true, lat: 36.72, lon: 25.5 },
+  { name: 'Naxos', date: '19 May', lat: 37.105, lon: 25.376 },
+];
+const named = stops.filter((s) => s.name);
+// Sailing time per leg at 6 knots over the great-circle distance through any waypoints, to the half hour.
+const nm = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+  const r = Math.PI / 180, h = Math.sin(((b.lat - a.lat) * r) / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(((b.lon - a.lon) * r) / 2) ** 2;
+  return 2 * 3440.1 * Math.asin(Math.sqrt(h));
+};
+const legHours: string[] = [];
+let run = 0;
+stops.forEach((s, i) => {
+  if (i) run += nm(stops[i - 1], s);
+  if (i && s.name) {
+    const h = Math.max(0.5, Math.round((run / 6) * 2) / 2);
+    legHours.push(`${String(h).replace('.5', '½')} h`);
+    run = 0;
+  }
+});
+---
+
+<section class="section ankh-sec" id="per-ankh-section" aria-labelledby="ankh-title">
+  <div class="wrap ankh-grid">
+    <div>
+      <p class="eyebrow">ñü.řåł</p>
+      <h2 id="ankh-title" class="big">Per-Ankh. <em>Your records, kept only by you.</em></h2>
+      <p class="lede">
+        In ancient Egypt, the Per-Ankh, the House of Life, was where scribes kept the records. Ours lives on your
+        phone: everything you’ve said, heard and shared, searchable and askable, and readable by no one else.
+      </p>
+      <ul class="ankh-points" role="list">
+        {points.map((p) => <li><b>{p.t}</b><span>{p.b}</span></li>)}
+      </ul>
+    </div>
+
+    <figure class="ankh-fig" aria-label="On an iPhone 18 Pro, four searches run on the device and merge into one answer, with a sailboat sailing the route from Athens to Naxos on a globe.">
+      <div class="ankh-device">
+        <canvas class="ankh-body" aria-hidden="true"></canvas>
+        <div class="ankh-screen">
+          <div class="ankh-status" aria-hidden="true"><b>9:41</b><span class="ankh-island"></span><span class="ankh-sys"><i></i><i></i><i></i></span></div>
+          <p class="ankh-title">Per-Ankh</p>
+            <div class="ankh-ask">What’s our Greek islands sailing plan?</div>
+            <ul class="ankh-lanes" role="list">
+              {lanes.map((l, i) => (
+                <li style={`--i:${i}`}><b>{l.name}</b><small>{l.note}</small><span class="ankh-beam" /></li>
+              ))}
+            </ul>
+            <div class="ankh-answer">
+              <div class="ankh-globe" data-stops={JSON.stringify(stops)}>
+                <canvas aria-hidden="true"></canvas>
+                <ol class="ankh-labels" aria-hidden="true">{named.map((s) => <li>{s.name} <small>{s.date}</small></li>)}</ol>
+                <ol class="ankh-legs" aria-hidden="true">{legHours.map((h) => <li>{h}</li>)}</ol>
+                <svg class="ankh-boat" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2v14M12 3l7 12h-7zM11 5l-6 10h6z" fill="#fff" stroke="#fff" stroke-width="0.6" stroke-linejoin="round" />
+                  <path d="M3 17h18l-2.6 3.6H5.6z" fill="#8b7bff" />
+                </svg>
+              </div>
+              <p><b>12–19 May, from Athens.</b> Kea, Syros, Mykonos, Paros, Ios, Santorini, then Naxos. Ana added Ios on Tuesday; Sam booked the boat.</p>
+              <p class="ankh-cites"><span>Ana · Tue 14:02</span><span>Sam · charter PDF</span><span>Skipper · voice note</span></p>
+            </div>
+        </div>
+      </div>
+      <figcaption>Search works on every iPhone with iOS 26; answers need Apple Intelligence (iPhone 15 Pro or later). Apple Intelligence is a trademark of Apple Inc.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<script>
+  import * as THREE from 'three';
+  import dots from '../../data/globe-dots.json';
+  import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+  import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
+  // iPhone 18 Pro, in millimetres: about 71.9 × 150 × 8.8 with 11.5 mm corners. The screen is 393 × 852 points.
+  const W = 71.9, H = 150, D = 8.8, CORNER = 11.5, BEZEL = 1.9, SW = 393, SH = 852;
+  const rounded = (w: number, h: number, r: number) => {
+    const sh = new THREE.Shape();
+    sh.moveTo(-w / 2 + r, -h / 2);
+    sh.lineTo(w / 2 - r, -h / 2); sh.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+    sh.lineTo(w / 2, h / 2 - r); sh.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
+    sh.lineTo(-w / 2 + r, h / 2); sh.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+    sh.lineTo(-w / 2, -h / 2 + r); sh.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+    return sh;
+  };
+
+  for (const device of document.querySelectorAll<HTMLElement>('.ankh-device')) {
+    const canvas = device.querySelector<HTMLCanvasElement>('.ankh-body')!;
+    const screenEl = device.querySelector<HTMLElement>('.ankh-screen')!;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const gl = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    gl.setPixelRatio(Math.min(devicePixelRatio, 2));
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    const css = new CSS3DRenderer();
+    css.domElement.className = 'ankh-css';
+    device.appendChild(css.domElement);
+
+    const scene = new THREE.Scene(), cssScene = new THREE.Scene();
+    scene.environment = new THREE.PMREMGenerator(gl).fromScene(new RoomEnvironment(), 0.04).texture;
+    const camera = new THREE.PerspectiveCamera(24, 1, 1, 2000);
+    camera.position.set(0, 0, 410);
+    const phone = new THREE.Group(), cssPhone = new THREE.Group();
+    scene.add(phone); cssScene.add(cssPhone);
+
+    const frame = new THREE.MeshPhysicalMaterial({ color: 0x3b4150, metalness: 1, roughness: 0.32, clearcoat: 0.4 });
+    const body = new THREE.ExtrudeGeometry(rounded(W - 2, H - 2, CORNER - 1), { depth: D - 2, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 6, curveSegments: 24 });
+    body.translate(0, 0, -(D - 2) / 2);
+    phone.add(new THREE.Mesh(body, frame));
+    const glass = new THREE.Mesh(new THREE.ShapeGeometry(rounded(W - 0.6, H - 0.6, CORNER - 0.3), 24),
+      new THREE.MeshPhysicalMaterial({ color: 0x050506, metalness: 0, roughness: 0.05, clearcoat: 1 }));
+    glass.position.z = D / 2 + 0.02;
+    phone.add(glass);
+    const button = (y: number, h: number, side: number) => {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, h, 3), frame);
+      b.position.set(side * (W / 2 + 0.3), y, 0);
+      phone.add(b);
+    };
+    button(38, 8, -1); button(24, 14, -1); button(8, 14, -1); button(28, 22, 1); button(-22, 18, 1);
+
+    // The live screen: the DOM, scaled so 393 points span the glass inside the bezel.
+    const screenObj = new CSS3DObject(screenEl);
+    const sw = W - BEZEL * 2;
+    screenObj.scale.setScalar(sw / SW);
+    screenObj.position.z = D / 2 + 0.05;
+    cssPhone.add(screenObj);
+    device.classList.add('is-3d');
+
+    const resize = () => {
+      const w = device.clientWidth, h = device.clientHeight;
+      gl.setSize(w, h, false); css.setSize(w, h);
+      camera.aspect = w / h;
+      camera.position.z = Math.max(410, ((H + 24) / 2 / Math.tan((12 * Math.PI) / 180)) * Math.max(1, 0.55 / camera.aspect));
+      camera.updateProjectionMatrix();
+    };
+    new ResizeObserver(resize).observe(device);
+    resize();
+    let visible = false;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(device);
+    const t0 = performance.now();
+    gl.setAnimationLoop((ms) => {
+      if (!visible) return;
+      const t = (ms - t0) / 1000;
+      const enter = still ? 1 : 1 - Math.pow(1 - Math.min(1, t / 1.6), 3);
+      const ry = still ? -0.22 : -0.62 * (1 - enter) + Math.sin(t * 0.45) * 0.26;
+      const rx = still ? 0.06 : Math.sin(t * 0.33) * 0.07 + 0.04;
+      for (const g of [phone, cssPhone]) {
+        g.rotation.set(rx, ry, Math.sin(t * 0.27) * 0.015);
+        g.position.y = still ? 0 : Math.sin(t * 0.6) * 2;
+      }
+      gl.render(scene, camera);
+      css.render(cssScene, camera);
+    });
+  }
+
+  type Stop = { name?: string; via?: boolean; lat: number; lon: number };
+  const R = 1;
+  const v3 = (lat: number, lon: number, r = R) => {
+    const p = (lat * Math.PI) / 180, l = (lon * Math.PI) / 180;
+    return new THREE.Vector3(r * Math.cos(p) * Math.sin(l), r * Math.sin(p), r * Math.cos(p) * Math.cos(l));
+  };
+
+  for (const host of document.querySelectorAll<HTMLElement>('.ankh-globe')) {
+    const canvas = host.querySelector('canvas')!;
+    const labels = [...host.querySelectorAll<HTMLElement>('.ankh-labels li')];
+    const boat = host.querySelector<SVGElement>('.ankh-boat')!;
+    const legLabels = [...host.querySelectorAll<HTMLElement>('.ankh-legs li')];
+    const stops: Stop[] = JSON.parse(host.dataset.stops!);
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(30, 2, 0.01, 10);
+    const globe = new THREE.Group();
+    scene.add(globe);
+
+    globe.add(new THREE.Mesh(new THREE.SphereGeometry(R * 0.995, 64, 64), new THREE.MeshBasicMaterial({ color: 0x0b0b12 })));
+    const pos = new Float32Array((dots as number[][]).length * 3);
+    (dots as number[][]).forEach(([la, lo], i) => v3(la / 100, lo / 100).toArray(pos, i * 3));
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    globe.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x9a96b8, size: 1.3, sizeAttenuation: false, transparent: true, opacity: 0.45 })));
+
+    // Route: sampled along each sub-segment; legStart[k] is the route index where leg k (named stop k to k + 1) begins.
+    const route: THREE.Vector3[] = [];
+    const legStart: number[] = [0];
+    for (let i = 1; i < stops.length; i++) {
+      const a = v3(stops[i - 1].lat, stops[i - 1].lon), b = v3(stops[i].lat, stops[i].lon);
+      for (let t = route.length ? 1 / 20 : 0; t <= 1.0001; t += 1 / 20) route.push(a.clone().lerp(b, t).normalize().multiplyScalar(R * 1.002));
+      if (stops[i].name) legStart.push(route.length - 1);
+    }
+    const legs = legStart.length - 1;
+    const rg = new THREE.BufferGeometry().setFromPoints(route);
+    const colors = new Float32Array(route.length * 3);
+    const c0 = new THREE.Color(0x8b7bff), c1 = new THREE.Color(0x4fd1c5);
+    route.forEach((_, i) => c0.clone().lerp(c1, i / (route.length - 1)).toArray(colors, i * 3));
+    rg.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    globe.add(new THREE.Line(rg, new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 })));
+    const marks = stops.filter((s) => s.name).map((s) => v3(s.lat, s.lon, R * 1.003));
+    const mg = new THREE.BufferGeometry().setFromPoints(marks);
+    globe.add(new THREE.Points(mg, new THREE.PointsMaterial({ color: 0xffffff, size: 5, sizeAttenuation: false })));
+
+    // Face the Aegean: rotate the globe so the middle of the route, 37.1° N, 24.65° E, points at the camera.
+    globe.rotation.order = 'XYZ';
+    const target = { x: (37.12 * Math.PI) / 180, y: (-24.65 * Math.PI) / 180 };
+
+    const resize = () => {
+      const w = host.clientWidth, h = host.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    };
+    new ResizeObserver(resize).observe(host);
+    resize();
+
+    const ease = (t: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+    const smooth = (t: number) => t * t * (3 - 2 * t);
+    // 0-4 s zoom in, then each leg sails for SAIL seconds and rests PAUSE seconds at the island; hold at Naxos.
+    const SAIL = 1.4, PAUSE = 0.5, START = 4.4;
+    const LOOP = START + legs * (SAIL + PAUSE) + 2.5;
+    let visible = false;
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(host);
+    const v = new THREE.Vector3(), here = new THREE.Vector3(), ahead = new THREE.Vector3();
+    const screen = (p: THREE.Vector3, w: number, h: number) => {
+      v.copy(p).applyMatrix4(globe.matrixWorld).project(camera);
+      return [((v.x + 1) / 2) * w, ((1 - v.y) / 2) * h];
+    };
+    const at = (f: number, out: THREE.Vector3) => {
+      const i = Math.min(route.length - 2, Math.floor(f));
+      return out.copy(route[i]).lerp(route[i + 1], f - i);
+    };
+    const frame = (ms: number) => {
+      const t = still ? LOOP : (ms / 1000) % LOOP;
+      const zoom = ease((t - 1) / 3);
+      const s = Math.max(0, t - START);
+      const leg = Math.min(legs - 1, Math.floor(s / (SAIL + PAUSE)));
+      const p = Math.min(1, (s - leg * (SAIL + PAUSE)) / SAIL);
+      const f = t < START ? 0 : legStart[leg] + smooth(p) * (legStart[leg + 1] - legStart[leg]);
+
+      // Follow the boat in closer while it sails, then pull back to the whole route at Naxos.
+      const END = START + legs * (SAIL + PAUSE);
+      const follow = still ? 0 : ease((t - START + 0.6) / 1.2) * (1 - ease((t - END) / 1.4));
+      at(f, here);
+      const lat = Math.asin(here.y / here.length()), lon = Math.atan2(here.x, here.z);
+      const tx = target.x + (lat - target.x) * follow, ty = target.y + (-lon - target.y) * follow;
+      globe.rotation.y = ty - (1 - ease(t / 4)) * 1.4;
+      globe.rotation.x = tx * ease(t / 4);
+      camera.position.set(0, 0, 4.2 - zoom * 3.13 - follow * 0.016);
+      camera.lookAt(0, 0, 0);
+      globe.updateMatrixWorld();
+      const reached = t < START ? 0 : leg + (p >= 1 ? 2 : 1);
+      rg.setDrawRange(0, t < START ? 0 : Math.floor(f) + 1);
+      mg.setDrawRange(0, reached);
+
+      const w = host.clientWidth, h = host.clientHeight;
+      marks.forEach((m, i) => {
+        const [x, y] = screen(m, w, h);
+        labels[i].style.transform = `translate(${x + 6}px, ${y - 7}px)`;
+        labels[i].style.opacity = i < reached && zoom > 0.9 ? '1' : '0';
+      });
+      legLabels.forEach((el, k) => {
+        const [x, y] = screen(at((legStart[k] + legStart[k + 1]) / 2, ahead), w, h);
+        el.style.transform = `translate(calc(${x}px - 50%), ${y + 5}px)`;
+        el.style.opacity = t >= START && (k < leg || (k === leg && p > 0.3)) && zoom > 0.9 ? '1' : '0';
+      });
+      const [bx, by] = screen(at(f, here), w, h);
+      const [ax] = screen(at(Math.min(route.length - 1.001, f + 1), ahead), w, h);
+      const sailing = t >= START && p < 1;
+      const bob = sailing ? Math.sin(t * 9) * 1.2 : 0;
+      boat.style.transform = `translate(${bx - 9}px, ${by - 17 + bob}px) scaleX(${ax < bx ? -1 : 1})`;
+      boat.style.opacity = zoom > 0.9 ? '1' : '0';
+      if (visible || still) renderer.render(scene, camera);
+      if (!still) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+</script>
+
+<style>
+  .ankh-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  .ankh-points { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.4rem; margin: 1.6rem 0 0; padding: 0; list-style: none; }
+  .ankh-points li { display: grid; gap: 0.2rem; align-content: start; }
+  .ankh-points span { color: var(--muted, rgba(255, 255, 255, 0.65)); }
+  .ankh-fig {
+    margin: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .ankh-device {
+    position: relative;
+    height: min(86vh, 780px);
+    min-height: 600px;
+    border-radius: 28px;
+    background: radial-gradient(60% 55% at 50% 45%, rgba(139, 123, 255, 0.18), transparent 70%);
+  }
+  .ankh-body { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ankh-device :global(.ankh-css) { position: absolute !important; inset: 0; pointer-events: none; }
+  .ankh-screen {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 393px;
+    height: 852px;
+    translate: -50% -50%;
+    scale: 0.66;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 62px 18px 24px;
+    border-radius: 55px;
+    background: radial-gradient(120% 60% at 80% 0%, rgba(139, 123, 255, 0.22), transparent 60%), #000;
+    box-shadow: 0 0 0 10px #2c313c, 0 30px 60px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    font-size: 15px;
+    color: #fff;
+  }
+  .ankh-device.is-3d .ankh-screen { left: 0; top: 0; translate: none; scale: none; box-shadow: none; }
+  .ankh-status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 34px 0 46px;
+    font-size: 16px;
+  }
+  .ankh-island { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; border-radius: 20px; background: #000; box-shadow: 0 0 0 1px #111; }
+  .ankh-sys { display: flex; gap: 3px; align-items: end; }
+  .ankh-sys i { width: 4px; border-radius: 1px; background: #fff; }
+  .ankh-sys i:nth-child(1) { height: 6px; } .ankh-sys i:nth-child(2) { height: 9px; } .ankh-sys i:nth-child(3) { height: 12px; }
+  .ankh-title { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  .ankh-ask, .ankh-answer {
+    border-radius: 20px;
+    padding: 12px 14px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+  .ankh-ask { justify-self: end; border-radius: 18px 18px 4px 18px; background: rgba(10, 132, 255, 0.85); border-color: transparent; }
+  .ankh-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .ankh-lanes li {
+    position: relative;
+    display: grid;
+    gap: 0.1rem;
+    padding: 9px 11px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .ankh-lanes small { color: rgba(255, 255, 255, 0.55); font-size: 11.5px; }
+  .ankh-beam {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.45rem;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, #b9adff, transparent) no-repeat;
+    background-size: 50% 100%;
+    animation: ankh-scan 2.6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.25s);
+  }
+  .ankh-globe {
+    position: relative;
+    height: 300px;
+    margin: -4px -6px 12px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: radial-gradient(80% 90% at 50% 50%, rgba(139, 123, 255, 0.12), transparent 70%);
+  }
+  .ankh-globe canvas { display: block; width: 100%; height: 100%; }
+  .ankh-labels { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .ankh-labels li {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transition: opacity 0.4s;
+    white-space: nowrap;
+  }
+  .ankh-boat {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+    pointer-events: none;
+  }
+  .ankh-labels small { color: rgba(255, 255, 255, 0.55); font-size: 9.5px; }
+  .ankh-legs { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .ankh-legs li {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    font-size: 9.5px;
+    line-height: 1.5;
+    color: #b9f1ea;
+    background: rgba(10, 10, 16, 0.6);
+    opacity: 0;
+    transition: opacity 0.4s;
+    white-space: nowrap;
+  }
+  .ankh-answer p { margin: 0; }
+  .ankh-answer { font-size: 14.5px; line-height: 1.4; }
+  .ankh-cites { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px !important; }
+  .ankh-cites span {
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .ankh-fig figcaption { font-size: 0.72rem; color: var(--muted, rgba(255, 255, 255, 0.5)); }
+  @keyframes ankh-scan {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @media (max-width: 900px) {
+    .ankh-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .ankh-points { grid-template-columns: 1fr; }
+    .ankh-device { height: 640px; min-height: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ankh-beam { animation: none; background-position: 50% 0; }
+  }
+</style>

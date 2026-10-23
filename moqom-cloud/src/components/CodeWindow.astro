@@ -1,0 +1,58 @@
+---
+import { Code } from "astro:components";
+
+interface Props {
+  code: string;
+  lang: "swift" | "go" | "rust" | "sh" | "json" | "ts";
+  filename?: string;
+}
+const { code, lang, filename } = Astro.props;
+---
+
+<div class="code-window glass glass--strong">
+  <div class="chrome">
+    <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    {filename && <span class="filename">{filename}</span>}
+    <span class="lang">{lang}</span>
+  </div>
+  <Code code={code.trim()} lang={lang} theme="github-dark-default" />
+</div>
+
+<style>
+  .code-window {
+    overflow: hidden;
+    min-width: 0;
+  }
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--glass-edge);
+    background: rgb(255 255 255 / 0.04);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+  }
+  .dots {
+    display: inline-flex;
+    gap: 6px;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.18);
+  }
+  .lang {
+    margin-left: auto;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .code-window :global(pre.astro-code) {
+    background: transparent !important;
+    padding: var(--space-4) var(--space-5);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+</style>

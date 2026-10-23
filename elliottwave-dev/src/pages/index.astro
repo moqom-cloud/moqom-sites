@@ -1,0 +1,384 @@
+---
+import Base from '../layouts/Base.astro';
+import Wave from '../components/Wave.astro';
+import { BENCH_LABEL, COMPARE_URL, LINKS, METRICS, RESOLUTION_LATENCY, RESOLUTION_NOTE } from '../data/moqom';
+import { SIX10NINE } from '../data/six10nine';
+import { UNIFY } from '../data/unify';
+
+const quickstart = [
+  {
+    label: 'Swift Package Manager · iOS / macOS',
+    code: `.package(url: "https://github.com/moqom-cloud/moqom-swift", branch: "main")`,
+  },
+  {
+    label: 'Go · backend admin SDK',
+    code: 'go get github.com/moqom-cloud/moqom-go',
+  },
+];
+// TODO(Elliott): switch the Swift snippet to a tagged release (`from: "x.y.z"`) once one is published, and add a Rust snippet once moqom-rust is public.
+---
+
+<Base>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">developer hub</p>
+      <h1>Build on <span class="hl">elliottwave.studio lab</span>.</h1>
+      <p class="lede">
+        SDKs, documentation, open-source repositories, platform status and security for every elliottwave.studio lab
+        product. Today, that is MOQOM, six10nine and Unify.
+      </p>
+    </div>
+    <div class="hero-wave" aria-hidden="true">
+      <Wave strands={16} height={300} labels={false} accent="var(--cyan)" />
+    </div>
+  </section>
+
+  <section class="section products">
+    <div class="wrap">
+      <p class="eyebrow">products</p>
+      <div class="cards">
+        <article class="card product">
+          <header>
+            <div>
+              <h2>MOQOM</h2>
+              <p class="mono sub">Media Over QUIC Orchestration Mesh</p>
+            </div>
+            <span class="tag ok">iOS · macOS available</span>
+          </header>
+          <p>
+            Real-time video on the IETF’s Media over QUIC, speaking <code>draft-ietf-moq-transport-22</code> and <code>-19</code>. Sub-60 ms
+            glass-to-glass, at broadcast scale, over QUIC and WebTransport.
+          </p>
+
+          <dl class="metrics">
+            {METRICS.map((m) => (
+              <div>
+                <dt>{m.label}</dt>
+                <dd>{m.value}<sup>*</sup></dd>
+              </div>
+            ))}
+          </dl>
+          <table class="res">
+            <thead>
+              <tr><th scope="col">resolution</th><th scope="col">use</th><th scope="col">median glass-to-glass</th></tr>
+            </thead>
+            <tbody>
+              {RESOLUTION_LATENCY.map((r) => (
+                <tr>
+                  <td>{r.resolution}</td>
+                  <td>{r.use}</td>
+                  <td class:list={[r.measured ? 'measured' : 'pending']}>{r.median}{r.measured && <sup>*</sup>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="footnote">{RESOLUTION_NOTE}</p>
+          <p class="footnote">* {BENCH_LABEL}</p>
+          <p class="small"><a href={COMPARE_URL}>how MOQOM compares → moqom.dev</a></p>
+
+          <div class="quick">
+            {quickstart.map((q) => (
+              <div>
+                <p class="qlabel mono">{q.label}</p>
+                <pre><code>{q.code}</code></pre>
+              </div>
+            ))}
+          </div>
+
+          <div class="btn-row">
+            <a class="btn primary" href={LINKS.docs}>docs → moqom.dev</a>
+            <a class="btn" href={LINKS.console}>console / sign up → moqom.cloud</a>
+            <a class="btn" href={LINKS.github}>github.com/moqom-cloud</a>
+          </div>
+        </article>
+
+        <article class="card six" id="six10nine">
+          <p class="mono faint">// product 02 · macOS</p>
+          <header>
+            <h2>{SIX10NINE.name}</h2>
+            <span class="tag amber">source-available</span>
+          </header>
+          <p>{SIX10NINE.summary}</p>
+          <p class="small">
+            <strong>{SIX10NINE.licence}.</strong> {SIX10NINE.licenceNote}
+          </p>
+          <p class="small">{SIX10NINE.install}</p>
+          <p class="footnote">
+            <code>{SIX10NINE.repo.replace('https://', '')}</code> · {SIX10NINE.repoStatus}
+          </p>
+        </article>
+      </div>
+
+      <div class="cards cards-even">
+        <article class="card six unify" id="unify">
+          <p class="mono faint">// product 03 · iOS</p>
+          <header>
+            <h2>{UNIFY.name}</h2>
+            <span class="tag amber">featured by Apple</span>
+          </header>
+          <p>{UNIFY.summary}</p>
+          <p class="small">
+            <strong>On the App Store since {UNIFY.since}, free to try.</strong> Apple featured it before it had a business model.
+            It builds on Apple’s Vision framework with technology of our own, and there is more we haven’t released.
+          </p>
+          <p class="small">{UNIFY.next}</p>
+          <div class="row">
+            <a class="btn" href={UNIFY.appStore}>App Store</a>
+            <a class="btn" href={UNIFY.url}>weunify.app</a>
+          </div>
+        </article>
+
+        <article class="card next">
+          <p class="mono faint">// product 04</p>
+          <h2>More products coming.</h2>
+          <p>New elliottwave.studio lab products will get their SDKs, docs and status here, in the same place and the same shape.</p>
+          <pre class="ghost" aria-hidden="true"><code>$ elliottwave products --unannounced
+  ▍</code></pre>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap grid links">
+      <a class="card link" href="/open-source">
+        <span class="mono">/open-source</span>
+        <p>Which repositories are public, and under which licence.</p>
+      </a>
+      <a class="card link" href="/status">
+        <span class="mono">/status</span>
+        <p>Platform availability and what is planned next.</p>
+      </a>
+      <a class="card link" href="/security">
+        <span class="mono">/security</span>
+        <p>Responsible disclosure and how to report a vulnerability.</p>
+      </a>
+      <a class="card link" href="/blog">
+        <span class="mono">/blog</span>
+        <p>Engineering notes from the lab.</p>
+      </a>
+      <a class="card link" href="/open-source#contribute">
+        <span class="mono">/open-source#contribute</span>
+        <p>How to build, test and contribute to the open repositories.</p>
+      </a>
+      <a class="card link" href="/donate">
+        <span class="mono">/donate</span>
+        <p>Fund open-source maintenance and the bug bounty.</p>
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding: clamp(3.5rem, 9vw, 6.5rem) 0 0;
+    overflow: hidden;
+  }
+  .hl {
+    background: linear-gradient(90deg, var(--cyan), var(--amber));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-wave {
+    margin-top: 1rem;
+    opacity: 0.9;
+    mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+  }
+  .cards {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 980px) {
+    .cards {
+      grid-template-columns: 1.7fr 1fr;
+    }
+  }
+  .product {
+    border-color: color-mix(in srgb, var(--cyan) 30%, var(--line));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 8%, transparent), 0 30px 80px -40px color-mix(in srgb, var(--cyan) 35%, transparent);
+  }
+  .product header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .product h2 {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .sub {
+    color: var(--cyan);
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0;
+  }
+  .product > p {
+    color: var(--text-dim);
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0 0.6rem;
+  }
+  .metrics div {
+    background: var(--bg-sunk);
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .metrics dt {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+  }
+  .metrics dd {
+    margin: 0 0 0.2rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: var(--amber);
+  }
+  .metrics sup {
+    font-size: 0.5em;
+    color: var(--text-faint);
+  }
+  .res {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0 0.6rem;
+    font-size: 0.85rem;
+  }
+  .res th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-faint);
+    padding: 0 0.75rem 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .res td {
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+  .res td:first-child {
+    font-family: var(--font-mono);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .res .measured {
+    color: var(--amber);
+  }
+  .res sup {
+    font-size: 0.6em;
+    color: var(--text-faint);
+  }
+  .product .small {
+    font-size: 0.9rem;
+  }
+  .quick {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .qlabel {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    margin: 0 0 0.35rem;
+  }
+  .quick pre {
+    margin: 0;
+  }
+  .six {
+    display: flex;
+    flex-direction: column;
+    border-color: color-mix(in srgb, var(--amber) 28%, var(--line));
+  }
+  .six header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .six h2 {
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    margin: 0 0 0.75rem;
+  }
+  .six > p {
+    color: var(--text-dim);
+  }
+  .six .small {
+    font-size: 0.9rem;
+  }
+  .six strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .six .footnote {
+    margin-top: auto;
+  }
+  .cards-even {
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 980px) {
+    .cards-even {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .unify .row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 1rem;
+  }
+  .next {
+    display: flex;
+    flex-direction: column;
+    border-style: dashed;
+    background: transparent;
+  }
+  .next p {
+    color: var(--text-dim);
+  }
+  .faint {
+    color: var(--text-faint) !important;
+    font-size: 0.78rem;
+  }
+  .ghost {
+    margin-top: auto;
+    color: var(--text-faint);
+  }
+  .ghost code {
+    color: var(--text-faint);
+  }
+  .link {
+    color: var(--text);
+    transition: border-color 0.15s ease;
+  }
+  .link:hover {
+    text-decoration: none;
+    border-color: var(--cyan);
+  }
+  .link span {
+    color: var(--cyan);
+  }
+  .link p {
+    color: var(--text-dim);
+    margin: 0.4rem 0 0;
+    font-size: 0.92rem;
+  }
+</style>

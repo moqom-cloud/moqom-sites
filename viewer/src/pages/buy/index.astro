@@ -1,0 +1,145 @@
+---
+// Starts Stripe Checkout: validates the domains with the licence server, which creates the
+// Checkout session, then sends the browser to checkout.stripe.com. Nothing is stored before
+// payment. The plugin can be preselected with ?plugin=<id>.
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+import { PAID_PLUGINS, PLATFORM_HOSTS, PLUGIN_NAMES, PRICES, usd } from '../../data/pricing';
+---
+
+<Base title="Buy a licence" description={`Buy a ${SITE.displayName} plugin licence for one domain.`}>
+  <p class="eyebrow">Pricing</p>
+  <h1>Buy a licence</h1>
+  <div class="prose">
+    <p>
+      One licence is for one plugin on one domain, with its www. form, one staging subdomain and local development hosts. See
+      <a href="/pricing/">pricing</a> for what it covers.
+    </p>
+  </div>
+  <div class="note" data-cancelled hidden>
+    <p>Checkout was cancelled. Nothing was charged.</p>
+  </div>
+
+  <form class="form" data-buy novalidate>
+    <label>
+      <span>Plugin</span>
+      <select name="plugin" required>
+        {PAID_PLUGINS.map((p) => <option value={p}>{PLUGIN_NAMES[p]}</option>)}
+      </select>
+    </label>
+
+    <fieldset>
+      <legend>Plan</legend>
+      <label class="choice"><input type="radio" name="plan" value="yearly" checked /> {usd(PRICES.yearly)} a year</label>
+      <label class="choice"><input type="radio" name="plan" value="lifetime" /> {usd(PRICES.lifetime)} once (lifetime)</label>
+    </fieldset>
+
+    <label>
+      <span>Your domain</span>
+      <input type="text" name="host" required autocomplete="url" spellcheck="false" inputmode="url" placeholder="example.com" maxlength="253" />
+      <span class="hint">The site’s address, without https://. www. is included automatically.</span>
+      <span class="error" data-error="host" aria-live="polite"></span>
+    </label>
+
+    <label>
+      <span>Staging subdomain (optional)</span>
+      <input type="text" name="staging" spellcheck="false" inputmode="url" placeholder="staging.example.com" maxlength="253" />
+      <span class="hint">A subdomain of your domain. You can add or change it later.</span>
+      <span class="error" data-error="staging" aria-live="polite"></span>
+    </label>
+
+    {
+      Object.entries(PLATFORM_HOSTS).map(([plugin, info]) => (
+        <label data-platform={plugin} hidden>
+          <span>{info.label} (optional)</span>
+          <input type="text" name={`platform_host_${plugin}`} spellcheck="false" inputmode="url" placeholder={info.example} maxlength="253" />
+          <span class="hint">So the licence also covers the site on the platform’s own address.</span>
+        </label>
+      ))
+    }
+    <span class="error" data-error="platform_host" aria-live="polite"></span>
+
+    <label class="choice">
+      <input type="checkbox" name="terms" required />
+      <span>I agree to the <a href="/licence/#plugins">plugin licence</a>.</span>
+    </label>
+    <span class="error" data-error="terms" aria-live="polite"></span>
+
+    <div>
+      <button type="submit" class="btn primary">Continue to payment</button>
+    </div>
+    <span class="error" data-error="form" aria-live="polite"></span>
+    <span class="hint">Payment is handled by Stripe on checkout.stripe.com. You’ll get the key on the next page and by email.</span>
+  </form>
+</Base>
+
+<script>
+  import { LICENSING, isPaidPlugin } from '../../vendor/core/licensing-config';
+
+  const form = document.querySelector<HTMLFormElement>('[data-buy]')!;
+  const plugin = form.elements.namedItem('plugin') as HTMLSelectElement;
+  const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+  const params = new URLSearchParams(location.search);
+
+  const wanted = params.get('plugin');
+  if (isPaidPlugin(wanted)) plugin.value = wanted;
+  if (params.get('plan') === 'lifetime') (form.querySelector('input[value=lifetime]') as HTMLInputElement).checked = true;
+  if (params.get('cancelled') === '1') document.querySelector<HTMLElement>('[data-cancelled]')!.hidden = false;
+
+  const showPlatform = () => {
+    for (const label of form.querySelectorAll<HTMLElement>('[data-platform]')) label.hidden = label.dataset.platform !== plugin.value;
+  };
+  plugin.addEventListener('change', showPlatform);
+  showPlatform();
+
+  const setError = (field: string, text: string) => {
+    for (const node of form.querySelectorAll<HTMLElement>('[data-error]')) {
+      node.textContent = node.dataset.error === field ? text : '';
+    }
+  };
+  const value = (name: string) => ((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? '').trim();
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    setError('', '');
+    if (!value('host')) return setError('host', 'Enter your domain.');
+    if (!(form.elements.namedItem('terms') as HTMLInputElement).checked) return setError('terms', 'Please read and accept the plugin licence.');
+    const body = {
+      plugin: plugin.value,
+      plan: (form.querySelector('input[name=plan]:checked') as HTMLInputElement).value,
+      host: value('host'),
+      staging: value('staging'),
+      platform_host: value(`platform_host_${plugin.value}`),
+    };
+    button.disabled = true;
+    try {
+      const response = await fetch(`${LICENSING.api}/v1/checkout`, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await response.json().catch(() => ({}))) as { url?: string; field?: string; message?: string; error?: string };
+      if (response.ok && typeof data.url === 'string') {
+        const url = new URL(data.url);
+        if (url.protocol === 'https:' && url.hostname === 'checkout.stripe.com') {
+          location.assign(url.href);
+          return;
+        }
+        setError('form', 'Unexpected response from the licence server.');
+      } else if (response.status === 400 && data.field) {
+        setError(['host', 'staging', 'platform_host'].includes(data.field) ? data.field : 'form', data.message ?? 'Check this value.');
+      } else if (response.status === 503) {
+        setError('form', 'Checkout is not open yet.');
+      } else if (response.status === 429) {
+        setError('form', 'Too many attempts. Try again in a minute.');
+      } else {
+        setError('form', 'Something went wrong. Nothing was charged; try again later.');
+      }
+    } catch {
+      setError('form', 'Could not reach the licence server. Nothing was charged; try again later.');
+    }
+    button.disabled = false;
+  });
+</script>

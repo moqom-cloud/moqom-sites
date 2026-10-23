@@ -1,0 +1,410 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import Estimator from "../components/Estimator.astro";
+import BillingApi from "../components/BillingApi.astro";
+import PriceCards from "../components/PriceCards.astro";
+import { AGORA, RATE, PRICING, TIERS, VOLUME_BANDS, agoraAt, rateAt, usd } from "../data/pricing";
+---
+
+<Base
+  title="Pricing"
+  description="Prepaid pricing for end-to-end encrypted real-time video: 15% under Agora's list price at every tier and every volume band. Self-host for a 5¢/GiB platform fee."
+>
+  <PageHero
+    eyebrow="Pricing"
+    title="15% under Agora. At every tier, at every volume."
+    lede="Prepaid credit, billed by the second. Every rate is 85% of Agora's Interactive Live Streaming list price, after the same volume discount Agora gives, and always at least 1¢ under it."
+  >
+    <div class="btn-row">
+      <a class="btn btn-primary" href="/signup/">Get an API key</a>
+      <a class="btn" href="#estimate">Estimate a bill</a>
+    </div>
+    <p class="small muted volume">
+      Volume pricing is automatic. <a href="#volume">See the bands</a>
+    </p>
+  </PageHero>
+
+  <section class="cards-band" id="scenarios">
+    <div class="container">
+      <PriceCards />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">The model</span>
+        <h2>Agora's price, then 15% off.</h2>
+      </div>
+      <div class="grid grid-4 formula">
+        <div class="glass card reveal">
+          <span class="mono faint small">1 · list</span>
+          <h3>Agora's list price</h3>
+          <p class="small muted">Per 1,000 participant-minutes, by role and resolution, from Agora's own pricing page.</p>
+        </div>
+        <div class="glass card reveal">
+          <span class="mono faint small">2 · volume</span>
+          <h3>Agora's volume discount</h3>
+          <p class="small muted">The same automatic monthly discount Agora gives: 5%, 7% and 10% as your minutes grow.</p>
+        </div>
+        <div class="glass card reveal">
+          <span class="mono faint small">3 · 85%</span>
+          <h3>You pay 85% of that</h3>
+          <p class="small muted">15% under Agora at your volume, rounded down to the cent. No markup on top, no platform fee.</p>
+        </div>
+        <div class="glass card cap">
+          <span class="mono small">= guaranteed</span>
+          <h3>At least 1¢ under</h3>
+          <p class="small muted">Every rate is at least 1¢ under Agora's, per 1,000 minutes and per GiB, enforced in code.</p>
+        </div>
+      </div>
+      <p class="small faint">
+        Self-hosted relays pay {usd(PRICING.selfHostedFeePerGiB)} per GiB and nothing else, never more than the hosted
+        price. The live values are always available from <code>GET /v1/rates</code>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="compare">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Comparison</span>
+        <h2>MOQOM vs Agora Interactive Live Streaming list prices</h2>
+        <p class="lede">
+          USD per 1,000 participant-minutes. Tiers follow Agora's billing: the aggregate resolution of all the video a
+          participant receives at once.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Tier</th>
+              <th colspan="2" class="group">Hosts &amp; interactive audience</th>
+              <th colspan="2" class="group">Broadcast audience</th>
+            </tr>
+            <tr>
+              <th class="num">Agora list</th>
+              <th class="num">MOQOM</th>
+              <th class="num">Agora list</th>
+              <th class="num">MOQOM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              TIERS.map((t) => (
+                <tr>
+                  <th scope="row">
+                    {t.label}
+                    <span class="tier-detail">{t.detail}</span>
+                  </th>
+                  <td class="num">{usd(AGORA.interactive[t.id])}</td>
+                  <td class="num col-moqom">{usd(RATE.interactive[t.id])}</td>
+                  <td class="num">{usd(AGORA.broadcast[t.id])}</td>
+                  <td class="num col-moqom">{usd(RATE.broadcast[t.id])}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="glass callout notes">
+        <p>
+          <strong>These are first-band rates, the most anyone pays.</strong> Past 100,000 participant-minutes in a
+          month, every rate drops with <a href="#volume">the volume bands</a> below.
+        </p>
+        <p class="small faint">
+          Agora prices are from docs.agora.io (Interactive Live Streaming pricing), retrieved October 2026. Agora may
+          change its prices. Agora is a trademark of its owner, and this comparison does not imply any affiliation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="volume">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Volume</span>
+        <h2>Volume pricing, automatic.</h2>
+        <p class="lede">
+          Your participant-minutes on MOQOM Cloud are counted each calendar month (UTC). The minutes inside each band
+          are billed at that band's rate, with no contract and nothing to ask for. Example: hosts at HD.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Minutes this month</th>
+              <th class="num">Agora discount</th>
+              <th class="num">Agora, HD host</th>
+              <th class="num">MOQOM, HD host</th>
+              <th class="num">MOQOM, HD broadcast audience</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              VOLUME_BANDS.map((b, i) => (
+                <tr>
+                  <th scope="row">{b.label}</th>
+                  <td class="num">{b.discount ? `${Math.round(b.discount * 100)}%` : "—"}</td>
+                  <td class="num">{usd(agoraAt("interactive", "hd", i), 3)}</td>
+                  <td class="num col-moqom">{usd(rateAt("interactive", "hd", i))}</td>
+                  <td class="num col-moqom">{usd(rateAt("broadcast", "hd", i))}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint">
+        USD per 1,000 participant-minutes. Every tier follows the same bands; <code>GET /v1/rates</code> lists them all.
+        Agora's automatic volume discounts are from agora.io, retrieved October 2026.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="recording">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Recording</span>
+        <h2>No recording fee. Every account can record.</h2>
+        <p class="lede">
+          Recording isn’t a separate product or a plan upgrade. A recording agent is billed like any other viewer, for
+          the bytes it receives, and storage is passed through at cost. Agora charges a recording fee on top.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Recorded hours per year</th>
+              <th class="num">Agora fee, HD</th>
+              <th class="num">Agora fee, Full HD</th>
+              <th class="num">MOQOM fee</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              [100_000, 1_000_000, 10_000_000, 100_000_000].map((hours) => (
+                <tr>
+                  <th scope="row">{hours.toLocaleString("en-US")}</th>
+                  <td class="num">{usd((hours * 60 * 5.99) / 1000, 0)}</td>
+                  <td class="num">{usd((hours * 60 * 13.49) / 1000, 0)}</td>
+                  <td class="num col-moqom">$0</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="glass callout notes">
+        <p>
+          <strong>100% off the recording fee, not the whole bill.</strong> On both platforms the recorder’s stream still
+          has to be delivered and stored. With MOQOM that is the same rate as any viewer, 15% under Agora. Self-hosted, it is your own cloud bill plus the per-GiB platform fee.
+        </p>
+        <p>
+          Agents that only need data, not media, can skip it entirely: room events, presence, moderation and usage come
+          straight from the control plane.
+        </p>
+        <p class="small faint">
+          Agora Cloud Recording list prices per 1,000 minutes: audio $1.49, HD $5.99, Full HD $13.49, 2K $23.99, 2K+
+          $53.99 (docs.agora.io, retrieved October 2026), charged on top of channel minutes.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="estimate">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Estimator</span>
+        <h2>Estimate a session</h2>
+        <p class="lede">Rough numbers before you commit. Everything is calculated in your browser.</p>
+      </div>
+      <Estimator />
+    </div>
+  </section>
+
+  <section class="section" id="self-hosted">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Self-hosted</span>
+        <h2>Run your own relays. Pay only the platform fee.</h2>
+        <p class="lede">
+          Run MOQOM relays on your own infrastructure and pay your provider for the bandwidth. MOQOM charges only the
+          platform fee: 5¢ per GiB delivered.
+        </p>
+        <p class="small muted">
+          Why 5¢: Agora bills per minute, and its cheapest rate works out to about 16¢ per GiB (720p to 1080p, watched
+          by a broadcast audience). At 5¢ the fee is about 69% under that. Agora charges more per GiB for smaller
+          video, so the gap widens: about 90% under at 360p and 97% under for audio. It never costs more than the same
+          minutes would on MOQOM Cloud.
+        </p>
+        <ul class="check-list">
+          <li>The same control plane, tokens, rooms and moderation as MOQOM Cloud</li>
+          <li>You still have an API key and a prepaid balance. Your relays report usage with a relay key</li>
+          <li>Relays keep admitting sessions while the balance is in good standing</li>
+          <li>For your own applications and users, including commercial ones</li>
+        </ul>
+      </div>
+      <div class="glass card reveal">
+        <h3>Example</h3>
+        <p class="muted small">A relay you run delivers 10 TiB in a month.</p>
+        <p class="mono big">10,240 GiB × $0.05 = <span class="col-moqom">$512.00</span></p>
+        <p class="small faint">You pay your cloud provider for egress and MOQOM for the platform fee.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="private-networks">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Private relay networks</span>
+        <h2>Relays that carry only your traffic.</h2>
+        <p class="lede">
+          Run your tenant on a relay pool nobody else uses: dedicated relays MOQOM hosts in the regions you pick, your
+          own relays, or both. Your tokens name your pool, so shared relays refuse them and your relays refuse everyone
+          else.
+        </p>
+        <ul class="check-list">
+          <li>Dedicated relays at 10¢ per relay-hour, cost plus 15%, from your prepaid balance</li>
+          <li>Static IPs you can allow-list, and your own host name if you want one</li>
+          <li>Your own relays join a pool at no extra charge</li>
+          <li>Private Service Connect, VPC peering or overlay-only access, with no public address at all</li>
+          <li>No spillover onto the shared fleet, ever</li>
+        </ul>
+        <p><a href="https://moqom.dev/guides/private-networks/">How private relay networks work</a></p>
+      </div>
+      <div class="glass card reveal">
+        <h3>Example</h3>
+        <p class="muted small">Two regions, two dedicated relays in each, for a month.</p>
+        <p class="mono big">4 × 730 h × $0.10 = <span class="col-moqom">$292.00</span></p>
+        <p class="small faint">Plus usage at the usual rates, 15% under Agora's.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="billing">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Billing</span>
+        <h2>Prepaid, transparent, self-serve.</h2>
+      </div>
+      <div class="grid grid-3">
+        <div class="glass card reveal">
+          <h3>Prepaid credit</h3>
+          <p class="small muted">
+            Add credit, then spend it. Top-ups start at {usd(PRICING.minTopUp, 0)}. There are no invoices to chase
+            and no surprise overage bills.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>Auto top-up</h3>
+          <p class="small muted">
+            Set a threshold and an amount, and your saved card is charged when the balance drops below it. Configure it
+            through the API.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>Stripe checkout and receipts</h3>
+          <p class="small muted">
+            Payment runs on Stripe-hosted checkout, so card details never reach MOQOM's servers. Receipts and saved
+            cards are in the Stripe customer portal.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <BillingApi />
+
+  <section class="section">
+    <div class="narrow faq">
+      <h2>Questions</h2>
+      <details>
+        <summary>What happens when my balance runs out?</summary>
+        <p class="muted">New sessions aren't admitted until you top up. Turn on auto top-up to avoid that during a live event.</p>
+      </details>
+      <details>
+        <summary>Why compare against Agora?</summary>
+        <p class="muted">
+          Agora publishes detailed per-minute list prices by role and resolution, which makes it a clear public
+          benchmark. Our rates are 85% of theirs for the same tier at the same volume, and always at least 1¢ under.
+        </p>
+      </details>
+      <details>
+        <summary>Is there a free tier?</summary>
+        <p class="muted">No. Pricing is prepaid, with a {usd(PRICING.minTopUp, 0)} minimum top-up.</p>
+      </details>
+      <details>
+        <summary>Do you offer committed-use pricing?</summary>
+        <p class="muted">Not needed: volume discounts apply automatically every month. For very large deployments, <a href="/company/">get in touch</a>.</p>
+      </details>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .volume {
+    margin-top: var(--space-3);
+  }
+  .cards-band {
+    padding-bottom: var(--space-6);
+  }
+  .formula {
+    margin-bottom: var(--space-4);
+  }
+  .cap {
+    border-color: rgb(34 211 238 / 0.4);
+    background-image: linear-gradient(180deg, var(--accent-soft), transparent 70%);
+  }
+  .cap .mono {
+    color: var(--accent);
+  }
+  .group {
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .tier-detail {
+    display: block;
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+  }
+  tbody th {
+    font-weight: 600;
+  }
+  .notes {
+    margin-top: var(--space-5);
+  }
+  .notes p:last-child {
+    margin-bottom: 0;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .big {
+    font-size: var(--text-lg);
+  }
+  .faq details {
+    border-bottom: 1px solid var(--glass-edge);
+    padding-block: var(--space-4);
+  }
+  .faq summary {
+    cursor: pointer;
+    font-weight: 560;
+  }
+  .faq details p {
+    margin: var(--space-3) 0 0;
+  }
+</style>

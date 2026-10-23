@@ -1,0 +1,17 @@
+// Page code for the Wix page that holds the custom element (Dev Mode → page code).
+// Replace #customElement1 with your element's ID, and the URLs and alt text with your own.
+$w.onReady(() => {
+  const viewer = $w('#customElement1');
+  viewer.setAttribute('src', 'https://YOUR-MODELS.web.app/models/chair.glb');
+  viewer.setAttribute('ios-src', 'https://YOUR-MODELS.web.app/models/chair.usdz');
+  viewer.setAttribute('alt', 'Oak chair with a woven seat');
+  viewer.setAttribute('ar', '');
+  viewer.setAttribute('camera-controls', '');
+  // Your licence key (https://viewer.elliottwave.studio/pricing/). Without it the viewer shows a
+  // small "Unlicensed" link on your published site; the model still works.
+  viewer.setAttribute('license-key', 'EWV-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX');
+  // Optional:
+  // viewer.setAttribute('auto-rotate', '');
+  // viewer.setAttribute('poster', 'https://YOUR-MODELS.web.app/models/chair.webp');
+  // viewer.setAttribute('background', '#ffffff');
+});

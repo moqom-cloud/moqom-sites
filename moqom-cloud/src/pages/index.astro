@@ -1,0 +1,997 @@
+---
+import Base from "../layouts/Base.astro";
+import BenchBadge from "../components/BenchBadge.astro";
+import BenchFootnote from "../components/BenchFootnote.astro";
+import BarChart from "../components/BarChart.astro";
+import FlowDiagram from "../components/FlowDiagram.astro";
+import CodeWindow from "../components/CodeWindow.astro";
+import PriceCards from "../components/PriceCards.astro";
+import { headline, latencyBars, fanoutBars } from "../data/benchmarks";
+import { LISTED_CLIENTS, BACKENDS, STATUS_LABEL, STATUS_PILL, STATUS_NOTE } from "../data/platforms";
+import LiveStats from "../components/LiveStats.astro";
+import IndrasNet from "../components/IndrasNet.astro";
+import Pillars from "../components/Pillars.astro";
+import { SITE, STATS_REPOS, STATS_URL } from "../data/site";
+import Linked from "../components/Linked.astro";
+const seen = new Set<string>();
+
+const swift = `
+import MoqomKit
+
+let deviceKey = try DeviceKey.installed()   // lives in the Secure Enclave
+
+// Your backend (moqom-go or moqom-rust) mints a short-lived token
+// and tells the app which relay to use.
+let (issued, relay) = try await backend.join(room: "standup", device: deviceKey)
+
+let session = MoqomSession(
+    transport: MoqtTransport.network(),
+    credentials: DeviceCredentials(
+        identity: ParticipantIdentity(username: try Username("ada"),
+                                      device: try DeviceID("ada-iphone")),
+        token: issued.token,
+        deviceKey: deviceKey,
+        expiresAt: issued.expiresAt,
+        renew: { try await backend.join(room: "standup", device: deviceKey).0 }
+    ),
+    tenant: TenantID("acme")
+)
+
+try await session.connect(to: relay)
+let room = try await session.join(room: RoomID("standup"))
+
+for await state in session.states {
+    print("session:", state)          // connecting, connected, reconnecting…
+}
+`;
+
+const security = [
+  {
+    title: "Encrypted media payloads",
+    body: "Every track is SFrame-encrypted on the device (RFC 9605, AES-256-GCM). The keys never leave your users' devices, so not even MOQOM can see the media; relays forward ciphertext and still cache and prioritise it. No perceptible latency: about 54 µs per 1080p keyframe. (Secure Frame, the IETF standard, not the Simple Frame stack-trace format.)",
+  },
+  {
+    title: "Tokens bound to the device",
+    body: "Every token is bound to an ML-DSA-87 key held in the device's Secure Enclave, and relays refuse a session that can't prove it holds that key. A token copied off the phone is useless anywhere else. Stricter than DPoP: binding is mandatory, the key is in hardware, and each proof is post-quantum, used once and tied to the connection it's sent on.",
+  },
+  {
+    title: "Bans take effect mid-session",
+    body: "Kick or ban someone through the admin API and their open connection closes. You don't have to wait for their token to expire.",
+  },
+  {
+    title: "Tenant isolation by construction",
+    body: "Every token names a tenant, a room and a set of grants, and the relay checks them against every namespace a request touches.",
+  },
+];
+
+const agents = [
+  {
+    title: "Pick what runs",
+    body: "Safety, classification, analytics, compliance, recording, or an agent of your own. Choose per room from your backend, cap how many attach, or rule out recording entirely.",
+  },
+  {
+    title: "Agents can moderate",
+    body: "An agent moderates with only the permissions you grant it. Every action lands in the room's audit log, and when a model made the call, the log names the model. MOQOM's own safety agents flag and limit in real time, and a person decides every kick and ban.",
+  },
+  {
+    title: "Private by design",
+    body: "Run detection and captions on the device, on decoded frames, so the media never has to leave the phone to be analysed. With end-to-end encryption, servers only ever see ciphertext.",
+  },
+  {
+    title: "Record at no extra cost",
+    body: "Room agents run privately inside your tenant and can record or capture data from a room. There is no recording fee: an agent is billed like any other viewer, at the same rate, and storage is passed through at cost. Self-hosted, you pay your own cloud bill plus the per-GiB platform fee.",
+  },
+  {
+    title: "AI participants with personalities",
+    body: "In progress. An agent can join as a participant: an animated, talking avatar with a personality you choose, running on on-device AI, that reacts to chat, captions and stream events like games. It can be put on stage, muted or removed like anyone else.",
+  },
+  {
+    title: "Disclosed, never hidden",
+    body: "Agents never pose as people or pad the viewer count. Each one is announced to the room and AI participants are always labelled as AI, so your app can show who is listening, recording, analysing or talking.",
+  },
+];
+
+const spaces = [
+  {
+    title: "AR games, shared live",
+    status: "In development",
+    body: "A host plays an AR game in their room while cohosts and viewers see the same board in theirs, in step with the video.",
+  },
+  {
+    title: "Every move in order",
+    status: "Swift SDK",
+    body: "Game events are numbered and arrive in order, never duplicated, never reordered. A slow network can delay a move, but it can’t change the result, and a viewer who reconnects lands in the exact current state.",
+  },
+  {
+    title: "Smooth at 60 ticks a second",
+    status: "Swift SDK",
+    body: "Positions and rotations travel as flat binary data that the renderer reads in place, zero-copy: a 50-entity tick reads in about 6 µs, so parsing never costs a frame and playback stays smooth.",
+  },
+];
+
+const encryption = [
+  {
+    title: "Post-quantum authentication, not just secrecy",
+    body: "Some messengers made recorded messages quantum-safe but kept classical identity keys, so a future quantum computer could still impersonate a contact. Here every identity key, device credential, key package, group change and message signature is ML-DSA-87, so impersonation is quantum-resistant too.",
+  },
+  {
+    title: "Post-quantum, end to end",
+    body: "Room keys are agreed with ML-KEM-1024 and every member’s handshake is signed with ML-DSA-87, NIST’s post-quantum standards (FIPS 203 and 204), inside MLS (RFC 9420). Media stays on AES-256, which a quantum computer doesn’t break, so it costs no more than before. There is nothing to turn on.",
+  },
+  {
+    title: "Standard cryptography, nothing homemade",
+    body: "SFrame and MLS are IETF standards, ML-KEM and ML-DSA are NIST’s, and AES-256-GCM is the cipher banks and governments use. Every primitive comes from Apple’s CryptoKit, not our own implementation, and where we combine them the result is checked against Go’s standard library with shared test vectors.",
+  },
+  {
+    title: "More than AES-GCM alone",
+    body: "AES-GCM protects the bytes it encrypts. MOQOM also binds each frame’s position, priority and timing into the seal, so a relay can route frames but can’t reorder, relabel or swap them without the receiver noticing.",
+  },
+  {
+    title: "Replays refused",
+    body: "Every frame’s key and counter are accepted once. A captured frame sent again, or an old one sent late, is rejected instead of played.",
+  },
+  {
+    title: "Nonces never repeat",
+    body: "A repeated nonce is the one way AES-GCM fails badly. Each sender’s nonces come from its own counter, so they never repeat.",
+  },
+  {
+    title: "Can’t be skipped",
+    body: "Encryption wraps the stream writer itself, so there is no path from a frame to the network that goes around it.",
+  },
+  {
+    title: "Two layers, not one",
+    body: "Under SFrame, every hop also runs TLS 1.3 inside QUIC, with ML-KEM-1024 key exchange on every device connection and every link between our servers. The SDK brings its own QUIC and TLS stack, so the phone’s operating system doesn’t get to pick something weaker. Classical-only key exchange is refused, and only devices holding a valid, device-bound token can join. Breaking one layer still leaves the other.",
+  },
+];
+
+const resilience = [
+  {
+    title: "Survives the network switch",
+    body: "Walk out of Wi-Fi onto cellular and the QUIC connection moves with you. No redial, no new handshake, no dropped call.",
+  },
+  {
+    title: "Heals itself",
+    body: "If the network does drop, the SDK reconnects with backoff and restores subscriptions, mutes, grants and stage position exactly. Others see you as reconnecting, not gone.",
+  },
+  {
+    title: "Bends instead of breaking",
+    body: "Bandwidth is estimated continuously and video steps down a layer before it stalls. Buffers drop late frames rather than freezing the picture.",
+  },
+  {
+    title: "No head-of-line stalls",
+    body: "Every track rides its own QUIC stream, so a lost packet on one never holds up the others. Missed pieces are fetched back or skipped, never waited on forever.",
+  },
+];
+
+const durable = [
+  {
+    title: "First frame, instantly",
+    body: "A new viewer gets the group already in progress, so a tile fills the moment it opens instead of sitting black until the next keyframe.",
+  },
+  {
+    title: "Back on screen after a drop",
+    body: "After a drop, the SDK reconnects, rebinds every subscription and fills the picture from the relay’s recent history. No relayout, no blank screen.",
+  },
+  {
+    title: "Instant replay",
+    body: "Replay the last seconds of anyone’s video as its own stream, without disturbing the live picture. How far back depends on what the relay holds.",
+  },
+  {
+    title: "Never slows the live edge",
+    body: "History is kept alongside live forwarding, never in its path, so it can’t stall the stream. It works with end-to-end encryption: relays keep ciphertext they can’t read.",
+  },
+];
+
+const dataTracks = [
+  {
+    title: "Data rides with the video",
+    body: "Chat, game state, reactions, telemetry: any app data travels as tracks on the same QUIC connection as the media, prioritised and fanned out by the same relay.",
+  },
+  {
+    title: "Zero-copy decode",
+    body: "A FlatBuffers-style layout the client reads straight out of the received buffer, with no parse step and no allocation, and positions go to the GPU as they arrived. A 50-entity game tick reads in 5.7 µs against 163 µs for JSON and is 1.9× smaller, without FlatBuffers’ 7,400-line runtime.†",
+  },
+  {
+    title: "Encrypted like media",
+    body: "TLS 1.3 on every hop, always. Data is end-to-end encrypted on the device too, and the relay forwards ciphertext it can’t read. Sealing a 60-byte message takes about 3 µs.†",
+  },
+  {
+    title: "Hostile input assumed",
+    body: "Every read is bounds-checked and a malformed record returns an error instead of crashing. Tested against truncation at every length and thousands of random buffers.",
+  },
+];
+
+const story = [
+  {
+    kicker: "One stream",
+    title: "One stream for calls and broadcast",
+    body: "The stream that carries a two-person call also reaches an audience of thousands. One protocol and one SDK, with no second product to move to when the audience grows.",
+  },
+  {
+    kicker: "Fast",
+    title: "Sub-60 ms glass to glass*",
+    body: `${headline.latencyMedian} median from light hitting one camera to pixels on another screen: two iPhone 15 Pros through a cloud relay, both directions at once.`,
+  },
+  {
+    kicker: "Private",
+    title: "Encrypted per frame",
+    body: `Every frame is encrypted on the device before it leaves, with keys that never leave your users' devices, so not even MOQOM can see it. A 1080p keyframe takes about ${headline.sframeCost}* to encrypt, a sliver of a 33 ms frame budget, with no perceptible delay.`,
+  },
+];
+---
+
+<Base>
+  <section class="hero">
+    <IndrasNet />
+    <div class="orb orb-cyan depth-3 h-o1" aria-hidden="true"></div>
+    <div class="orb orb-violet depth-2 h-o2" aria-hidden="true"></div>
+    <div class="orb orb-amber depth-1 h-o3" aria-hidden="true"></div>
+    <div class="container hero-grid hero-zoom">
+      <div>
+        <span class="eyebrow">MOQOM · Media Over QUIC Orchestration Mesh</span>
+        <p class="small faint name-note">A palindrome on purpose: one relay platform that broadcasts and receives, both ways.</p>
+        <h1 class="hero-title text-sweep">Real-time video on <span class="gradient-text">Media over QUIC</span>, encrypted end to end.</h1>
+        <p class="lede">
+          Sub-60 ms glass-to-glass<sup class="star">*</sup>, from light hitting one camera to pixels on another
+          screen. MOQOM is a relay, a control plane and native SDKs, built on the IETF's new real-time media standard.
+          Every room is end-to-end encrypted, always, so relays forward media they can't read. You pay what
+          delivery costs, and never more than Agora's list price.
+        </p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="/signup/">Get an API key</a>
+          <a class="btn" href={SITE.docs} rel="noopener">Read the docs ↗</a>
+        </div>
+        <p class="small faint hero-note">Prepaid credit from $10. No contract and no sales call.</p>
+      </div>
+      <div class="glass glass--strong card hero-stat depth-1">
+        <div class="big-num"><span class="gradient-text">56</span><span class="unit">ms<sup class="star">*</sup></span></div>
+        <p class="muted">median glass-to-glass latency, 720p30, two iPhone 15 Pros through a cloud relay, both directions at once</p>
+        <dl class="mini">
+          <div><dt>p95</dt><dd>{headline.latencyP95}</dd></div>
+          <div><dt>Fan-out</dt><dd>{headline.fanoutSubscribers} viewers</dd></div>
+          <div><dt>On</dt><dd>{headline.fanoutMachine}</dd></div>
+        </dl>
+        <BenchBadge />
+      </div>
+    </div>
+    <div class="container"><BenchFootnote /></div>
+  </section>
+
+  <Pillars />
+
+  <section class="pin-stage story" aria-labelledby="story-title">
+    <div class="pin-sticky">
+      <div class="container story-grid">
+        <div>
+          <span class="eyebrow">Why MOQOM</span>
+          <h2 id="story-title" class="visually-hidden">Why MOQOM</h2>
+          <ol class="story-steps" role="list">
+            {
+              story.map((s, i) => (
+                <li class="pin-step">
+                  <span class="step-num mono">0{i + 1}</span>
+                  <h3>{s.title}</h3>
+                  <p class="muted"><Linked text={s.body} seen={seen} /></p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+        <div class="story-visual" aria-hidden="true">
+          <div class="orb orb-cyan depth-3 s-o1"></div>
+          <div class="orb orb-violet depth-2 s-o2"></div>
+          <div class="tiles">
+            <div class="glass glass--strong pin-step tile t1">
+              <span class="tile-num gradient-text">1</span><span class="tile-label">stream · call + broadcast</span>
+            </div>
+            <div class="glass glass--strong pin-step tile t2">
+              <span class="tile-num gradient-text">56</span><span class="tile-label">ms median*</span>
+            </div>
+            <div class="glass glass--strong pin-step tile t3">
+              <span class="tile-num gradient-text">54</span><span class="tile-label">µs per 1080p keyframe*</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container"><BenchFootnote /></div>
+    </div>
+  </section>
+
+  <section class="section has-orbs" id="numbers">
+    <div class="orb orb-violet depth-3 n-o1" aria-hidden="true"></div>
+    <div class="orb orb-cyan depth-2 n-o2" aria-hidden="true"></div>
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Key numbers</span>
+        <h2 class="text-sweep">Fast for the people on the call. Efficient for the people paying for it.</h2>
+        <p class="lede">
+          Glass-to-glass counts everything a person experiences: capture, encode, network, buffer, decode and display.
+          Fan-out is one relay and one track, and a size only counts if every viewer got every frame.
+        </p>
+        <BenchBadge />
+      </div>
+
+      <div class="grid grid-4 stats">
+        <div class="glass card stat reveal--scale">
+          <div class="stat-num">{headline.latencyMedian}</div>
+          <div class="stat-label">median glass-to-glass<sup>*</sup></div>
+        </div>
+        <div class="glass card stat reveal--scale">
+          <div class="stat-num">{headline.latencyP95}</div>
+          <div class="stat-label">p95, every frame delivered<sup>*</sup></div>
+        </div>
+        <div class="glass card stat reveal--scale">
+          <div class="stat-num">{headline.fanoutSubscribers}</div>
+          <div class="stat-label">viewers on one 4-vCPU relay, zero loss<sup>*</sup></div>
+        </div>
+        <div class="glass card stat reveal--scale">
+          <div class="stat-num">{headline.fanoutThroughput}</div>
+          <div class="stat-label">egress from that one relay<sup>*</sup></div>
+        </div>
+      </div>
+      <div class="stats-strip reveal">
+        <LiveStats repos={STATS_REPOS} statsUrl={STATS_URL} heading="In the open" />
+      </div>
+
+      <div class="grid grid-2 charts">
+        <div class="glass card depth-1">
+          <BarChart
+            title="Glass-to-glass latency, two iPhone 15 Pros via a relay in Los Angeles (ms)"
+            description="Median 56 to 57 ms and p95 70 ms at 720p30; 61 ms with layout changes; 66 ms alongside an AR game; 69 ms at 540p60."
+            bars={latencyBars}
+            max={100}
+            ticks={[0, 25, 50, 75, 100]}
+            reference={{ value: 60, label: "60 ms" }}
+          />
+        </div>
+        <div class="glass card depth-2">
+          <BarChart
+            title="One 4-vCPU relay: egress with zero loss (Gbit/s)"
+            description="4,000 subscribers 3.57 Gbit/s; 4,500 4.11; 5,000 4.59; 5,500 5.04; 6,000 5.46."
+            bars={fanoutBars}
+            max={6}
+            ticks={[0, 2, 4, 6]}
+          />
+        </div>
+      </div>
+      <p class="small faint footnote">
+        {headline.latencyMedian} median and {headline.latencyP95} p95: two iPhone 15 Pros on ordinary home Wi-Fi in
+        Venice Beach, California (about 108 Mbps down, 8 Mbps up), shared with TVs and other devices streaming movies at
+        the same time; GCP relay in us-west2. Fan-out: GCP n2-standard-4, one publisher, one track, 6,000 is the largest size tested, not
+        the ceiling. Not production SLAs. <a href="/benchmarks/">Full results →</a>
+      </p>
+      <BenchFootnote />
+    </div>
+  </section>
+
+  <section class="section" id="resilience">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Resilience</span>
+        <h2 class="text-sweep">Built for the network your users actually have.</h2>
+        <p class="lede">
+          Mobile video and data run on networks that drop, switch and congest. MOQOM treats that as the normal case:
+          the network and the SDKs heal themselves, and it’s on by default.
+        </p>
+      </div>
+      <div class="grid grid-4">
+        {
+          resilience.map((r) => (
+            <div class="glass card reveal">
+              <h3>{r.title}</h3>
+              <p class="small muted"><Linked text={r.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="durable">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Durable playback</span>
+        <h2 class="text-sweep">The picture comes back. Fast.</h2>
+        <p class="lede">
+          Every relay keeps the most recent seconds of every stream, about 16 seconds by default. Viewers who join late,
+          drop out or want to see it again are served from the nearest relay, not from the person publishing.
+        </p>
+      </div>
+      <div class="grid grid-4">
+        {
+          durable.map((d) => (
+            <div class="glass card reveal">
+              <h3>{d.title}</h3>
+              <p class="small muted"><Linked text={d.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="small muted footnote">
+        <strong>Durable event streams, too.</strong> Every join, mute, grant change and moderation decision is stored
+        before it is sent, numbered in order per room. A backend that restarts picks up from its last event and gets
+        everything it missed, so no moderation verdict falls through the gap.
+        <a href="https://moqom.dev/guides/events-and-billing/#durable-event-streams">Events guide →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="encryption">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">End-to-end encryption</span>
+        <h2 class="text-sweep">Encrypted on the device. Not even MOQOM can see it.</h2>
+        <p class="lede">
+          In every room: every frame of audio, video and data is sealed on the sender’s device with
+          <strong>SFrame (<a href="https://www.rfc-editor.org/rfc/rfc9605" rel="noopener">RFC 9605</a>)</strong> using <strong>AES-256-GCM with SHA-512</strong>, and opened only on the
+          receiver’s. The devices agree those keys with <strong>post-quantum cryptography</strong>, so a call
+          recorded today stays sealed even against a future quantum computer, and every signature that says who
+          someone is is post-quantum too, so nobody can impersonate them with one either. Relays, MOQOM and the
+          cloud underneath carry ciphertext they cannot read. It runs on the phone’s hardware AES, about 54 µs per
+          1080p keyframe. There is no setting that turns it off.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        {
+          encryption.map((e) => (
+            <div class="glass card reveal">
+              <h3>{e.title}</h3>
+              <p class="small muted"><Linked text={e.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="small faint footnote">
+        Keys are agreed on the devices with MLS (<a href="https://www.rfc-editor.org/rfc/rfc9420" rel="noopener">RFC 9420</a>) using
+        MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87, the category-5 suite from the IETF’s <a href="https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/" rel="noopener">post-quantum MLS cipher suites draft</a>. Join tokens are
+        signed with ML-DSA-87 and last 15 minutes at most, and the phone proves it holds its token with ML-DSA-87 too.
+        The libraries that do all of this are <a href="/security/#open-source">open source</a>.
+        <a href="/security/#pq-authentication">Post-quantum authentication, compared with Signal →</a>
+        <a href="/security/#post-quantum">What is and isn’t post-quantum →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2 class="text-sweep">One publisher, one relay hop, thousands of viewers.</h2>
+        <p class="lede">
+          MoQ moves media as named tracks over QUIC, so a relay forwards it without decoding it. Your backend
+          controls who joins. The relay handles the rest.
+        </p>
+      </div>
+      <div class="glass card flow-card reveal--scale"><FlowDiagram /></div>
+      <ol class="grid grid-3 steps">
+        <li class="glass card reveal">
+          <span class="step">1</span>
+          <h3>Your backend mints a token</h3>
+          <p class="muted">
+            With the Go or Rust SDK, create a room, set its policy and mint a short-lived token naming the tenant, the
+            room and exactly what this participant may do.
+          </p>
+        </li>
+        <li class="glass card reveal">
+          <span class="step">2</span>
+          <h3>The app joins over QUIC</h3>
+          <p class="muted">
+            The client SDK connects to the relay over QUIC or WebTransport. Both use one UDP port, so the handshake is
+            the only setup. Media starts on a keyframe.
+          </p>
+        </li>
+        <li class="glass card reveal">
+          <span class="step">3</span>
+          <h3>The relay fans out</h3>
+          <p class="muted">
+            Each track is pulled from the publisher once, however large the audience. When the last viewer leaves, the
+            relay stops pulling it.
+          </p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="code">
+    <div class="container code-grid">
+      <div class="reveal">
+        <span class="eyebrow">For developers</span>
+        <h2 class="text-sweep">Connect, join, and you're in the room.</h2>
+        <p class="lede">
+          MoqomKit is an open-source (Apache 2.0) SDK that both streams and plays. It is pure Swift, with its own
+          implementation of the IETF MoQ transport draft-19 rather than a wrapper around a Rust core, and no third-party
+          dependencies. It uses async/await throughout and is Swift 6 strict-concurrency clean.
+        </p>
+        <ul class="check-list">
+          <li>Hardware encode and decode through VideoToolbox, HEVC and H.264</li>
+          <li>Tiles are fetched at the size they're shown, and a track nobody is watching stops being sent at all</li>
+          <li>Muting stops bytes at the encoder instead of sending silence, and the relay forwards without ever decoding</li>
+          <li>The SDK renews the token before it expires, without reconnecting</li>
+          <li>No handoff. A viewer becomes a guest or host on the same connection: the token's grants change, nothing reconnects</li>
+          <li>Reconnects after a network change and restores the room's exact state</li>
+          <li>Raw frames and samples are available after decryption, for your own processing</li>
+          <li>Zero-copy on Apple platforms: frames stay in GPU memory from camera to hardware encoder, and from decoder to screen</li>
+          <li>Go and Rust SDKs for the server side, over gRPC, with user management and a live stream of room events built in</li>
+          <li>Analytics stay anonymous: usage is metered by role, tier, seconds and bytes, not by person</li>
+          <li>No advertising IDs or ad keys in the SDK. Your app can add its own if it chooses</li>
+        </ul>
+        <div class="btn-row">
+          <a class="btn" href={SITE.docs} rel="noopener">Quickstart on moqom.dev ↗</a>
+        </div>
+      </div>
+      <div class="reveal--scale"><CodeWindow code={swift} lang="swift" filename="JoinRoom.swift" /></div>
+    </div>
+  </section>
+
+  <section class="section" id="platforms">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Platforms</span>
+        <h2 class="text-sweep">Native on Apple platforms today. Everywhere else is next.</h2>
+      </div>
+      <div class="grid grid-3 plat">
+        {
+          LISTED_CLIENTS.map((p) => (
+            <a class="glass glass--interactive card plat-card reveal" href="/platforms/">
+              <div class="plat-top">
+                <h3>{p.name}</h3>
+                <span class={STATUS_PILL[p.status]}>{STATUS_LABEL[p.status]}</span>
+              </div>
+              <p class="small muted plat-pkg">{p.pkg}</p>
+              <p class="small plat-status">{STATUS_NOTE[p.status]}</p>
+            </a>
+          ))
+        }
+        <a class="glass glass--interactive card plat-card reveal" href="/platforms/#backend">
+          <div class="plat-top">
+            <h3>Backend SDKs</h3>
+            <span class="pill pill-ok">Available</span>
+          </div>
+          <p class="small muted plat-pkg">{BACKENDS.map((b) => b.name).join(" · ")}</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="security">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Security</span>
+        <h2 class="text-sweep">End-to-end encrypted in every room. Required, not an add-on.</h2>
+        <p class="lede">
+          TLS 1.3 protects every media connection, because QUIC requires it, and end-to-end encryption protects the
+          media inside it. MOQOM adds protections on top of that, and they come built in rather than left for your
+          application to write.
+        </p>
+      </div>
+      <div class="grid grid-4">
+        {
+          security.map((s) => (
+            <div class="glass card reveal">
+              <h3>{s.title}</h3>
+              <p class="small muted"><Linked text={s.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <div class="btn-row more"><a class="btn btn-ghost" href="/security/">How MOQOM handles security →</a></div>
+    </div>
+  </section>
+
+  <section class="section" id="agents">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">AI native</span>
+        <h2 class="text-sweep">AI agents in the room. Only the ones you choose.</h2>
+        <p class="lede">
+          MOQOM is AI native: agents join a room over the same protocol and relays as people, with their own scoped
+          keys, so there is no separate AI path to bolt on. Attach them to live video for detection, classification,
+          moderation, safety, captions, analytics or compliance, picked room by room. They work in real time, and they
+          never watch in secret.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        {
+          agents.map((a) => (
+            <div class="glass card reveal">
+              <h3>{a.title}</h3>
+              <p class="small muted"><Linked text={a.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <div class="btn-row more">
+        <a class="btn btn-ghost" href="https://moqom.dev/guides/moderation/" rel="noopener">Moderation and agents on moqom.dev ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="spaces">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Shared spaces</span>
+        <h2 class="text-sweep">Play together, live, on the same stream.</h2>
+        <p class="lede">
+          Game state rides the same connection as the video, so host and viewers share one moment rather than two that
+          drift apart.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        {
+          spaces.map((s) => (
+            <div class="glass card reveal">
+              <span class={s.status === "In development" ? "pill pill-planned" : "pill pill-ok"}>{s.status}</span>
+              <h3>{s.title}</h3>
+              <p class="small muted"><Linked text={s.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="data">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Data tracks</span>
+        <h2 class="text-sweep">Data channels built for speed, and for the worst sender in the room.</h2>
+      </div>
+      <div class="grid grid-4">
+        {
+          dataTracks.map((d) => (
+            <div class="glass card reveal">
+              <h3>{d.title}</h3>
+              <p class="small muted"><Linked text={d.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="small faint footnote">
+        † Measured in a release build on an Apple M1 Pro MacBook Pro, averaged over 200 runs: reading every moved
+        position out of one tick of 50 entities (1,831 bytes; 3,528 as JSON), and sealing one 60-byte object with SFrame.
+        <a href="https://moqom.dev/specs/benchmarks/#data-messages">Every data benchmark →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="container">
+      <span class="eyebrow">Pricing</span>
+      <PriceCards heading="15% under Agora. At every tier, at every volume." showKeyPoints={false} />
+      <p class="lede reveal">
+        Every rate is 85% of Agora's Interactive Live Streaming list price, after the same automatic volume discount
+        Agora gives, and always at least 1¢ under it per 1,000 minutes.
+      </p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="/pricing/">See all pricing and estimate a bill →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section final">
+    <div class="container final-inner reveal--scale">
+      <h2 class="text-sweep">Ship end-to-end encrypted real-time video this week.</h2>
+      <p class="lede">Create an account, get an API key, add credit and join your first room.</p>
+      <div class="btn-row center">
+        <a class="btn btn-primary" href="/signup/">Get an API key</a>
+        <a class="btn" href={SITE.docs} rel="noopener">Read the docs ↗</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+    padding-block: var(--space-9) var(--space-7);
+  }
+  .h-o1 {
+    width: 520px;
+    height: 520px;
+    right: -80px;
+    top: -60px;
+  }
+  .h-o2 {
+    width: 420px;
+    height: 420px;
+    left: 30%;
+    top: 40%;
+  }
+  .h-o3 {
+    width: 300px;
+    height: 300px;
+    left: -80px;
+    bottom: -40px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--space-7);
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .hero-title {
+    font-size: var(--text-hero);
+    letter-spacing: -0.035em;
+    max-width: 16ch;
+  }
+  .hero-note {
+    margin-top: var(--space-4);
+  }
+  .name-note {
+    margin: var(--space-2) 0 var(--space-4);
+  }
+  .star,
+  .stat-label sup {
+    color: var(--warn);
+  }
+  .hero-stat {
+    padding: var(--space-6);
+  }
+  .big-num {
+    font-size: clamp(4rem, 3rem + 4vw, 6.5rem);
+    font-weight: 750;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin-bottom: var(--space-3);
+  }
+  .unit {
+    font-size: 0.35em;
+    color: var(--text-muted);
+    margin-left: 0.15em;
+    letter-spacing: 0;
+  }
+  .mini {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--glass-edge);
+  }
+  .mini dt {
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .mini dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  /* Pinned story */
+  .story {
+    isolation: isolate;
+  }
+  .story :global(.bench-footnote) {
+    margin-top: var(--space-6);
+  }
+  .story-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--space-7);
+    align-items: center;
+  }
+  .story-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .story-steps h3 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-2);
+  }
+  .story-steps p {
+    margin: 0;
+    max-width: 48ch;
+  }
+  .step-num {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-bottom: var(--space-1);
+  }
+  .story-visual {
+    position: relative;
+  }
+  .tiles {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .s-o1 {
+    width: 360px;
+    height: 360px;
+    right: -40px;
+    top: -60px;
+  }
+  .s-o2 {
+    width: 300px;
+    height: 300px;
+    left: -40px;
+    bottom: -60px;
+  }
+  .tile {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-6);
+  }
+  .t2 {
+    margin-left: var(--space-7);
+  }
+  .t3 {
+    margin-left: var(--space-5);
+  }
+  .tile-num {
+    font-size: clamp(2.6rem, 2rem + 2.5vw, 4rem);
+    font-weight: 750;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .tile-label {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 900px) {
+    .story-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+    .story-steps {
+      gap: var(--space-4);
+    }
+    .story-steps h3 {
+      font-size: var(--text-xl);
+    }
+    .story-visual {
+      display: none;
+    }
+    .pin-sticky {
+      top: 120px;
+      min-height: auto;
+    }
+  }
+
+  .has-orbs {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+  }
+  .n-o1 {
+    width: 460px;
+    height: 460px;
+    left: -120px;
+    top: 30%;
+  }
+  .n-o2 {
+    width: 380px;
+    height: 380px;
+    right: -100px;
+    bottom: 10%;
+  }
+  .stats {
+    margin-bottom: var(--space-5);
+  }
+  .stats-strip {
+    --stats-bg: var(--glass-fill);
+    --stats-line: var(--glass-edge);
+    --stats-dim: var(--text-muted);
+    --stats-radius: var(--glass-radius);
+    margin-bottom: var(--space-6);
+  }
+  .stats-strip :global(.ls-card) {
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+  .stats-strip :global(.ls-heading) {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+  }
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .stat-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .footnote {
+    margin-top: var(--space-5);
+    max-width: 90ch;
+  }
+  .flow-card {
+    padding: var(--space-5) var(--space-5) var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .step {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+  }
+  .code-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: var(--space-7);
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .code-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .code-grid > * {
+    min-width: 0;
+  }
+  .check-list {
+    margin-bottom: var(--space-5);
+  }
+  .plat-card {
+    color: inherit;
+  }
+  .plat-card:hover {
+    text-decoration: none;
+  }
+  .plat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .plat-top h3 {
+    margin: 0;
+  }
+  .plat-pkg {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-mono);
+  }
+  .plat-status {
+    margin: var(--space-2) 0 0;
+    color: #b79cfb;
+  }
+  .more {
+    margin-top: var(--space-5);
+  }
+  #pricing :global(.pc) {
+    padding-top: 0;
+  }
+  .final {
+    text-align: center;
+  }
+  .final-inner .lede {
+    margin-inline: auto;
+  }
+  .center {
+    justify-content: center;
+  }
+</style>

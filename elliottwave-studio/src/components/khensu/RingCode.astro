@@ -1,0 +1,244 @@
+---
+// A ñüCode, the ring code of khensu-specs design/ring-code.md: a 3D disc of 444 data points on six rings, interlaced
+// with a flower of life, around the ñü.isheru stone seal. Each point's angular offset and brightness is set by the
+// bytes it carries; the flower and the pulses carry no data. The bytes here come from a sample address.
+const RINGS = [54, 62, 70, 78, 86, 94];
+const C = 200;
+let seed = 0x6b68656e;
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+
+type P = { x: number; y: number; r: number; o: number; d: number; ring: number; a: number };
+const pts: P[] = [];
+RINGS.forEach((n, ring) => {
+  const rad = 62 + ring * 25;
+  for (let i = 0; i < n; i++) {
+    const bits = Math.floor(rand() * 8);
+    const a = ((i + (bits & 3) * 0.22) / n) * Math.PI * 2 - Math.PI / 2;
+    pts.push({ x: C + rad * Math.cos(a), y: C + rad * Math.sin(a), r: bits & 4 ? 2.4 : 1.6, o: bits & 4 ? 1 : 0.55, d: rand() * 4, ring, a });
+  }
+});
+
+const ringLines: string[][] = RINGS.map(() => []);
+const byRing = RINGS.map((_, i) => pts.filter((p) => p.ring === i));
+for (let ring = 1; ring < RINGS.length; ring++) {
+  for (const p of byRing[ring]) {
+    const near = byRing[ring - 1]
+      .map((q) => ({ q, d: Math.abs(Math.atan2(Math.sin(q.a - p.a), Math.cos(q.a - p.a))) }))
+      .sort((m, n) => m.d - n.d)
+      .slice(0, 2);
+    for (const { q } of near) ringLines[ring].push(`M${p.x.toFixed(1)} ${p.y.toFixed(1)}L${q.x.toFixed(1)} ${q.y.toFixed(1)}`);
+  }
+}
+const pulses = ringLines.map((ls) => ls.filter(() => rand() < 0.08).map((d) => ({ d, delay: (rand() * 6).toFixed(2), dur: (1.6 + rand() * 1.6).toFixed(2) })));
+
+// Flower of life: one circle, six around it, twelve around those, spread over three depths so it weaves
+// between the data rings.
+const R = 60;
+const centres: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+for (let k = 0; k < 6; k++) {
+  const a = (k * Math.PI) / 3 - Math.PI / 2;
+  centres.push({ x: R * Math.cos(a), y: R * Math.sin(a) });
+}
+for (let k = 0; k < 6; k++) {
+  const a = (k * Math.PI) / 3 - Math.PI / 2;
+  const b = a + Math.PI / 6;
+  centres.push({ x: 2 * R * Math.cos(a), y: 2 * R * Math.sin(a) });
+  centres.push({ x: Math.sqrt(3) * R * Math.cos(b), y: Math.sqrt(3) * R * Math.sin(b) });
+}
+const petals = [0, 1, 2].map((weave) =>
+  centres
+    .map((c, i) => ({ cx: C + c.x, cy: C + c.y, i }))
+    .filter((c) => c.i % 3 === weave)
+    .map((c) => ({ ...c, pulse: rand() < 0.35, delay: (rand() * 8).toFixed(2), dur: (5 + rand() * 4).toFixed(2) })),
+);
+---
+
+<section class="section ring-sec" id="nucode-section" aria-labelledby="nucode-title">
+  <div class="wrap ring-grid">
+    <figure class="ring-fig">
+      <div class="ring-view" role="img" aria-label="A ñüCode: a disc of 444 points on six rings, interlaced with a flower of life, around the ñü.isheru stone seal.">
+        <div class="ring-stage">
+          <div class="ring-glow"></div>
+          {RINGS.map((_, ring) => (
+            <svg class="ring-layer" viewBox="-20 -20 440 440" style={`--z:${ring * 12}px`} aria-hidden="true">
+              <path class="ring-lines" d={ringLines[ring].join('')} />
+              {pulses[ring].map((p) => <path class="ring-pulse" d={p.d} pathLength="1" style={`animation-delay:${p.delay}s;animation-duration:${p.dur}s`} />)}
+              {byRing[ring].map((p) => (
+                <circle class="ring-dot" cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r} style={`--o:${p.o};animation-delay:-${p.d.toFixed(2)}s`} />
+              ))}
+            </svg>
+          ))}
+          {petals.map((group, weave) => (
+            <svg class="ring-layer flower" viewBox="-20 -20 440 440" style={`--z:${6 + weave * 24}px`} aria-hidden="true">
+              {weave === 0 && (
+                <>
+                  <circle class="petal bound" cx={C} cy={C} r={3 * R} />
+                  <circle class="petal bound" cx={C} cy={C} r={3 * R + 7} />
+                </>
+              )}
+              {group.map((c) => (
+                <>
+                  <circle class="petal" cx={c.cx.toFixed(1)} cy={c.cy.toFixed(1)} r={R} />
+                  {c.pulse && <circle class="petal-pulse" cx={c.cx.toFixed(1)} cy={c.cy.toFixed(1)} r={R} pathLength="1" style={`animation-delay:-${c.delay}s;animation-duration:${c.dur}s`} />}
+                </>
+              ))}
+            </svg>
+          ))}
+          <div class="ring-seal">
+            <span class="seal-rim"></span>
+            <img src="/seal.webp" alt="" width="512" height="512" loading="lazy" decoding="async" />
+          </div>
+        </div>
+      </div>
+      <figcaption>A ñüCode.</figcaption>
+    </figure>
+    <div>
+      <p class="eyebrow">ñüCode</p>
+      <h2 id="nucode-title" class="big">No QR codes. <em>A ñüCode that’s only yours.</em></h2>
+      <p class="lede">
+        Show your ñüCode and a friend’s camera reads it in about two seconds. 444 points, placed by the data they carry,
+        so no two ñüCodes are alike.
+      </p>
+      <ul class="ring-list" role="list">
+        <li><b>New every time</b><span>Each live ñüCode carries a fresh one-time ML-KEM-1024 key, so a photo of it is useless once it’s used or after five minutes.</span></li>
+        <li><b>In your contact card</b><span>Add your khėnsu.ñü profile to your own card in Contacts, so it travels with NameDrop and contact sharing. Only your public handle, never keys.</span></li>
+        <li><b>In Apple Wallet</b><span>Your ñüCode as a Wallet pass, with no barcode and no web service behind it, so it never phones home.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ring-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  .ring-fig { margin: 0; }
+  .ring-fig figcaption { margin-top: 0.6rem; text-align: center; font-size: 0.75rem; color: var(--muted, rgba(255, 255, 255, 0.5)); }
+  .ring-view {
+    position: relative;
+    width: 100%;
+    max-width: 30rem;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    perspective: 1400px;
+  }
+  .ring-stage {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    animation: nucode-disc 48s linear infinite;
+  }
+  @keyframes nucode-disc {
+    0% { transform: rotateX(16deg) rotateY(-12deg) rotateZ(0deg); }
+    25% { transform: rotateX(-6deg) rotateY(-18deg) rotateZ(90deg); }
+    50% { transform: rotateX(-16deg) rotateY(10deg) rotateZ(180deg); }
+    75% { transform: rotateX(8deg) rotateY(18deg) rotateZ(270deg); }
+    100% { transform: rotateX(16deg) rotateY(-12deg) rotateZ(360deg); }
+  }
+  .ring-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform: translateZ(var(--z));
+  }
+  .ring-glow {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    background:
+      radial-gradient(closest-side, rgba(139, 123, 255, 0.3), rgba(46, 229, 157, 0.08) 62%, transparent),
+      radial-gradient(closest-side, transparent 88%, rgba(185, 173, 255, 0.18) 94%, transparent);
+    transform: translateZ(-14px);
+    filter: blur(5px);
+  }
+  .ring-lines { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 0.6; }
+  .ring-dot {
+    fill: #fff;
+    opacity: var(--o);
+    filter: drop-shadow(0 0 2px rgba(185, 173, 255, 0.8));
+    animation: ring-twinkle 4s ease-in-out infinite;
+  }
+  .ring-pulse {
+    fill: none;
+    stroke: #b9adff;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-dasharray: 0.18 1;
+    stroke-dashoffset: 1.18;
+    opacity: 0;
+    animation: ring-pulse 2.4s linear infinite;
+  }
+  .petal {
+    fill: none;
+    stroke: rgba(196, 186, 255, 0.34);
+    stroke-width: 0.9;
+    filter: drop-shadow(0 0 3px rgba(139, 123, 255, 0.55));
+  }
+  .petal.bound { stroke: rgba(196, 186, 255, 0.24); }
+  .petal-pulse {
+    fill: none;
+    stroke: #2ee59d;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-dasharray: 0.08 0.92;
+    filter: drop-shadow(0 0 4px rgba(46, 229, 157, 0.9));
+    animation: petal-run 6s linear infinite;
+  }
+  .ring-seal {
+    position: absolute;
+    left: 39%;
+    top: 39%;
+    width: 22%;
+    aspect-ratio: 1;
+    transform-style: preserve-3d;
+    transform: translateZ(80px);
+  }
+  .ring-seal img,
+  .seal-rim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+  .ring-seal img {
+    display: block;
+    filter: drop-shadow(0 0 18px rgba(80, 110, 255, 0.45));
+  }
+  .seal-rim {
+    background: linear-gradient(135deg, #e8ebf0, #6d727c 55%, #2a2d34);
+    transform: translateZ(-5px) scale(1.02);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  }
+  .ring-list { display: grid; gap: 1rem; margin: 1.6rem 0 0; padding: 0; list-style: none; }
+  .ring-list li { display: grid; gap: 0.2rem; }
+  .ring-list span { color: var(--muted, rgba(255, 255, 255, 0.65)); }
+  @keyframes ring-pulse {
+    0% { stroke-dashoffset: 1.18; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  @keyframes petal-run {
+    to { stroke-dashoffset: -1; }
+  }
+  @keyframes ring-twinkle {
+    0%, 100% { opacity: var(--o); }
+    50% { opacity: calc(var(--o) * 0.35); }
+  }
+  @media (max-width: 860px) {
+    .ring-grid { grid-template-columns: 1fr; }
+    .ring-view { max-width: 22rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ring-stage { animation: none; transform: rotateX(12deg) rotateY(-10deg); }
+    .ring-pulse,
+    .petal-pulse { display: none; }
+    .ring-dot { animation: none; }
+  }
+</style>

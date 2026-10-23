@@ -1,0 +1,214 @@
+---
+// The bare iPhone, then the khensu shell's layers arrive above it and clip on once as the page scrolls past.
+// Each layer is a render from the CAD model (khensu-specs/hardware/sunu/render_layers.py), drawn
+// from one fixed camera, so stacking the images reproduces the assembly and a vertical offset
+// explodes it. --a (0 only the phone, 1 every layer arrived) and --e (0 assembled, 1 exploded) come from
+// scripts/scenes.ts.
+const layers = [
+  { file: 'phone', label: 'iPhone 18 Pro', short: 'iPhone' },
+  { file: 'suction_film', label: 'Micro-suction shock layer', short: 'Shock layer' },
+  { file: 'base', label: 'Base plate', short: 'Base' },
+  { file: 'magnet_ring', label: 'MagSafe-compatible magnets', short: 'Magnets' },
+  { file: 'pcb', label: 'Node board, i.MX 93', short: 'Node board' },
+  { file: 'battery', label: '7.5 Wh battery', short: 'Battery' },
+  { file: 'window_inserts', label: 'Antenna band: HaLow, Wi-Fi', short: 'Antennas' },
+  { file: 'housing', label: 'Ceramic powder-coated titanium', short: 'Titanium' },
+];
+---
+
+<section class="explode" data-scene="explode" aria-labelledby="shell-title">
+  <div class="sticky">
+    <div class="wrap scene-grid">
+      <div class="copy">
+        <p class="eyebrow">suñůlink.shield</p>
+        <h2 id="shell-title">Your phone becomes <em class="run">part of the network.</em></h2>
+        <p class="lede">
+          A post-quantum mesh transceiver in a battleproof titanium shell, machined to your phone’s own curves. It
+          turns the phone into a node: it carries traffic for the people around you, keeps your messages flowing when
+          Apple’s push service can’t be trusted, and earns while it works.
+        </p>
+        <dl class="facts">
+          <div><dt>6 hours</dt><dd>relaying on a full charge, then a sip of your iPhone’s battery</dd></div>
+          <div><dt>15 min</dt><dd>to 50% over USB-C from a wall charger or power bank, full in about 45</dd></div>
+          <div><dt>Clear</dt><dd>over the camera, with an opening for every lens, cut out of its view</dd></div>
+        </dl>
+        <p class="fits">
+          <span><b>Fits</b> iPhone X and later · Google Pixel · Samsung Galaxy S and A</span>
+          <small>The khėnsu.ñü app needs iPhone 11 or later. On older iPhones and on Android, the shield runs as a node. Battery life and charge time vary with use and settings.</small>
+        </p>
+      </div>
+      <div class="stage" role="img" aria-label="suñůlink.shield, shown on iPhone 18 Pro, arriving in layers and clipping onto the phone: battleproof titanium shell, antenna band, battery, node board, Qi2 charging coil, magnets, base plate and shock layer above an iPhone.">
+        <img class="shadow" src="/khensu/shell/shadow.png" alt="" width="1600" height="1600" loading="lazy" decoding="async" />
+        {layers.map((l, i) => (
+          <img class:list={['layer', { phone: i === 0 }]} src={`/khensu/shell/${l.file}.png`} alt="" width="1600" height="1600" style={`--i:${i}`} loading="lazy" decoding="async" />
+        ))}
+        <img class="camera" src="/khensu/shell/camera.png" alt="" width="1600" height="1600" loading="lazy" decoding="async" />
+        <ol class="labels" aria-hidden="true">
+          {layers.map((l, i) => (
+            <li style={`--i:${i}`}><span class="long">{l.label}</span><span class="short">{l.short}</span></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .explode {
+    --a: 1;
+    --e: 1;
+    position: relative;
+    height: 360vh;
+  }
+  .sticky {
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .scene-grid {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+    width: 100%;
+  }
+  @media (min-width: 960px) {
+    .scene-grid {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+  }
+  .fits {
+    margin: 1.2rem 0 0;
+    display: grid;
+    gap: 0.3rem;
+    max-width: 34rem;
+  }
+  .fits b {
+    font-weight: 600;
+    margin-right: 0.4rem;
+  }
+  .fits small {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .copy h2 {
+    font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.2rem;
+    margin: 1.6rem 0 0;
+    max-width: 34rem;
+  }
+  .facts dt {
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .facts dd {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .stage {
+    container-type: inline-size;
+    position: relative;
+    width: min(78%, 62vh, 500px);
+    aspect-ratio: 1 / 1.45;
+    margin-inline: auto;
+    translate: -20% 0;
+  }
+  .stage img {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+  }
+  /* Each layer arrives from above in turn, the base first and the titanium shell last. */
+  .layer {
+    --ai: clamp(0, calc(var(--a) * 2 - var(--i) * 0.12), 1);
+    translate: 0 calc(var(--e) * var(--i) * -6.2cqw - (1 - var(--ai)) * (30cqw + var(--i) * 4cqw));
+    opacity: var(--ai);
+    will-change: translate, opacity;
+  }
+  .layer.phone {
+    --ai: 1;
+  }
+  .shadow {
+    opacity: calc(1 - var(--e) * var(--a) * 0.5);
+  }
+  /* The lenses sit in front of the shell's far wall once it's on; hidden as soon as it lifts. */
+  .camera {
+    opacity: clamp(0, calc(1 - var(--e) * 40), 1);
+  }
+  .labels {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 84%;
+    bottom: 0;
+    width: 12rem;
+    height: 100%;
+    opacity: clamp(0, calc(min(var(--e), var(--a)) * 4 - 3), 1);
+  }
+  .labels li {
+    opacity: clamp(0, calc(var(--a) * 2 - var(--i) * 0.12), 1);
+    position: absolute;
+    left: 0;
+    bottom: calc(63cqw + var(--i) * 6.2cqw);
+    font-size: 0.78rem;
+    line-height: 1.15;
+    color: var(--text-dim);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .labels li::before {
+    content: '';
+    width: 2.2rem;
+    height: 1px;
+    background: var(--line-strong);
+  }
+  .short {
+    display: none;
+  }
+  @media (max-height: 820px) and (min-width: 960px) {
+    .fits small {
+      display: none;
+    }
+  }
+  @media (max-width: 959px) {
+    .explode {
+      height: 300vh;
+    }
+    .copy .lede,
+    .facts {
+      display: none;
+    }
+    .stage {
+      width: min(70vw, 48vh);
+      translate: -14% 0;
+    }
+    .labels li {
+      font-size: 0.7rem;
+    }
+    .long {
+      display: none;
+    }
+    .short {
+      display: inline;
+    }
+    .labels li::before {
+      width: 1rem;
+    }
+  }
+</style>

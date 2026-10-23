@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="t d" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif">
+  <title id="t">WebRTC platforms versus Media over QUIC at audience scale</title>
+  <desc id="d">WebRTC platforms keep a few people on the fast call path and move the large audience to a slower mode or product. Media over QUIC relays forward the same stream to every subscriber and chain to other relays.</desc>
+  <rect width="960" height="420" rx="22" fill="#0b1220"/>
+  <g fill="none" stroke-linecap="round">
+    <!-- Left: WebRTC -->
+    <text x="40" y="52" fill="#e6edf7" font-size="20" font-weight="600">WebRTC platforms</text>
+    <text x="40" y="76" fill="#8a97ab" font-size="14">Built for calls. Audiences get a different path.</text>
+    <circle cx="90" cy="200" r="22" fill="#1f2a3d" stroke="#8a97ab" stroke-width="2"/>
+    <text x="90" y="205" fill="#e6edf7" font-size="12" text-anchor="middle">Host</text>
+    <rect x="170" y="176" width="90" height="48" rx="10" fill="#1f2a3d" stroke="#8a97ab" stroke-width="2"/>
+    <text x="215" y="205" fill="#e6edf7" font-size="13" text-anchor="middle">SFU</text>
+    <path d="M112 200 H170" stroke="#8a97ab" stroke-width="2"/>
+    <path d="M260 190 L330 140 M260 200 L330 200" stroke="#8a97ab" stroke-width="2"/>
+    <circle cx="345" cy="140" r="12" fill="#1f2a3d" stroke="#8a97ab" stroke-width="2"/>
+    <circle cx="345" cy="200" r="12" fill="#1f2a3d" stroke="#8a97ab" stroke-width="2"/>
+    <text x="370" y="174" fill="#8a97ab" font-size="13">Co-hosts: real time</text>
+    <path d="M260 212 L300 290" stroke="#8a97ab" stroke-width="2" stroke-dasharray="5 6"/>
+    <rect x="250" y="292" width="190" height="44" rx="10" fill="#1f2a3d" stroke="#d9a441" stroke-width="2"/>
+    <text x="345" y="319" fill="#e6c27a" font-size="13" text-anchor="middle">Audience: slower mode</text>
+    <text x="40" y="380" fill="#8a97ab" font-size="13">Agora documents 400–800 ms host to audience.</text>
+    <text x="40" y="400" fill="#8a97ab" font-size="13">AWS sells real time and broadcast as separate products.</text>
+
+    <line x1="480" y1="40" x2="480" y2="380" stroke="#1f2a3d" stroke-width="2"/>
+
+    <!-- Right: MoQ -->
+    <text x="520" y="52" fill="#e6edf7" font-size="20" font-weight="600">MOQOM on Media over QUIC</text>
+    <text x="520" y="76" fill="#8a97ab" font-size="14">Publish once. Every subscriber gets the same stream.</text>
+    <circle cx="560" cy="210" r="22" fill="#0e2a33" stroke="#38d6f5" stroke-width="2"/>
+    <text x="560" y="215" fill="#e6edf7" font-size="12" text-anchor="middle">Host</text>
+    <rect x="630" y="186" width="84" height="48" rx="10" fill="#0e2a33" stroke="#38d6f5" stroke-width="2"/>
+    <text x="672" y="215" fill="#e6edf7" font-size="13" text-anchor="middle">Relay</text>
+    <path d="M582 210 H630" stroke="#38d6f5" stroke-width="2"/>
+    <rect x="770" y="120" width="76" height="40" rx="10" fill="#0e2a33" stroke="#38d6f5" stroke-width="2"/>
+    <text x="808" y="145" fill="#e6edf7" font-size="12" text-anchor="middle">Relay</text>
+    <rect x="770" y="260" width="76" height="40" rx="10" fill="#0e2a33" stroke="#38d6f5" stroke-width="2"/>
+    <text x="808" y="285" fill="#e6edf7" font-size="12" text-anchor="middle">Relay</text>
+    <path d="M714 200 L770 140 M714 220 L770 280 M714 210 H880" stroke="#38d6f5" stroke-width="2"/>
+    <g fill="#38d6f5" stroke="none">
+      <circle cx="890" cy="110" r="7"/><circle cx="910" cy="130" r="7"/><circle cx="890" cy="150" r="7"/><circle cx="910" cy="170" r="7"/>
+      <circle cx="890" cy="200" r="7"/><circle cx="910" cy="220" r="7"/>
+      <circle cx="890" cy="250" r="7"/><circle cx="910" cy="270" r="7"/><circle cx="890" cy="290" r="7"/><circle cx="910" cy="310" r="7"/>
+    </g>
+    <path d="M846 140 L882 112 M846 140 L882 150 M846 280 L882 252 M846 280 L882 290" stroke="#38d6f5" stroke-width="1.5"/>
+    <text x="520" y="380" fill="#8a97ab" font-size="13">Co-hosts and viewers share one path. Relays chain like a CDN.</text>
+    <text x="520" y="400" fill="#8a97ab" font-size="13">Nobody gets demoted to the cheap seats.</text>
+  </g>
+</svg>

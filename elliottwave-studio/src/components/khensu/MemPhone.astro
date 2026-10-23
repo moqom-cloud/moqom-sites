@@ -1,0 +1,676 @@
+---
+// iPhone-sized screens of the khėnsu.ñü app for /memory: For you, What it knows about me, Ask khėnsu, and the iOS
+// home screen the app goes to when it is backgrounded. Sized in container units, so a phone renders the same at any
+// width. With `cycle`, the For you screen gives way to the home screen and back on a 12 s loop that matches the
+// traffic timelines in MemShield.
+import Icon from './Icon.astro';
+
+type Screen = 'foryou' | 'knows' | 'ask' | 'home';
+interface Props {
+  screen: Screen;
+  cycle?: boolean;
+  video?: boolean;
+  label?: string;
+  class?: string;
+}
+const { screen, cycle = false, video = false, label, class: cls } = Astro.props;
+
+const knows = [
+  { name: 'Sailing', why: 'You watch most sailing videos to the end' },
+  { name: 'Live jazz', why: 'You joined 4 jazz streams this month' },
+  { name: 'Naxos', why: 'You saved 6 posts about Naxos' },
+  { name: 'Ibiza', why: 'You opened Ibiza on the map 4 times this week' },
+  { name: 'Hercules Caves, Tangier', why: 'You watched 3 live streams from the Caves of Hercules' },
+  { name: 'Climate organising', why: 'You follow 3 climate forums' },
+];
+const toggles = [
+  { name: 'Time spent', on: true },
+  { name: 'Live streams', on: true },
+  { name: 'Places', on: true },
+];
+const tabs = [
+  { name: 'Chats', icon: 'chats' },
+  { name: 'Feed', icon: 'feed' },
+  { name: 'Calls', icon: 'calls' },
+  { name: 'Wallet', icon: 'wallet' },
+] as const;
+const apps = ['Camera', 'Photos', 'Maps', 'Music', 'Notes', 'Weather', 'Clock', 'Settings'];
+const main = cycle ? 'foryou' : screen;
+---
+
+<figure class:list={['mp', cls, { cycle }]} aria-label={label}>
+  <div class="mp-screen" aria-hidden="true">
+    <div class:list={['mp-layer', 'mp-app', `s-${main}`]}>
+      <div class="mp-status"><b>10:10</b><span class="mp-island"></span><span class="mp-sys"><i></i><i></i><i></i><i></i><span class="mp-batt"></span></span></div>
+
+      {main === 'foryou' && (
+        <div class="mp-body">
+          <div class="mp-nav"><span class="mp-cap">Following</span><span class="mp-circle"><Icon name="search" /></span></div>
+          <p class="mp-large">For you</p>
+          <div class="mp-chips"><span class="on">For you</span><span>Live</span><span>Places</span><span>Forums</span></div>
+          <article class="mp-post">
+            <div class="mp-media aurora">
+              {video ? (
+                <video class="mp-video" muted loop playsinline preload="none" poster="/khensu/codec/glowkey/iss-aurora.jpg" data-autoplay>
+                  <source src="/khensu/codec/glowkey/iss-aurora.mp4" type="video/mp4" />
+                </video>
+              ) : (
+                <img src="/khensu/codec/glowkey/iss-aurora.jpg" alt="" loading="lazy" decoding="async" width="1920" height="1080" />
+              )}
+              <span class="mp-mt">Aurora over the Pacific, from the ISS</span>
+            </div>
+            <p class="mp-why"><Icon name="sparkle" /> Trending: 48k anonymous views today</p>
+          </article>
+          <article class="mp-post">
+            <div class="mp-media cave"><span class="mp-live">LIVE 360°</span><span class="mp-mt">Hercules Caves, Tangier</span></div>
+            <p class="mp-why"><Icon name="sparkle" /> You watched 3 streams from the Caves</p>
+          </article>
+          <article class="mp-post">
+            <header><span class="mp-av">A</span><b>ada.khensu.nu</b><span class="mp-dim">· 2h</span></header>
+            <p class="mp-text">Night sail from Paros to Naxos. Flat sea, full moon.</p>
+            <p class="mp-why"><Icon name="sparkle" /> Sailing · you follow Ada</p>
+          </article>
+        </div>
+      )}
+
+      {main === 'knows' && (
+        <div class="mp-body">
+          <div class="mp-nav"><span class="mp-circle"><Icon name="back" /></span><span class="mp-cap">Edit</span></div>
+          <p class="mp-large sm">What it knows about me</p>
+          <p class="mp-sub"><Icon name="lock" /> Only on this iPhone</p>
+          <ul class="mp-list">
+            {knows.map((k) => (
+              <li><span><b>{k.name}</b><small>{k.why}</small></span><i class="mp-x">Remove</i></li>
+            ))}
+          </ul>
+          <p class="mp-sub">Learn from</p>
+          <ul class="mp-list">
+            {toggles.map((t) => (
+              <li><span><b>{t.name}</b></span><i class:list={['mp-sw', { on: t.on }]}></i></li>
+            ))}
+          </ul>
+          <div class="mp-btns"><span>Pause learning</span><span class="danger">Reset everything</span></div>
+        </div>
+      )}
+
+      {main === 'ask' && (
+        <div class="mp-body">
+          <div class="mp-nav"><span></span><span class="mp-circle"><Icon name="more" /></span></div>
+          <p class="mp-large">Ask khėnsu</p>
+          <div class="mp-q"><Icon name="search" /> When do we sail to Naxos?</div>
+          <div class="mp-answer">
+            <p class="mp-k"><Icon name="sparkle" /> Private AI on this iPhone</p>
+            <p><b>19 May, from Santorini.</b> Sam confirmed the charter; the skipper wants to leave at 7:00 for the weather window.</p>
+            <ul class="mp-cites">
+              <li><span>Chat</span> Sam: charter confirmed, Naxos 19 May</li>
+              <li><span>PDF</span> Charter, 12–19 May</li>
+              <li><span>Voice</span> Skipper: leave at 7:00</li>
+            </ul>
+          </div>
+          <p class="mp-foot">Only you have your data. No AI servers.</p>
+        </div>
+      )}
+
+      {main !== 'home' && main !== 'knows' && (
+        <nav class="mp-tabbar">
+          <span class="mp-tabs">
+            {tabs.map((t) => (
+              <span class:list={['mp-tab', { on: (t.name === 'Feed' && main === 'foryou') }]}><Icon name={t.icon} /><span>{t.name}</span></span>
+            ))}
+          </span>
+          <span class:list={['mp-circle', 'lg', { on: main === 'ask' }]}><Icon name="search" /></span>
+        </nav>
+      )}
+    </div>
+
+    {(cycle || screen === 'home') && (
+      <div class="mp-layer mp-home">
+        <div class="mp-status"><b>10:10</b><span class="mp-island"></span><span class="mp-sys"><i></i><i></i><i></i><i></i><span class="mp-batt"></span></span></div>
+        <div class="mp-grid">
+          {apps.map((a) => <span class="mp-app-i"><i></i><small>{a}</small></span>)}
+          <span class="mp-app-i nu"><i><b>ñü</b></i><small>khėnsu.ñü</small></span>
+        </div>
+        <div class="mp-dock"><i></i><i></i><i></i><i></i></div>
+      </div>
+    )}
+    <span class="mp-home-bar"></span>
+  </div>
+</figure>
+
+<script>
+  // Videos inside phones play only while on screen, and never under reduced motion.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const vids = [...document.querySelectorAll<HTMLVideoElement>('video[data-autoplay]')];
+  if (!still && vids.length) {
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) {
+        const v = e.target as HTMLVideoElement;
+        if (e.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      }
+    }, { threshold: 0.25 });
+    for (const v of vids) io.observe(v);
+  }
+</script>
+
+<style>
+  .mp {
+    --star: #f2f1ec;
+    --ash: #8a8f98;
+    --silver: #c9ccd2;
+    --fill: rgba(255, 255, 255, 0.07);
+    --stroke: rgba(255, 255, 255, 0.12);
+    container-type: inline-size;
+    width: var(--phone-w, 300px);
+    aspect-ratio: 9 / 19.5;
+    margin: 0;
+    padding: 2.6%;
+    border-radius: 16% / 7.4%;
+    background: linear-gradient(145deg, #3a3d43, #15171a 40%, #2b2e33);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 40px 80px -20px rgba(0, 0, 0, 0.8),
+      0 10px 30px rgba(0, 0, 0, 0.5);
+    flex: none;
+  }
+  .mp-screen {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 13.6% / 6.4%;
+    background: #000;
+    color: var(--star);
+    font-family: -apple-system, 'SF Pro Text', var(--font-sans);
+    font-size: 4cqw;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-align: start;
+  }
+  .mp-layer {
+    position: absolute;
+    inset: 0;
+  }
+  .mp-app {
+    background: #000;
+  }
+  .mp-status {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 12cqw;
+    padding: 1.6cqw 7cqw 0 9cqw;
+    font-size: 4.2cqw;
+    z-index: 1;
+  }
+  .mp-island {
+    position: absolute;
+    left: 50%;
+    top: 2.8cqw;
+    width: 31cqw;
+    height: 9cqw;
+    margin-left: -15.5cqw;
+    border-radius: 5cqw;
+    background: #000;
+  }
+  .mp-sys {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 0.6cqw;
+    height: 3.2cqw;
+  }
+  .mp-sys i {
+    width: 0.9cqw;
+    border-radius: 0.3cqw;
+    background: var(--star);
+  }
+  .mp-sys i:nth-child(1) { height: 35%; }
+  .mp-sys i:nth-child(2) { height: 55%; }
+  .mp-sys i:nth-child(3) { height: 78%; }
+  .mp-sys i:nth-child(4) { height: 100%; }
+  .mp-batt {
+    width: 6cqw;
+    height: 3cqw;
+    margin-left: 1.2cqw;
+    border-radius: 0.9cqw;
+    border: 0.3cqw solid rgba(255, 255, 255, 0.5);
+    background: linear-gradient(90deg, var(--star) 72%, transparent 72%) content-box;
+    padding: 0.3cqw;
+  }
+  .mp-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4cqw;
+    padding: 1.5cqw 4.5cqw 0;
+  }
+  .mp-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 9cqw;
+  }
+  .mp-cap,
+  .mp-circle,
+  .mp-tabs,
+  .mp-q {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px);
+  }
+  .mp-cap {
+    display: inline-flex;
+    align-items: center;
+    height: 9cqw;
+    padding: 0 3.6cqw;
+    border-radius: 5cqw;
+    font-weight: 500;
+  }
+  .mp-circle {
+    display: inline-grid;
+    place-items: center;
+    width: 9cqw;
+    height: 9cqw;
+    border-radius: 50%;
+  }
+  .mp-circle.lg {
+    width: 14cqw;
+    height: 14cqw;
+    font-size: 5.4cqw;
+  }
+  .mp-circle.on {
+    background: rgba(255, 255, 255, 0.22);
+  }
+  .mp-large {
+    margin: 0;
+    font-size: 9.4cqw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .mp-large.sm {
+    font-size: 7.4cqw;
+  }
+  .mp-chips {
+    display: flex;
+    gap: 1.6cqw;
+    font-size: 3.4cqw;
+  }
+  .mp-chips span {
+    padding: 1.2cqw 3cqw;
+    border-radius: 4cqw;
+    background: var(--fill);
+    color: var(--silver);
+  }
+  .mp-chips .on {
+    background: var(--star);
+    color: #0b0c0e;
+    font-weight: 600;
+  }
+  .mp-post {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4cqw;
+  }
+  .mp-post header {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    font-size: 3.6cqw;
+  }
+  .mp-av {
+    display: grid;
+    place-items: center;
+    width: 7cqw;
+    height: 7cqw;
+    border-radius: 50%;
+    font-size: 3.2cqw;
+    font-weight: 600;
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.38), transparent 55%),
+      linear-gradient(160deg, rgba(150, 156, 168, 0.55), rgba(58, 62, 69, 0.45));
+    box-shadow: inset 0 0.25cqw 0.4cqw rgba(255, 255, 255, 0.45), 0 0 0 0.15cqw rgba(255, 255, 255, 0.22);
+  }
+  .mp-dim {
+    color: var(--ash);
+  }
+  .mp-text {
+    margin: 0;
+    font-size: 3.8cqw;
+  }
+  .mp-media {
+    position: relative;
+    height: 30cqw;
+    border-radius: 4cqw;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 2.4cqw 3cqw;
+    font-size: 3.4cqw;
+    font-weight: 600;
+  }
+  .mp-media.aurora {
+    height: 36cqw;
+    background: #031a12;
+  }
+  .mp-media img,
+  .mp-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .mp-media.cave {
+    background: radial-gradient(120% 120% at 56% 45%, #5a4330 20%, #2a1d14 55%, #120d09 85%);
+  }
+  .mp-media.cave::before {
+    content: '';
+    position: absolute;
+    left: 36%;
+    top: 10%;
+    width: 40%;
+    height: 74%;
+    border-radius: 44% 56% 36% 64% / 38% 34% 66% 62%;
+    background: linear-gradient(180deg, #e9f2f7 0%, #a8d2ee 40%, #2a7fb8 50%, #13598f 72%, #0b3d66 100%);
+    box-shadow: 0 0 0 0.5cqw rgba(0, 0, 0, 0.35), 0 0 7cqw 1cqw rgba(255, 232, 196, 0.22);
+  }
+  .mp-mt {
+    position: relative;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  }
+  .mp-live {
+    position: absolute;
+    top: 2.4cqw;
+    left: 3cqw;
+    padding: 0.4cqw 1.6cqw;
+    border-radius: 1.4cqw;
+    background: #e5484d;
+    font-size: 2.8cqw;
+    font-weight: 700;
+  }
+  .mp-why {
+    display: flex;
+    align-items: center;
+    gap: 1.2cqw;
+    margin: 0;
+    font-size: 3.1cqw;
+    color: var(--silver);
+  }
+  .mp-sub {
+    display: flex;
+    align-items: center;
+    gap: 1.2cqw;
+    margin: 0;
+    font-size: 3.2cqw;
+    color: var(--ash);
+  }
+  .mp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 4cqw;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .mp-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2cqw;
+    padding: 2cqw 3.2cqw;
+  }
+  .mp-list li + li {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .mp-list span {
+    display: grid;
+    min-width: 0;
+  }
+  .mp-list b {
+    font-weight: 500;
+    font-size: 3.6cqw;
+  }
+  .mp-list small {
+    color: var(--ash);
+    font-size: 2.8cqw;
+    line-height: 1.25;
+  }
+  .mp-x {
+    flex: none;
+    font-style: normal;
+    font-size: 2.9cqw;
+    color: #ff6b6b;
+  }
+  .mp-sw {
+    position: relative;
+    flex: none;
+    width: 11cqw;
+    height: 6.6cqw;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .mp-sw::after {
+    content: '';
+    position: absolute;
+    top: 0.7cqw;
+    left: 0.7cqw;
+    width: 5.2cqw;
+    height: 5.2cqw;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .mp-sw.on {
+    background: #30d158;
+  }
+  .mp-sw.on::after {
+    left: 5.1cqw;
+  }
+  .mp-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2cqw;
+  }
+  .mp-btns span {
+    padding: 2.2cqw;
+    border-radius: 99px;
+    text-align: center;
+    font-size: 3.2cqw;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .mp-btns .danger {
+    color: #ff6b6b;
+  }
+  .mp-q {
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    height: 11cqw;
+    padding: 0 4cqw;
+    border-radius: 3.4cqw;
+  }
+  .mp-answer {
+    display: flex;
+    flex-direction: column;
+    gap: 2cqw;
+    padding: 3.6cqw;
+    border-radius: 4cqw;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--stroke);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  .mp-answer p {
+    margin: 0;
+  }
+  .mp-k {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+    font-size: 3.2cqw;
+    color: var(--silver);
+  }
+  .mp-cites {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.4cqw;
+    font-size: 3.1cqw;
+    color: var(--silver);
+  }
+  .mp-cites span {
+    display: inline-block;
+    min-width: 10cqw;
+    margin-right: 1cqw;
+    padding: 0.2cqw 1.4cqw;
+    border-radius: 1.4cqw;
+    background: rgba(255, 255, 255, 0.11);
+    color: var(--star);
+    font-size: 2.7cqw;
+    text-align: center;
+  }
+  .mp-foot {
+    margin: 0;
+    font-size: 3.1cqw;
+    color: var(--ash);
+    text-align: center;
+  }
+  .mp-tabbar {
+    position: absolute;
+    left: 4.5cqw;
+    right: 4.5cqw;
+    bottom: 7cqw;
+    display: flex;
+    gap: 2.4cqw;
+    align-items: center;
+  }
+  .mp-tabs {
+    flex: 1;
+    display: flex;
+    justify-content: space-around;
+    height: 14cqw;
+    border-radius: 7cqw;
+    padding: 0 1.4cqw;
+  }
+  .mp-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4cqw;
+    margin: 1.2cqw 0;
+    padding: 0 2.4cqw;
+    border-radius: 6cqw;
+    font-size: 2.5cqw;
+    color: var(--silver);
+  }
+  .mp-tab :global(svg) {
+    width: 5.4cqw;
+    height: 5.4cqw;
+  }
+  .mp-tab.on {
+    color: var(--star);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* iOS home screen on the space-aurora wallpaper */
+  .mp-home {
+    background:
+      radial-gradient(1px 1px at 20% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 8%, #fff, transparent),
+      radial-gradient(1px 1px at 84% 30%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 12% 40%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(90% 40% at 30% 78%, rgba(47, 224, 160, 0.55), transparent 60%),
+      radial-gradient(70% 35% at 80% 66%, rgba(139, 123, 255, 0.55), transparent 60%),
+      linear-gradient(180deg, #02030a 0%, #060a1c 50%, #0b1a24 100%);
+  }
+  .mp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5cqw 2cqw;
+    padding: 6cqw 5cqw 0;
+  }
+  .mp-app-i {
+    display: grid;
+    justify-items: center;
+    gap: 1.2cqw;
+  }
+  .mp-app-i i {
+    display: grid;
+    place-items: center;
+    width: 15cqw;
+    height: 15cqw;
+    border-radius: 3.6cqw;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+  }
+  .mp-app-i.nu i {
+    background: radial-gradient(80% 80% at 30% 20%, #3a2a5a, #0b0b12);
+    font-style: normal;
+  }
+  .mp-app-i.nu b {
+    font-size: 5cqw;
+    font-weight: 600;
+  }
+  .mp-app-i small {
+    font-size: 2.6cqw;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .mp-dock {
+    position: absolute;
+    left: 4cqw;
+    right: 4cqw;
+    bottom: 5cqw;
+    display: flex;
+    justify-content: space-around;
+    padding: 3cqw;
+    border-radius: 8cqw;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+  }
+  .mp-dock i {
+    width: 14cqw;
+    height: 14cqw;
+    border-radius: 3.6cqw;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.08));
+  }
+  .mp-home-bar {
+    position: absolute;
+    bottom: 2cqw;
+    left: 50%;
+    width: 36cqw;
+    height: 1.4cqw;
+    margin-left: -18cqw;
+    border-radius: 1cqw;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 2;
+  }
+
+  /* 12 s loop: app open 0–46.7%, backgrounded 46.7–80%, open again 80–100% (MemShield timeline). */
+  .cycle .mp-home {
+    opacity: 0;
+    animation: mp-bg 12s linear infinite;
+  }
+  .cycle .mp-app {
+    animation: mp-app 12s linear infinite;
+  }
+  @keyframes mp-bg {
+    0%, 45.5% { opacity: 0; transform: scale(1.06); }
+    48%, 78.5% { opacity: 1; transform: scale(1); }
+    81%, 100% { opacity: 0; transform: scale(1.06); }
+  }
+  @keyframes mp-app {
+    0%, 45.5% { transform: scale(1); opacity: 1; }
+    48%, 78.5% { transform: scale(0.82); opacity: 0; }
+    81%, 100% { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cycle .mp-home,
+    .cycle .mp-app {
+      animation: none;
+    }
+  }
+</style>

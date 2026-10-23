@@ -1,0 +1,190 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import BenchFootnote from "../components/BenchFootnote.astro";
+import ResolutionTable from "../components/ResolutionTable.astro";
+import { ACCESSED, gaps, latencyScope, priceProtocol, providerNotes, sources, why } from "../data/compare";
+import Linked from "../components/Linked.astro";
+const seen = new Set<string>();
+---
+
+<Base
+  title="Compare"
+  description="Latency by resolution, and how MOQOM compares with Agora, Tencent RTC, AWS, Google Cloud and Cloudflare on latency, price, encryption and protocol, from each vendor's own documentation."
+>
+  <PageHero
+    eyebrow="Compare"
+    title="How MOQOM compares, from each vendor's own pages."
+    lede={`Competitor figures are what each vendor's own documentation says, accessed ${ACCESSED}. Where a vendor does not document something, we say so rather than guess.`}
+  />
+
+  <section class="section" id="resolution">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Latency by resolution</span>
+        <h2 class="text-sweep">From 4K broadcast to co-host tiles</h2>
+        <p class="lede">
+          Glass to glass is the time from light hitting the sender's camera to the frame being on the receiver's
+          screen: capture, encode, network, decode and display.
+        </p>
+      </div>
+      <ResolutionTable />
+    </div>
+  </section>
+
+  <section class="section" id="why">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Why MOQOM</span>
+        <h2 class="text-sweep">What you get today</h2>
+      </div>
+      <div class="grid grid-4">
+        {
+          why.map((w) => (
+            <div class="glass card reveal">
+              <h3>{w.title}</h3>
+              <p class="small muted"><Linked text={w.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <BenchFootnote />
+
+      <div class="glass callout callout-warn gaps reveal">
+        <h3>Where we are honest about gaps</h3>
+        <ul class="check-list">
+          {gaps.map((g) => <li class="small muted"><Linked text={g} seen={seen} /></li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="latency">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Latency and scope</span>
+        <h2 class="text-sweep">Documented latency, calls and broadcast</h2>
+        <p class="lede">
+          No latency figure below was measured by us on the same rig as MOQOM's, so read them as published claims, not
+          a head-to-head test.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap reveal">
+        <table>
+          <thead><tr><th>Provider</th><th>Documented latency</th><th>Calls and broadcast</th></tr></thead>
+          <tbody>
+            {
+              latencyScope.map(([p, l, s]) => (
+                <tr class:list={[p === "MOQOM" && "us"]}>
+                  <th scope="row">{p}</th>
+                  <td>{l}</td>
+                  <td class="muted">{s}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <BenchFootnote />
+    </div>
+  </section>
+
+  <section class="section" id="price">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Price, encryption and protocol</span>
+        <h2 class="text-sweep">List prices and what protects the media</h2>
+      </div>
+      <div class="glass glass--strong table-wrap reveal">
+        <table>
+          <thead><tr><th>Provider</th><th>List price, video</th><th>Media encryption</th><th>Protocol</th></tr></thead>
+          <tbody>
+            {
+              priceProtocol.map(([p, price, enc, proto]) => (
+                <tr class:list={[p === "MOQOM" && "us"]}>
+                  <th scope="row">{p}</th>
+                  <td>{price}</td>
+                  <td class="muted"><Linked text={enc} seen={seen} /></td>
+                  <td class="muted"><Linked text={proto} seen={seen} /></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted note">
+        AWS's per-participant list prices are below MOQOM's HD rate, so compare on features and on your own workload. <a href="/pricing/#estimate">Estimate a bill →</a>
+      </p>
+      <BenchFootnote />
+    </div>
+  </section>
+
+  <section class="section" id="notes">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Notes by provider</span>
+        <h2 class="text-sweep">In context</h2>
+      </div>
+      <div class="grid grid-2">
+        {
+          providerNotes.map((n) => (
+            <article class="glass card reveal">
+              <h3>{n.name}</h3>
+              <p class="small muted">{n.body}</p>
+            </article>
+          ))
+        }
+      </div>
+      <p class="small faint note">
+        All trademarks belong to their owners. This comparison does not imply any affiliation or partnership.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="sources">
+    <div class="narrow">
+      <h2>Sources (all accessed {ACCESSED})</h2>
+      <ul class="sources small">
+        {
+          sources.map(([label, url]) => (
+            <li>
+              {label}: <a href={url} rel="noopener nofollow">{url.replace(/^https:\/\//, "")}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .us th,
+  .us td:first-of-type {
+    color: var(--accent);
+  }
+  table {
+    min-width: 720px;
+  }
+  .gaps {
+    margin-top: var(--space-6);
+  }
+  .gaps ul {
+    margin: 0;
+  }
+  .note {
+    margin-top: var(--space-4);
+    max-width: 90ch;
+  }
+  .sources {
+    padding-left: 1.2em;
+    color: var(--text-muted);
+  }
+  .sources li {
+    margin-bottom: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+</style>

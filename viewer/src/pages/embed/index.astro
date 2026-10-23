@@ -1,0 +1,67 @@
+---
+// The iframe embed: /embed/?src=…&alt=…. A static page; the script below reads the query string in
+// the visitor's browser, validates it with core's embedOptions and builds <ew-viewer> with DOM
+// calls, so no parameter is ever written into HTML. Models load from the visitor's browser straight
+// from their URL. No cookies, no analytics.
+// Being framed by other sites needs `Content-Security-Policy: frame-ancestors *` (and no
+// X-Frame-Options) on this path only, sent by the load balancer; a meta policy cannot set it.
+import '@fontsource/inter/400.css';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+
+allowVisitorModels(Astro);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{SITE.displayName}</title>
+  </head>
+  <body>
+    <main data-embed></main>
+    <p class="error" data-error hidden></p>
+    <script>
+      import { BRAND, ViewerOptionError, embedOptions, toAttributes } from '../../vendor/core/snippet-entry';
+
+      const main = document.querySelector<HTMLElement>('[data-embed]')!;
+      const error = document.querySelector<HTMLElement>('[data-error]')!;
+      try {
+        const options = embedOptions(new URLSearchParams(location.search));
+        await import('../../vendor/core/index');
+        const viewer = document.createElement(BRAND.tagName);
+        for (const [name, value] of toAttributes(options)) viewer.setAttribute(name, value === true ? '' : value);
+        main.append(viewer);
+      } catch (e) {
+        if (!(e instanceof ViewerOptionError)) throw e;
+        error.textContent = `${BRAND.displayName}: this embed can't be shown. ${e.message}`;
+        error.hidden = false;
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    height: 100%;
+    background: transparent;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  main {
+    height: 100%;
+  }
+  .error {
+    margin: 0;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #444;
+    background: #f4f4f4;
+  }
+  ew-viewer {
+    --ew-viewer-accent: #b45309;
+  }
+</style>

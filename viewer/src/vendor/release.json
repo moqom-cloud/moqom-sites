@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "file": "ew-viewer.min.js",
+  "integrity": "sha384-KWnwxLSOxp4XkIskC2b2xU5Jd8yZLgF1NQfAoSPc8Bj7C664zdKhqjKb3rZED6y5",
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/@elliottwave/viewer@0.1.0/dist/ew-viewer.min.js",
+  "modelViewer": "4.3.1",
+  "three": "0.183.2",
+  "bytes": 1077367,
+  "styleHashes": [
+    "sha256-F7kvx28zBT3UUQL/hTOYst+55RSmqyCY3muSCYmt6A4="
+  ]
+}

@@ -1,0 +1,90 @@
+---
+// Production formats against delivery codecs and ñü.media on the same 4K clip, then what that means for sending
+// a one-hour 4K master. Format sizes and VMAF are measured (khensu-specs bench/formats.py and bench/ladder.py);
+// transfer times are projections from the stated link speeds.
+type F = { label: string; kbps: number; gb_per_hour: number; vmaf: number; size: string };
+type Pt = { actual_kbps: number; vmaf: number; dropped: number };
+const { formats, ladder } = Astro.props as { formats: { formats: Record<string, F> }; ladder: { codecs: Record<string, { points: Pt[] }> } };
+
+const best = (k: string) => [...ladder.codecs[k].points].filter((p) => p.dropped === 0).sort((a, b) => b.vmaf - a.vmaf)[0];
+const rows = [
+  ...Object.entries(formats.formats).map(([k, f]) => ({ k, name: f.label, kbps: f.kbps, vmaf: f.vmaf, note: f.size === '1920x1080' ? '1080p only' : 'Mac, ffmpeg', kind: 'prod' })),
+  { k: 'hevc', name: 'H.265 (HEVC), iPhone hardware', kbps: best('hevc-hw').actual_kbps, vmaf: best('hevc-hw').vmaf, note: 'Best measured point', kind: 'del' },
+  { k: 'av1', name: 'AV1, real time', kbps: best('av1-svt-rt').actual_kbps, vmaf: best('av1-svt-rt').vmaf, note: 'Best measured point', kind: 'del' },
+  { k: 'nu', name: 'ñü.media, measured', kbps: best('nu-media').actual_kbps, vmaf: best('nu-media').vmaf, note: 'Benchmark, iPhone Air', kind: 'ours' },
+].sort((a, b) => b.kbps - a.kbps);
+const lmax = Math.log10(Math.max(...rows.map((r) => r.kbps)));
+const lmin = Math.log10(500);
+const w = (k: number) => Math.max(2, ((Math.log10(k) - lmin) / (lmax - lmin)) * 100);
+const mbps = (k: number) => (k >= 10000 ? `${Math.round(k / 1000)} Mbit/s` : `${(k / 1000).toFixed(1)} Mbit/s`);
+const gbh = (k: number) => k * 3600 / 8 / 1e6;
+
+// A one-hour 4K master. Link speeds are assumptions, shown on the page.
+const hq = formats.formats['prores-hq'];
+const masterGB = gbh(hq.kbps);
+const nuBest = best('nu-media');
+const nuGB = gbh(nuBest.actual_kbps);
+const UP = 100, DOWN = 500, LINE = 1000, STREAM = 50; // Mbit/s
+const hours = (gb: number, mbit: number) => (gb * 8000) / mbit / 3600;
+const fmt = (h: number) => (h >= 1 ? `${h.toFixed(1)} h` : `${Math.round(h * 60)} min`);
+const transfer = [
+  { name: 'Dropbox', what: `ProRes 422 HQ master, ${masterGB.toFixed(0)} GB`, time: hours(masterGB, UP) + hours(masterGB, DOWN),
+    how: `Upload at ${UP} Mbit/s, then download at ${DOWN} Mbit/s`, sees: 'Dropbox holds the file and the keys; it knows who sent what to whom' },
+  { name: 'IBM Aspera', what: `ProRes 422 HQ master, ${masterGB.toFixed(0)} GB`, time: hours(masterGB, LINE),
+    how: `FASP at line rate, ${LINE / 1000} Gbit/s at both ends`, sees: 'Encrypted in transit; the server operator holds the file and sees who sent it' },
+  { name: 'khėnsu.ñü, bit-exact', what: `The same master, ${masterGB.toFixed(0)} GB`, time: hours(masterGB, STREAM),
+    how: `Constant stream through your own node, ${STREAM} Mbit/s`, sees: 'Nobody: end to end, and no one sees the sender, the recipient or the file name', ours: true },
+  { name: 'khėnsu.ñü, ñü.media', what: `ñü.media at its best measured point (VMAF ${nuBest.vmaf.toFixed(0)}), ${nuGB.toFixed(1)} GB`, time: hours(nuGB, STREAM),
+    how: `Same stream; the file is ${Math.round(masterGB / nuGB)}× smaller`, sees: 'Nobody, the same as above', ours: true },
+];
+const tmax = Math.max(...transfer.map((t) => t.time));
+---
+
+<figure class="card wide big" data-scene="reveal">
+  <figcaption><b>Against the formats film and TV use</b><span>The same 4K clip in ProRes and DNxHR, the delivery codecs and nu.media. Log scale: every step left is 10× less data.</span></figcaption>
+  <ul class="fmt" role="list">
+    {rows.map((r, i) => (
+      <li class:list={[r.kind]} style={`--w:${w(r.kbps)};--i:${i}`}>
+        <span class="label"><b>{r.name}</b> <small>{r.note}</small></span>
+        <span class="track"><span class="fill" /></span>
+        <span class="value"><b>{mbps(r.kbps)}</b> <small>{gbh(r.kbps).toFixed(gbh(r.kbps) < 10 ? 1 : 0)} GB/h{r.vmaf != null ? ` · VMAF ${r.vmaf.toFixed(0)}` : ''}</small></span>
+      </li>
+    ))}
+  </ul>
+  <p class="note">ProRes and DNxHR are editing formats: near-perfect quality (VMAF 99 and up here) at hundreds of megabits per second. Every row is a benchmark on the same 4K clip; nu.media is measured on iPhone Air. khėnsu.ñü doesn’t carry camera RAW.</p>
+
+  <figcaption class="sub"><b>Sending a one-hour 4K master</b><span>Projection from the link speeds shown. Faster here only because the file is smaller and goes direct.</span></figcaption>
+  <ul class="xfer" role="list">
+    {transfer.map((t, i) => (
+      <li class:list={[{ ours: t.ours, est: t.est }]} style={`--w:${(t.time / tmax) * 100};--i:${i}`}>
+        <span class="label"><b>{t.name}</b> <small>{t.what}</small></span>
+        <span class="track"><span class="fill" /></span>
+        <span class="value"><b>{fmt(t.time)}</b></span>
+        <span class="how"><small>{t.how}. {t.sees}.</small></span>
+      </li>
+    ))}
+  </ul>
+  <p class="note">Assumptions: a {UP} Mbit/s upload and {DOWN} Mbit/s download for Dropbox, {LINE / 1000} Gbit/s at both ends for Aspera, and a {STREAM} Mbit/s constant stream through your own khėnsu node. The mix network adds a few seconds of delay at the start, not per byte. Sending the exact same bytes is not faster than Aspera on a fast line: the gain comes from sending the picture in nu.media at native resolution instead of the editing master. Free on khėnsu.ñü: there is no per-gigabyte fee.</p>
+</figure>
+
+<style>
+  .fmt, .xfer { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+  .fmt li { display: grid; grid-template-columns: 17rem 1fr 11rem; gap: 1rem; align-items: center; }
+  .xfer li { display: grid; grid-template-columns: 17rem 1fr 6rem; gap: 0.3rem 1rem; align-items: center; }
+  .xfer .how { grid-column: 1 / -1; color: var(--text-dim); }
+  .label small, .value small { display: block; color: var(--text-dim); font-size: 0.8rem; }
+  .value { text-align: right; }
+  .track { height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+  .fill { display: block; height: 100%; width: calc(var(--w) * 1%); min-width: 4px; border-radius: inherit; background: rgba(255, 255, 255, 0.35);
+          transform-origin: left; transform: scaleX(clamp(0, calc((var(--e, 1) - var(--i) * 0.06) / 0.6), 1)); }
+  .del .fill { background: rgba(255, 255, 255, 0.55); }
+  .ours .fill { background: linear-gradient(90deg, #8b7bff, #4fd1c5); }
+  .est .fill { background: repeating-linear-gradient(135deg, rgba(139, 123, 255, 0.85) 0 6px, rgba(79, 209, 197, 0.25) 6px 12px); }
+  .ours b { color: #b9b0ff; }
+  .sub { margin-top: 1.4rem; }
+  .note { margin: 0; font-size: 0.92rem; color: var(--text-dim); }
+  @media (max-width: 760px) {
+    .fmt li, .xfer li { grid-template-columns: 1fr auto; gap: 0.3rem 0.8rem; }
+    .fmt .track, .xfer .track { grid-column: 1 / -1; grid-row: 2; }
+  }
+</style>

@@ -1,0 +1,563 @@
+---
+import { SIGNUP, SITE } from "../data/site";
+import { WORLD_DOTS } from "../data/world-dots";
+
+const width = 360;
+const height = WORLD_DOTS.rows * WORLD_DOTS.step;
+---
+
+<section class="section live">
+  <div class="container">
+    <span class="eyebrow">Account</span>
+    <h1 class="text-sweep">Live connections</h1>
+    <p class="lede">
+      Where your sessions are connected from right now, by city or country. Counts only: no addresses, no
+      identities, no history. <a href={`${SITE.docs}/guides/live-map/`} rel="noopener">How it works ↗</a>
+    </p>
+
+    {!SIGNUP.enabled && (
+      <div class="glass glass--strong card" role="status">
+        <span class="pill pill-accent">Coming soon</span>
+        <p class="muted">
+          Self-serve accounts aren't open yet. Email <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>.
+        </p>
+      </div>
+    )}
+
+    {SIGNUP.enabled && (
+      <div id="live" data-api={SIGNUP.apiBase}>
+        <form id="live-key-form" class="glass glass--strong card live-key" novalidate>
+          <p class="muted">
+            Paste a backend API key. It stays in this browser tab, is sent only to {new URL(SIGNUP.apiBase).host} in
+            an Authorization header, and is shared with <a href="/account/">Account</a> until you close the tab or
+            disconnect.
+          </p>
+          <div class="live-key-row">
+            <label class="visually-hidden" for="live-key-input">API key</label>
+            <input
+              id="live-key-input"
+              class="mono"
+              type="password"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="mqk_…"
+              required
+            />
+            <button class="btn btn-primary" type="submit">Connect</button>
+          </div>
+          <p id="live-key-error" class="live-error" role="alert" hidden></p>
+        </form>
+
+        <div id="live-board" class="live-board" hidden>
+          <div class="glass glass--strong card live-map">
+            <svg
+              id="live-svg"
+              viewBox={`0 0 ${width} ${height}`}
+              role="img"
+              aria-labelledby="live-map-title"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <title id="live-map-title">World map of active connections</title>
+              <path id="live-land" class="land" d=""></path>
+              <g id="live-points"></g>
+            </svg>
+            <p class="live-legend small faint">
+              Dot area follows connection count. Places with fewer than <span id="live-min">3</span> connections are
+              pooled into their country or left off the map.
+            </p>
+          </div>
+
+          <aside class="glass glass--strong card live-panel" aria-live="polite">
+            <div class="live-status">
+              <span id="live-state" class="pill">Connecting</span>
+              <span id="live-updated" class="small faint mono"></span>
+            </div>
+
+            <div class="live-stat">
+              <span class="small muted">Active sessions</span>
+              <strong id="live-sessions" class="live-big mono">–</strong>
+            </div>
+
+            <div class="live-split">
+              <div class="live-split-bar" aria-hidden="true"><span id="live-pub-bar"></span></div>
+              <dl class="live-pairs">
+                <div><dt>Publishers</dt><dd id="live-publishers" class="mono">–</dd></div>
+                <div><dt>Viewers</dt><dd id="live-viewers" class="mono">–</dd></div>
+                <div><dt>Rooms</dt><dd id="live-rooms" class="mono">–</dd></div>
+              </dl>
+            </div>
+
+            <h2 class="live-h">By relay region</h2>
+            <ul id="live-regions" class="live-list"></ul>
+            <p id="live-regions-withheld" class="small faint" hidden></p>
+
+            <h2 class="live-h">Top places</h2>
+            <ol id="live-places" class="live-list"></ol>
+            <p id="live-withheld" class="small faint" hidden></p>
+
+            <div class="btn-row">
+              <a class="btn" href="/account/">Account</a>
+              <button id="live-disconnect" class="btn btn-ghost" type="button">Disconnect</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  import { WORLD_DOTS } from "../data/world-dots";
+
+  type Place = { country: string; region: string; city: string; lat: number; lon: number; sessions: number };
+  type Snapshot = {
+    at: string;
+    tenant: string;
+    sessions: number;
+    publishers: number;
+    viewers: number;
+    rooms: number;
+    regions: { region: string; sessions: number }[];
+    places: Place[];
+    withheld: number;
+    regions_withheld: number;
+    disclosure: { min_count: number; round_to: number };
+  };
+
+  const STORAGE = "moqom.apiKey";
+  const SVG = "http://www.w3.org/2000/svg";
+  const root = document.getElementById("live");
+
+  if (root) {
+    const API = root.dataset.api ?? "";
+    const byId = <T extends Element>(id: string) => document.getElementById(id) as unknown as T;
+    const form = byId<HTMLFormElement>("live-key-form");
+    const input = byId<HTMLInputElement>("live-key-input");
+    const keyError = byId<HTMLParagraphElement>("live-key-error");
+    const board = byId<HTMLDivElement>("live-board");
+    const points = byId<SVGGElement>("live-points");
+    const state = byId<HTMLSpanElement>("live-state");
+    const countryName = (() => {
+      try {
+        const names = new Intl.DisplayNames(["en"], { type: "region" });
+        return (code: string) => names.of(code) ?? code;
+      } catch {
+        return (code: string) => code;
+      }
+    })();
+    const number = new Intl.NumberFormat("en");
+
+    // Land as a grid of dots, drawn once from the bundled bitset.
+    {
+      const bits = Uint8Array.from(atob(WORLD_DOTS.bits), (c) => c.charCodeAt(0));
+      const half = WORLD_DOTS.step / 2;
+      let d = "";
+      for (let row = 0; row < WORLD_DOTS.rows; row++) {
+        for (let col = 0; col < WORLD_DOTS.cols; col++) {
+          const n = row * WORLD_DOTS.cols + col;
+          if (bits[n >> 3] & (1 << (n & 7))) d += `M${col * WORLD_DOTS.step + half} ${row * WORLD_DOTS.step + half}h0`;
+        }
+      }
+      byId<SVGPathElement>("live-land").setAttribute("d", d);
+    }
+
+    let apiKey = "";
+    try {
+      apiKey = sessionStorage.getItem(STORAGE) ?? "";
+    } catch {
+      /* storage blocked: memory only */
+    }
+    let controller: AbortController | null = null;
+    let retry = 0;
+    let retryTimer = 0;
+
+    const setState = (label: string, tone: "ok" | "accent" | "") => {
+      state.textContent = label;
+      state.className = `pill${tone ? ` pill-${tone}` : ""}`;
+    };
+
+    const placeKey = (p: Place) => `${p.country}|${p.region}|${p.city}|${p.lat}|${p.lon}`;
+    const placeLabel = (p: Place) =>
+      p.city ? `${p.city}${p.region ? `, ${p.region}` : ""}, ${p.country}` : `${countryName(p.country)} (elsewhere)`;
+    const radius = (sessions: number) => Math.min(9, 1.2 + Math.sqrt(sessions) * 0.7);
+
+    const render = (s: Snapshot) => {
+      byId<HTMLSpanElement>("live-min").textContent = String(s.disclosure.min_count);
+      byId<HTMLElement>("live-sessions").textContent = number.format(s.sessions);
+      byId<HTMLElement>("live-publishers").textContent = number.format(s.publishers);
+      byId<HTMLElement>("live-viewers").textContent = number.format(s.viewers);
+      byId<HTMLElement>("live-rooms").textContent = number.format(s.rooms);
+      byId<HTMLElement>("live-pub-bar").style.width = s.sessions ? `${(s.publishers / s.sessions) * 100}%` : "0";
+      byId<HTMLElement>("live-updated").textContent = new Date(s.at).toLocaleTimeString();
+
+      const seen = new Set<string>();
+      for (const place of s.places) {
+        const key = placeKey(place);
+        seen.add(key);
+        let group = points.querySelector<SVGGElement>(`g[data-key="${CSS.escape(key)}"]`);
+        if (!group) {
+          group = document.createElementNS(SVG, "g");
+          group.dataset.key = key;
+          group.setAttribute("class", "pt");
+          group.setAttribute("transform", `translate(${place.lon + 180} ${WORLD_DOTS.north - place.lat})`);
+          const halo = document.createElementNS(SVG, "circle");
+          halo.setAttribute("class", "halo");
+          const core = document.createElementNS(SVG, "circle");
+          core.setAttribute("class", "core");
+          group.append(halo, core, document.createElementNS(SVG, "title"));
+          group.style.animationDelay = `${-Math.random() * 2.4}s`;
+          points.append(group);
+        }
+        const r = radius(place.sessions);
+        const [halo, core, title] = group.children;
+        halo.setAttribute("r", String(r));
+        core.setAttribute("r", String(r));
+        title.textContent = `${placeLabel(place)}: ${number.format(place.sessions)}`;
+      }
+      for (const group of [...points.children] as SVGGElement[]) {
+        if (!seen.has(group.dataset.key ?? "")) group.remove();
+      }
+
+      const regions = byId<HTMLUListElement>("live-regions");
+      const biggest = Math.max(1, ...s.regions.map((r) => r.sessions));
+      regions.replaceChildren(
+        ...s.regions.map((r) => {
+          const li = document.createElement("li");
+          const name = document.createElement("span");
+          name.className = "mono";
+          name.textContent = r.region;
+          const count = document.createElement("span");
+          count.className = "mono";
+          count.textContent = number.format(r.sessions);
+          const bar = document.createElement("span");
+          bar.className = "live-bar";
+          bar.style.width = `${(r.sessions / biggest) * 100}%`;
+          li.append(name, count, bar);
+          return li;
+        }),
+      );
+      if (!s.regions.length) {
+        const li = document.createElement("li");
+        li.className = "faint";
+        li.textContent = "None";
+        regions.append(li);
+      }
+      const regionsWithheld = byId<HTMLParagraphElement>("live-regions-withheld");
+      regionsWithheld.hidden = !s.regions_withheld;
+      regionsWithheld.textContent = `${number.format(s.regions_withheld)} on regions with fewer than ${s.disclosure.min_count}.`;
+
+      const places = byId<HTMLOListElement>("live-places");
+      places.replaceChildren(
+        ...s.places.slice(0, 8).map((p) => {
+          const li = document.createElement("li");
+          const name = document.createElement("span");
+          name.textContent = placeLabel(p);
+          const count = document.createElement("span");
+          count.className = "mono";
+          count.textContent = number.format(p.sessions);
+          li.append(name, count);
+          return li;
+        }),
+      );
+      if (!s.places.length) {
+        const li = document.createElement("li");
+        li.className = "faint";
+        li.textContent = "Nothing to show yet";
+        places.append(li);
+      }
+      const withheld = byId<HTMLParagraphElement>("live-withheld");
+      withheld.hidden = !s.withheld;
+      withheld.textContent =
+        `${number.format(s.withheld)} not on the map: in places with fewer than ${s.disclosure.min_count} ` +
+        `connections, or not locatable.` +
+        (s.disclosure.round_to > 1 ? ` Counts are rounded to the nearest ${s.disclosure.round_to}.` : "");
+    };
+
+    const signOut = (message = "") => {
+      stop();
+      apiKey = "";
+      try {
+        sessionStorage.removeItem(STORAGE);
+      } catch {
+        /* nothing stored */
+      }
+      points.replaceChildren();
+      board.hidden = true;
+      form.hidden = false;
+      input.value = "";
+      keyError.textContent = message;
+      keyError.hidden = !message;
+    };
+
+    const stop = () => {
+      window.clearTimeout(retryTimer);
+      controller?.abort();
+      controller = null;
+    };
+
+    const reconnect = () => {
+      if (!apiKey || document.hidden) return;
+      setState("Reconnecting", "");
+      const delay = Math.min(15_000, 1_000 * 2 ** retry++);
+      retryTimer = window.setTimeout(() => void connect(), delay);
+    };
+
+    const connect = async () => {
+      stop();
+      const own = new AbortController();
+      controller = own;
+      let response: Response;
+      try {
+        response = await fetch(`${API}/v1/live/connections/stream`, {
+          headers: { Authorization: `Bearer ${apiKey}`, Accept: "text/event-stream" },
+          cache: "no-store",
+          signal: own.signal,
+        });
+      } catch {
+        if (!own.signal.aborted) reconnect();
+        return;
+      }
+      if (response.status === 401) return signOut("That key was not accepted. It may be revoked, or it may be a relay key.");
+      if (response.status === 403) return signOut("That key cannot read the live map. Use a backend key for this account.");
+      if (!response.ok || !response.body) return reconnect();
+
+      try {
+        sessionStorage.setItem(STORAGE, apiKey);
+      } catch {
+        /* memory only */
+      }
+      retry = 0;
+      setState("Live", "ok");
+
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = "";
+      try {
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let end: number;
+          while ((end = buffer.indexOf("\n\n")) >= 0) {
+            const block = buffer.slice(0, end);
+            buffer = buffer.slice(end + 2);
+            let event = "message";
+            let data = "";
+            for (const line of block.split("\n")) {
+              if (line.startsWith("event: ")) event = line.slice(7);
+              else if (line.startsWith("data: ")) data += line.slice(6);
+            }
+            if (event === "snapshot" && data) render(JSON.parse(data) as Snapshot);
+            if (event === "revoked") return signOut("That key was revoked.");
+          }
+        }
+      } catch {
+        /* aborted or dropped */
+      }
+      if (!own.signal.aborted) reconnect();
+    };
+
+    const open = () => {
+      form.hidden = true;
+      board.hidden = false;
+      keyError.hidden = true;
+      setState("Connecting", "");
+      void connect();
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const value = input.value.trim();
+      if (!/^mqk_[0-9a-f]+_[A-Za-z0-9_-]+$/.test(value)) {
+        keyError.textContent = "That does not look like a MOQOM API key. Keys start with mqk_.";
+        keyError.hidden = false;
+        return;
+      }
+      apiKey = value;
+      open();
+    });
+    byId("live-disconnect").addEventListener("click", () => signOut());
+
+    // A hidden tab holds no stream open. It picks up where it left off when shown.
+    document.addEventListener("visibilitychange", () => {
+      if (!apiKey) return;
+      if (document.hidden) {
+        stop();
+        setState("Paused", "");
+      } else {
+        retry = 0;
+        void connect();
+      }
+    });
+
+    if (apiKey) open();
+  }
+</script>
+
+<style>
+  .live h1 {
+    margin-bottom: var(--space-3);
+  }
+  .live .lede {
+    max-width: 62ch;
+  }
+  .live-key {
+    max-width: 640px;
+    margin-top: var(--space-5);
+  }
+  .live-key-row {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .live-key-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-sunken);
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  .live-error {
+    color: var(--danger);
+    margin: var(--space-3) 0 0;
+  }
+  .live-board {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    align-items: start;
+  }
+  .live-board[hidden] {
+    display: none;
+  }
+  @media (max-width: 880px) {
+    .live-board {
+      grid-template-columns: 1fr;
+    }
+  }
+  .live-map {
+    padding: var(--space-4);
+  }
+  .live-map svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .live-map :global(.land) {
+    fill: none;
+    stroke: rgb(154 160 166 / 0.28);
+    stroke-width: 0.85;
+    stroke-linecap: round;
+  }
+  .live-map :global(.pt .core) {
+    fill: var(--accent);
+    fill-opacity: 0.55;
+    stroke: var(--accent);
+    stroke-width: 0.35;
+    transition: r 0.6s ease;
+  }
+  .live-map :global(.pt .halo) {
+    fill: var(--accent);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: live-pulse 2.4s ease-out infinite;
+    animation-delay: inherit;
+    transition: r 0.6s ease;
+  }
+  @keyframes live-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-map :global(.pt .halo) {
+      animation: none;
+    }
+  }
+  .live-legend {
+    margin: var(--space-3) 0 0;
+  }
+  .live-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+  }
+  .live-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .live-stat {
+    display: flex;
+    flex-direction: column;
+  }
+  .live-big {
+    font-size: var(--text-3xl);
+    line-height: 1.1;
+  }
+  .live-split-bar {
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-2-soft);
+    overflow: hidden;
+  }
+  .live-split-bar span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--accent-2);
+    transition: width 0.6s ease;
+  }
+  .live-pairs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+  }
+  .live-pairs dt {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .live-pairs dd {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+  .live-h {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: var(--space-3) 0 0;
+  }
+  .live-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .live-list :global(li) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px var(--space-3);
+  }
+  .live-list :global(.live-bar) {
+    grid-column: 1 / -1;
+    height: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    opacity: 0.6;
+    transition: width 0.6s ease;
+  }
+</style>

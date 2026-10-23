@@ -1,0 +1,292 @@
+---
+// /nufi hero: Earth at night with the network, a pledge curve rising through its goal line, and pledges drifting up
+// into it. Three layers move at different rates as the page scrolls (at most 8%); reduced motion holds them still.
+import { DAILY_MET, GOAL, cumulative } from '../../data/nufi-campaign';
+
+const W = 1440;
+const H = 600;
+const MAX = 50_000;
+const cum = cumulative(DAILY_MET);
+const pts = cum.map((v, i) => [(i / (cum.length - 1)) * W, H - 40 - (v / MAX) * (H - 120)] as const);
+// Catmull-Rom through every day, as cubic Béziers.
+const curve = pts
+  .map(([x, y], i) => {
+    if (!i) return `M${x.toFixed(1)} ${y.toFixed(1)}`;
+    const [x0, y0] = pts[i - 2] ?? pts[i - 1];
+    const [x1, y1] = pts[i - 1];
+    const [x3, y3] = pts[i + 1] ?? [x, y];
+    const c1 = [x1 + (x - x0) / 6, y1 + (y - y0) / 6];
+    const c2 = [x - (x3 - x1) / 6, y - (y3 - y1) / 6];
+    return `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`;
+  })
+  .join(' ');
+const area = `${curve} L${W} ${H} L0 ${H} Z`;
+const goalY = H - 40 - (GOAL / MAX) * (H - 120);
+const crossIdx = cum.findIndex((v) => v >= GOAL);
+const [cx, cy] = pts[crossIdx];
+
+// Pledges rising into the curve: fixed pseudo-random positions so every build draws the same field.
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const motes = Array.from({ length: 34 }, () => ({ x: rnd() * 100, d: 6 + rnd() * 9, delay: -rnd() * 15, s: 2 + rnd() * 3.5 }));
+---
+
+<section class="nh" data-hero id="nufi-hero-section" aria-labelledby="nufi-hero-title">
+  <div class="nh-bg" aria-hidden="true">
+    <img class="nh-earth" src="/khensu/hero/earth.jpg" alt="" width="1920" height="1080" fetchpriority="high" decoding="async" />
+    <div class="nh-motes">
+      {motes.map((m) => <i style={`--x:${m.x.toFixed(1)}%;--d:${m.d.toFixed(1)}s;--delay:${m.delay.toFixed(1)}s;--s:${m.s.toFixed(1)}px`} />)}
+    </div>
+    <div class="nh-plot">
+    <svg class="nh-curve" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="nh-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5ee6c0" stop-opacity="0.32" />
+          <stop offset="1" stop-color="#5ee6c0" stop-opacity="0" />
+        </linearGradient>
+        <linearGradient id="nh-line" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.25" />
+          <stop offset="0.7" stop-color="#bff5e4" />
+          <stop offset="1" stop-color="#ffffff" />
+        </linearGradient>
+      </defs>
+      <line class="nh-goal" x1="0" x2={W} y1={goalY} y2={goalY} />
+      <path class="nh-area" d={area} fill="url(#nh-fill)" />
+      <path class="nh-glow" d={curve} pathLength="1" />
+      <path class="nh-line" d={curve} pathLength="1" stroke="url(#nh-line)" />
+    </svg>
+    <span class="nh-goal-label" style={`top:${((goalY / H) * 100).toFixed(2)}%`}>goal</span>
+    <span class="nh-hit" style={`left:${((cx / W) * 100).toFixed(2)}%;top:${((cy / H) * 100).toFixed(2)}%`}></span>
+    </div>
+  </div>
+
+  <div class="wrap nh-copy">
+    <p class="nh-name">ñũ.Fî</p>
+    <h1 id="nufi-hero-title">Fund what you love.<br /><em>Privately.</em></h1>
+    <p class="nh-sub">
+      Give, back, lend and invest, person to person on khėnsu.ñü. No platform cut, and nobody in the middle holding the
+      money.
+    </p>
+    <div class="nh-cta">
+      <a class="btn primary" href="#nufi-back-section">See how pledges work</a>
+      <a class="btn" href="/app">Get the app</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('.nh');
+  if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let ticking = false;
+    const update = () => {
+      const p = Math.min(1, Math.max(0, scrollY / Math.max(1, hero.offsetHeight)));
+      hero.style.setProperty('--hp', p.toFixed(4));
+      ticking = false;
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
+  }
+</script>
+
+<style>
+  .nh {
+    --hp: 0;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: min(calc(100svh - 64px), 920px);
+    display: grid;
+    align-content: start;
+    background: #000;
+  }
+  .nh-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .nh-earth {
+    position: absolute;
+    inset: -6% 0 auto;
+    width: 100%;
+    height: 112%;
+    object-fit: cover;
+    opacity: 0.5;
+    transform: translate3d(0, calc(var(--hp) * 8%), 0) scale(1.06);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);
+    will-change: transform;
+  }
+  .nh-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(60% 46% at 50% 34%, rgba(0, 0, 0, 0.62), transparent 75%);
+    pointer-events: none;
+  }
+  .nh-bg::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16%;
+    z-index: 2;
+    background: linear-gradient(to bottom, transparent, #000);
+    pointer-events: none;
+  }
+  .nh-plot {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40%;
+    transform: translate3d(0, calc(var(--hp) * 4%), 0);
+  }
+  .nh-curve {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .nh-goal {
+    stroke: rgba(255, 255, 255, 0.28);
+    stroke-width: 1;
+    stroke-dasharray: 6 8;
+    vector-effect: non-scaling-stroke;
+  }
+  .nh-line,
+  .nh-glow {
+    fill: none;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: nh-draw 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s forwards;
+  }
+  .nh-line {
+    stroke-width: 2.5;
+  }
+  .nh-glow {
+    stroke: #5ee6c0;
+    stroke-width: 14;
+    opacity: 0.18;
+    filter: blur(6px);
+  }
+  .nh-area {
+    opacity: 0;
+    animation: nh-fade 1.6s ease 1.4s forwards;
+  }
+  @keyframes nh-draw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes nh-fade {
+    to { opacity: 1; }
+  }
+  .nh-goal-label {
+    position: absolute;
+    left: var(--gutter);
+    translate: 0 -150%;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    color: rgba(255, 255, 255, 0.5);
+    display: none;
+  }
+  .nh-hit {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 6px rgba(94, 230, 192, 0.25), 0 0 30px 8px rgba(94, 230, 192, 0.55);
+    opacity: 0;
+    animation: nh-fade 0.6s ease 2.6s forwards, nh-pulse 2.4s ease-in-out 3.2s infinite;
+  }
+  @keyframes nh-pulse {
+    50% { box-shadow: 0 0 0 12px rgba(94, 230, 192, 0.08), 0 0 44px 12px rgba(94, 230, 192, 0.4); }
+  }
+  .nh-motes {
+    position: absolute;
+    inset: 30% 0 0;
+    transform: translate3d(0, calc(var(--hp) * 6%), 0);
+    mask-image: linear-gradient(to top, #000 40%, transparent);
+    -webkit-mask-image: linear-gradient(to top, #000 40%, transparent);
+  }
+  .nh-motes i {
+    position: absolute;
+    left: var(--x);
+    bottom: -10px;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: #dffaf1;
+    box-shadow: 0 0 10px rgba(94, 230, 192, 0.8);
+    opacity: 0;
+    animation: nh-rise var(--d) linear var(--delay) infinite;
+  }
+  @keyframes nh-rise {
+    0% { transform: translateY(0); opacity: 0; }
+    15% { opacity: 0.9; }
+    100% { transform: translateY(-70vh); opacity: 0; }
+  }
+  .nh-copy {
+    position: relative;
+    padding-top: clamp(4.5rem, 12vh, 8rem);
+    padding-bottom: 2rem;
+    text-align: center;
+    transform: translate3d(0, calc(var(--hp) * -48px), 0);
+    opacity: calc(1 - var(--hp) * 1.1);
+  }
+  .nh-name {
+    margin: 0 auto 0.6rem;
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .nh h1 {
+    margin: 0 auto;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    max-width: none;
+  }
+  .nh-sub {
+    margin: 1.4rem auto 0;
+    max-width: 40ch;
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    color: rgba(255, 255, 255, 0.66);
+  }
+  .nh-cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 880px) {
+    .nh-goal-label {
+      display: block;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nh-line,
+    .nh-glow {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+    .nh-area,
+    .nh-hit {
+      animation: none;
+      opacity: 1;
+    }
+    .nh-motes {
+      display: none;
+    }
+  }
+</style>

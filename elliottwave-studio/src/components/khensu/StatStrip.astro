@@ -1,0 +1,190 @@
+---
+// Big numbers with one-line captions, Apple-style. Numeric values count up once as the strip scrolls into view;
+// the final value is in the HTML, so no-JS and reduced motion show it as is. The default slot is a footnote.
+interface Stat {
+  n: number | string;
+  pre?: string;
+  unit?: string;
+  dec?: number;
+  label: string;
+  kind?: string;
+}
+interface Props {
+  items: Stat[];
+  class?: string;
+}
+const { items, class: cls } = Astro.props;
+const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const shown = items.map((s) => ({ ...s, text: typeof s.n === 'number' ? fmt(s.n, s.dec) : s.n }));
+const note = Astro.slots.has('default');
+const SYMBOLS = new Set(['×', '%']);
+---
+
+<div class:list={['stat-strip', cls]} style={`--n:${items.length}`}>
+  <ul role="list">
+    {shown.map((s, i) => (
+      <li style={`--i:${i}`}>
+        <span class="sr">{`${s.pre ?? ''}${s.text}${s.unit ? ` ${s.unit}` : ''}: ${s.label}`}</span>
+        <b aria-hidden="true">
+          {s.pre && <span class="pre">{s.pre}</span>}
+          <span class="v">
+            <span class="ghost">{s.text}</span>
+            <span class="live" data-n={typeof s.n === 'number' ? s.n : undefined} data-dec={s.dec ?? 0}>{s.text}</span>
+          </span>
+          {s.unit && <span class:list={['unit', { sym: SYMBOLS.has(s.unit) }]}>{s.unit}</span>}
+        </b>
+        <span class="cap" aria-hidden="true">{s.label}{s.kind && <em class="kind">{s.kind}</em>}</span>
+      </li>
+    ))}
+  </ul>
+  {note && <p class="note"><slot /></p>}
+</div>
+
+<script>
+  const els = [...document.querySelectorAll<HTMLElement>('.stat-strip .live[data-n]')];
+  if (els.length && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const run = (el: HTMLElement) => {
+      const to = Number(el.dataset.n);
+      const dec = Number(el.dataset.dec || 0);
+      const final = el.textContent;
+      const t0 = performance.now();
+      const dur = 1200;
+      const step = (t: number) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = p < 1 ? (to * e).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : final;
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          io.unobserve(e.target);
+          run(e.target as HTMLElement);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    for (const el of els) io.observe(el);
+  }
+</script>
+
+<style>
+  .stat-strip {
+    margin: clamp(2rem, 5vw, 3.5rem) 0 0;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.4rem, 3vw, 2.2rem) clamp(1rem, 3vw, 2.5rem);
+  }
+  @media (min-width: 760px) {
+    ul {
+      grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 759px) {
+    li:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+  li {
+    margin: 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+    animation: stat-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i) * 90ms);
+  }
+  b {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 0.18em;
+    font-size: clamp(2.5rem, 5.4vw, 4.25rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+    color: var(--text, #fff);
+    font-variant-numeric: tabular-nums;
+  }
+  .pre {
+    margin-right: -0.12em;
+  }
+  .v {
+    display: inline-grid;
+  }
+  .ghost,
+  .live {
+    grid-area: 1 / 1;
+  }
+  .ghost {
+    visibility: hidden;
+  }
+  .unit {
+    font-size: 0.42em;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-dim, rgba(255, 255, 255, 0.6));
+  }
+  .unit.sym {
+    margin-left: -0.14em;
+    font-size: 0.62em;
+    font-weight: 600;
+    color: var(--text, #fff);
+  }
+  .cap {
+    color: var(--text-dim, rgba(255, 255, 255, 0.6));
+    font-size: clamp(0.88rem, 1.2vw, 0.98rem);
+    line-height: 1.4;
+    max-width: 22ch;
+  }
+  .kind {
+    display: block;
+    margin-top: 0.3rem;
+    font-style: normal;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--text-faint, rgba(255, 255, 255, 0.4));
+  }
+  .note {
+    margin: 1.4rem 0 0;
+    max-width: none;
+    font-size: 0.82rem;
+    color: var(--text-faint, rgba(255, 255, 255, 0.45));
+  }
+  .note :global(a) {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  @keyframes stat-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    li {
+      animation: none;
+    }
+  }
+</style>

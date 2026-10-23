@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import Code from '../components/Code.astro';
+import { SITE } from '../data/site';
+import { EXAMPLE, exampleHtml } from '../lib/examples';
+
+const tap = exampleHtml({ ...EXAMPLE, poster: 'https://your-models.web.app/models/chair.webp', reveal: 'interaction' }).element;
+const compress = `npx @gltf-transform/cli optimize chair.glb chair-small.glb --compress meshopt --texture-compress webp`;
+---
+
+<Base title="Accessibility and performance" description={`How ${SITE.displayName} handles screen readers, keyboards, reduced motion and loading.`}>
+  <p class="eyebrow">Guides</p>
+  <h1>Accessibility and performance</h1>
+  <div class="prose">
+    <h2>Accessibility</h2>
+    <ul>
+      <li>
+        <strong>Alt text is required.</strong> The snippet generators and the WordPress block refuse to run without it. Describe what the model
+        shows, as you would for an image: “Oak chair with a woven seat”, not “3D model”. If it is missing at runtime, the element logs an
+        error and screen readers hear “3D model”.
+      </li>
+      <li>
+        <strong>Keyboard:</strong> the viewer can be focused with Tab. With orbit and zoom on, arrow keys rotate the model. The AR and
+        tap-to-load buttons are real buttons.
+      </li>
+      <li>
+        <strong>Reduced motion:</strong> when the visitor's system asks for reduced motion, auto-rotate and the animated interaction prompt are
+        turned off, and the AR placement prompt does not animate. The setting is read live; changing it updates the page.
+      </li>
+      <li><strong>Loading:</strong> the progress bar is announced as a progress bar with a label.</li>
+      <li>
+        <strong>Contrast:</strong> the AR button is blue text (<code>#1a73e8</code>) on white, a contrast ratio of about 4.5:1. Change the
+        colour with the <code>--ew-viewer-accent</code> CSS custom property on the element; keep at least 4.5:1 against white.
+      </li>
+      <li>A 3D view is extra, not a replacement: keep product photos and a text description on the page.</li>
+    </ul>
+
+    <h2>Performance</h2>
+    <p>
+      The viewer script is {Math.round(SITE.release.bytes / 1024)} KiB, around 300 KB compressed, because it contains three.js. The browser
+      caches it, so a visitor downloads it once per version. Load it once per page, even with several models.
+    </p>
+    <ul>
+      <li>
+        <strong>Lazy loading</strong> is on by default: a model downloads when the viewer is close to the screen. Use
+        <code>loading="eager"</code> only for a model at the top of the page.
+      </li>
+      <li>
+        <strong>Tap to load</strong> (<code>reveal="interaction"</code>) shows the poster and a “Load 3D model” button, and downloads nothing
+        until the visitor asks. Good for large models and pages with several.
+      </li>
+      <li><strong>Poster:</strong> a small WebP or JPEG of the model makes the page look finished before the model arrives.</li>
+      <li>
+        <strong>File size:</strong> aim for under 15 MB; under 5 MB is better on mobile. Most of a model's size is usually textures.
+        <a href="https://gltf-transform.dev">glTF Transform</a> can resize and compress them.
+      </li>
+      <li><strong>Caching:</strong> serve models with <code>Cache-Control</code> of at least a day.</li>
+    </ul>
+  </div>
+  <Code title="Tap to load, with a poster" code={tap} />
+  <Code title="Compress a model (glTF Transform)" code={compress} />
+  <div class="prose">
+    <p>
+      Meshopt and Draco geometry compression, and KTX2 textures, need decoders. <code>&lt;model-viewer&gt;</code> downloads them from
+      <code>www.gstatic.com</code> the first time a model needs one. To serve them from your own site, see
+      <a href={`${SITE.repoUrl}/tree/main/packages/core#decoders`}>decoders</a>. WebP textures need no decoder.
+    </p>
+  </div>
+</Base>

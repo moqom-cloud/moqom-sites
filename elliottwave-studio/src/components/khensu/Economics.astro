@@ -1,0 +1,141 @@
+---
+// Per-view figures from khensu-specs design/node-earnings.md section 7. All estimates.
+const cols = ['1 thousand views', '1 million views', '1 billion views', '1 trillion views'];
+const rows = [
+  { name: 'Data sent with ñü.media', note: '4 MB a view', vals: ['4 GB', '4 TB', '4 PB', '4 EB'], ours: true },
+  { name: 'Data sent as Instagram’s own file', note: '18.8 MB a view', vals: ['18.8 GB', '18.8 TB', '18.8 PB', '18.8 EB'] },
+  { name: 'Paid to the nodes that deliver it', note: 'all nodes together', vals: ['$0.02–0.06', '$24–60', '$24k–60k', '$24M–60M'], ours: true },
+  { name: 'Paid to the creator', note: '1¢ a view, no cut', vals: ['$10', '$10,000', '$10M', '$10B'], ours: true },
+];
+// Other platforms' terms as published or widely reported in 2025; they change, so check each one.
+const compare = {
+  cols: ['Platform keeps from tips and subscriptions', 'Pays you per 1,000 views', 'Ads on your work'],
+  rows: [
+    { name: 'khėnsu.ñü', vals: ['0%', '$10, no cut', 'None'], ours: true },
+    { name: 'TikTok', vals: ['About half of LIVE gifts', '$0.40–1.00, videos over 1 minute', 'Yes'] },
+    { name: 'Instagram', vals: ['Up to 10% of subscriptions, plus app store fees', 'No general pay per view', 'Yes'] },
+    { name: 'Facebook', vals: ['Keeps the markup on Stars; you get $0.01 a Star', 'Varies with ad revenue', 'Yes'] },
+    { name: 'Patreon', vals: ['10% plus payment fees, new creators', 'None', 'No'] },
+    { name: 'OnlyFans', vals: ['20%', 'None', 'No'] },
+  ],
+};
+const points = [
+  { t: 'No owner takes a cut', b: 'Views, tips and gifts go straight to creators. The network fee goes to the people running the nodes.' },
+  { t: 'One rate, worldwide', b: 'A node in Tangier earns the same per gigabyte as one in Berlin, and that money goes about 2.5× further.' },
+  { t: 'A cent a play', b: 'Every view or play pays the creator 1¢, $10 per 1,000, and no one takes a cut. A fan’s money only goes to what they watched.' },
+];
+---
+
+<section class="section econ" id="economics-section" aria-labelledby="econ-title">
+  <div class="wrap">
+    <p class="eyebrow">Economics</p>
+    <h2 id="econ-title" class="big">Post-capitalist economics. <em>Paid for work, owned by no one.</em></h2>
+    <p class="lede">
+      No shareholders between you and your audience. People who make things and people who carry them are paid
+      directly, and the network keeps nothing in between.
+    </p>
+    <ul class="econ-points" role="list">
+      {points.map((p) => (
+        <li class:list={[{ goal: p.goal }]}>
+          {p.goal && <small>Goal</small>}
+          <b>{p.t}</b>
+          <span>{p.b}</span>
+        </li>
+      ))}
+    </ul>
+
+    <figure class="card econ-card">
+      <figcaption><b>Going live or posting a video</b><span>Estimates per number of views, where a view is one minute watched</span></figcaption>
+      <div class="econ-scroll" tabindex="0">
+        <table>
+          <thead>
+            <tr><th scope="col"><span class="sr">Item</span></th>{cols.map((c) => <th scope="col">{c}</th>)}</tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr class:list={[{ ours: r.ours }]}>
+                <th scope="row"><b>{r.name}</b><small>{r.note}</small></th>
+                {r.vals.map((v) => <td>{v}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        Estimates, not promises. nu.media at 500 kbit/s plus audio; three node hops a view, paid $0.002–0.005 per GB.
+        A view is one minute watched, of a post, a video or a live stream; the same minute costs and pays the same either way, so content people stay for earns more. Creators are paid 1¢ a view with no cut; tips and paid subscriptions come on top. A trillion
+        views is a whole platform’s traffic, not one video. Node rates and prices can change.
+      </p>
+    </figure>
+
+    <figure class="card econ-card">
+      <figcaption><b>Compared with where creators are now</b><span>For your own content, live or posted</span></figcaption>
+      <div class="econ-scroll" tabindex="0">
+        <table class="cmp">
+          <thead>
+            <tr><th scope="col"><span class="sr">Platform</span></th>{compare.cols.map((c) => <th scope="col">{c}</th>)}</tr>
+          </thead>
+          <tbody>
+            {compare.rows.map((r) => (
+              <tr class:list={[{ ours: r.ours }]}>
+                <th scope="row"><b>{r.name}</b></th>
+                {r.vals.map((v) => <td>{v}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        Other platforms’ terms as they published them or as creators widely reported them in 2025, before Apple’s and
+        Google’s fees on in-app purchases where those apply; programmes vary by country and change often. khėnsu.ñü’s
+        figure is the estimate above. TikTok, Instagram, Facebook, Patreon and OnlyFans are trademarks of their owners;
+        no affiliation.
+      </p>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .econ-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  .econ-points li {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+    padding: 1.2rem 1.3rem;
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) saturate(150%);
+  }
+  .econ-points li span { color: var(--muted, rgba(255, 255, 255, 0.65)); }
+  .econ-points .goal { border-color: rgba(139, 123, 255, 0.45); }
+  .econ-points small {
+    justify-self: start;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: rgba(139, 123, 255, 0.2);
+    color: #c9c0ff;
+  }
+  .econ-card figcaption { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; margin-bottom: 1rem; }
+  .econ-card figcaption span { color: var(--muted, rgba(255, 255, 255, 0.6)); font-size: 0.85rem; }
+  .econ-scroll { overflow-x: auto; }
+  table { width: 100%; min-width: 40rem; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 0.7rem 0.6rem; text-align: right; border-top: 1px solid rgba(255, 255, 255, 0.08); white-space: nowrap; }
+  thead th { border-top: 0; font-size: 0.8rem; font-weight: 500; color: var(--muted, rgba(255, 255, 255, 0.6)); }
+  tbody th { text-align: left; display: grid; gap: 0.1rem; font-weight: 400; white-space: normal; }
+  tbody th small { color: var(--muted, rgba(255, 255, 255, 0.5)); font-size: 0.75rem; }
+  tr.ours td { color: #fff; font-weight: 600; }
+  tr:not(.ours) td { color: var(--muted, rgba(255, 255, 255, 0.55)); }
+  .cmp th, .cmp td { white-space: normal; }
+  .cmp thead th { max-width: 14rem; }
+  .cmp tbody th { min-width: 7rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>

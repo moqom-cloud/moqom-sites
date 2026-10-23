@@ -1,0 +1,216 @@
+{
+  "clip": "reel",
+  "source": "deemsterhotline.mp4",
+  "start": 8.0,
+  "seconds": 6,
+  "size": "720x1280",
+  "vmaf_model": "vmaf_v0.6.1",
+  "codecs": {
+    "h264-hw": {
+      "label": "H.264, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 250,
+          "actual_kbps": 254.5,
+          "vmaf": 24.84,
+          "encode_fps_iphone": 192
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 358.7,
+          "vmaf": 35.44,
+          "encode_fps_iphone": 214
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 704.6,
+          "vmaf": 67.91,
+          "encode_fps_iphone": 212
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1404.6,
+          "vmaf": 85.41,
+          "encode_fps_iphone": 207
+        }
+      ]
+    },
+    "hevc-hw": {
+      "label": "HEVC, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.2,
+          "vmaf": 40.23,
+          "encode_fps_iphone": 198
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 352.3,
+          "vmaf": 61.42,
+          "encode_fps_iphone": 197
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 702.8,
+          "vmaf": 79.71,
+          "encode_fps_iphone": 196
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1404.0,
+          "vmaf": 89.96,
+          "encode_fps_iphone": 194
+        }
+      ]
+    },
+    "nu-base": {
+      "label": "nu-media base layer, HEVC iPhone hardware at half size",
+      "points": [
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.2,
+          "vmaf": 45.31,
+          "encode_fps_iphone": 380
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 352.4,
+          "vmaf": 62.02,
+          "encode_fps_iphone": 378
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 702.5,
+          "vmaf": 75.18,
+          "encode_fps_iphone": 376
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1401.2,
+          "vmaf": 83.84,
+          "encode_fps_iphone": 363
+        }
+      ]
+    },
+    "av1-svt-rt": {
+      "label": "AV1, SVT-AV1 real time on the Mac (no iPhone AV1 encoder)",
+      "points": [
+        {
+          "target_kbps": 250,
+          "actual_kbps": 306.2,
+          "vmaf": 62.85
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 547.9,
+          "vmaf": 74.35
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1053.8,
+          "vmaf": 84.83
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2047.1,
+          "vmaf": 92.85
+        }
+      ]
+    },
+    "nu-base-av1": {
+      "label": "nu-media base layer, SVT-AV1 real time on the Mac at half size",
+      "points": [
+        {
+          "target_kbps": 250,
+          "actual_kbps": 273.2,
+          "vmaf": 58.71
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 525.2,
+          "vmaf": 70.7
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1021.2,
+          "vmaf": 80.16
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2029.5,
+          "vmaf": 86.42
+        }
+      ]
+    },
+    "nu-sr": {
+      "label": "nu-media: HEVC iPhone hardware at half size + Apple low-latency super resolution (Neural Engine), all on iPhone",
+      "device": "iPhone18,4",
+      "os": "Version 26.6.1 (Build 23G83)",
+      "points": [
+        {
+          "target_kbps": 150,
+          "actual_kbps": 107.3,
+          "vmaf": 29.53,
+          "encode_fps_iphone": 386,
+          "sr_fps_iphone": 457
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.2,
+          "vmaf": 43.07,
+          "encode_fps_iphone": 384,
+          "sr_fps_iphone": 443
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 352.4,
+          "vmaf": 56.91,
+          "encode_fps_iphone": 384,
+          "sr_fps_iphone": 471
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 702.5,
+          "vmaf": 66.94,
+          "encode_fps_iphone": 377,
+          "sr_fps_iphone": 456
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1401.2,
+          "vmaf": 72.94,
+          "encode_fps_iphone": 368,
+          "sr_fps_iphone": 459
+        }
+      ]
+    }
+  },
+  "device": "iPhone18,4",
+  "os": "Version 26.6.1 (Build 23G83)",
+  "grid": {
+    "want_kbps": 500,
+    "codecs": {
+      "h264-hw": {
+        "actual_kbps": 497.1,
+        "vmaf": 52.69
+      },
+      "hevc-hw": {
+        "actual_kbps": 500.5,
+        "vmaf": 72.63
+      },
+      "av1-svt-rt": {
+        "actual_kbps": 494.7,
+        "vmaf": 72.38
+      },
+      "nu-base": {
+        "actual_kbps": 500.0,
+        "vmaf": 69.35
+      },
+      "nu-base-av1": {
+        "actual_kbps": 502.1,
+        "vmaf": 69.83
+      }
+    }
+  }
+}

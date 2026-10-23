@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Chords & actions" description="How six10nine chords are played, and what a chord can do in each app." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Chords &amp; actions</h1>
+  <p class="lede">A chord is ⌘ plus keys. What it does is up to you, app by app.</p>
+
+  <h2>Playing chords</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Kind</th><th>How</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Chord</td>
+          <td>Hold ⌘ and press keys together, like the notes of a piano chord. Add ⇧, ⌥ or ⌃ if you like.</td>
+          <td><kbd>⌘8</kbd> <kbd>⌘8K</kbd> <kbd>⌘⇧8K</kbd></td>
+        </tr>
+        <tr>
+          <td>In order</td>
+          <td>Hold ⌘ and press keys one after another. Order and repeats count.</td>
+          <td><kbd>⌘P·O·O·P</kbd></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <kbd>⌘P·O·O·P</kbd>, <kbd>⌘P·O·P</kbd> and the chord <kbd>⌘OP</kbd> are three different chords, and each can have
+    its own action. A chord finishes when you release ⌘ or pause, or straight away when nothing longer could follow.
+  </p>
+  <p>
+    <kbd>⌘8</kbd> and <kbd>⌘0</kbd> work from the first launch. The menu bar menu lists the chord keys you can play. A ⌘
+    shortcut that isn’t a chord reaches the app as usual, so <kbd>⌘C</kbd> still copies.
+  </p>
+
+  <h2>Actions</h2>
+  <p>
+    Each app keeps its own action for each chord. An action is a <strong>menu item</strong>, which six10nine clicks for
+    you through Accessibility. Menu items keep working when you change an app’s shortcuts. If the item is gone or
+    disabled, six10nine beeps and does nothing. Chords never press keys in the app for you.
+  </p>
+  <p>
+    When you record a shortcut, six10nine saves the menu item in that app that shows it. If no menu item shows that
+    shortcut, it asks you to pick a menu item instead. A chord with no action in the current app is handed to the app as
+    if six10nine weren’t there, unless <a href="/ai">AI matching</a> finds an equivalent.
+  </p>
+  <p>
+    Chords recorded as shortcuts by earlier versions are looked up in the app’s menus the next time you play them and
+    switched to the menu item that shows that shortcut. If there isn’t one, the chord does nothing and six10nine tells
+    you to record it again.
+  </p>
+
+  <h2>Recording</h2>
+  <p>Hold <kbd>⌘67</kbd> for a second in the app you want.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Keys</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td>Chord</td><td>⌘ + keys</td><td>Plays the chord. Playing again replaces it.</td></tr>
+        <tr><td></td><td><kbd>↩</kbd></td><td>Uses this chord and moves on.</td></tr>
+        <tr><td>Action</td><td>A shortcut with ⌘, ⌃ or ⌥, or a key like F5</td><td>Picks the menu item that shows it. If none does, six10nine asks you to pick a menu item instead.</td></tr>
+        <tr><td></td><td>Typing</td><td>Searches the app’s menu items; every word must appear in the menu path.</td></tr>
+        <tr><td></td><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Moves through the top eight matches.</td></tr>
+        <tr><td></td><td><kbd>↩</kbd></td><td>Saves.</td></tr>
+        <tr><td>Any</td><td><kbd>Esc</kbd></td><td>Cancels.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Return, Esc, plain arrows and plain ⌫ drive the recording, so they can’t be recorded as actions or used in chords.
+    Keys are named by their physical position, so ⌥ and ⇧ don’t change what a key is called.
+  </p>
+
+  <h2>Reserved gestures</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Gesture</th><th>Does</th></tr></thead>
+      <tbody>
+        <tr><td>Hold <kbd>⌘67</kbd> for 1 s</td><td>Record a chord.</td></tr>
+        <tr><td><kbd>⌘67</kbd> while disabled</td><td>Turns chords back on, if that option is checked.</td></tr>
+        <tr><td><kbd>⌘69</kbd></td><td>Opens a camera mirror with a dry, deadpan voice assistant. Needs macOS 26 with Apple Intelligence. Try it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Changing and removing chords</h2>
+  <p>
+    Record the chord again to replace its action in that app. AI agents can also list, set and remove chords through the
+    <a href="/mcp">MCP server</a>.
+  </p>
+</Base>

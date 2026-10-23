@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0A0B0D"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 520 C40 480 90 400 130 400 C170 400 200 460 230 450 C300 420 400 210 480 200 C530 195 560 300 590 290 C660 260 740 120 790 110 C840 100 880 240 910 230 C950 220 980 170 1010 175 C1060 185 1140 340 1200 360" stroke="#2C3038" stroke-width="2"/>
+    <path d="M0 540 C40 500 90 430 130 430 C170 430 200 480 230 470 C300 445 400 250 480 240 C530 235 560 330 590 320 C660 295 740 160 790 150 C840 140 880 270 910 260 C950 250 980 205 1010 210 C1060 220 1140 360 1200 380" stroke="#1F2228" stroke-width="2"/>
+    <path d="M0 500 C40 460 90 370 130 370 C170 370 200 430 230 420 C300 390 400 170 480 160 C530 155 560 260 590 250 C660 220 740 80 790 70 C840 60 880 200 910 190 C950 180 980 130 1010 135 C1060 145 1140 300 1200 320" stroke="#F59E0B" stroke-width="4"/>
+  </g>
+  <text x="80" y="560" fill="#E8EAED" font-family="Georgia, serif" font-size="72">elliottwave.studio lab</text>
+  <text x="84" y="600" fill="#9AA0A9" font-family="Menlo, monospace" font-size="22" letter-spacing="3">TECHNOLOGY THAT DEFINES ITS CATEGORY</text>
+</svg>

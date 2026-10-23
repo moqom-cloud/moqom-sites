@@ -1,0 +1,834 @@
+---
+// iPhone-sized HTML mocks of the khėnsu.ñü app, after the design canvas in khensu-specs.
+// Everything is sized in container units, so a phone renders identically at any width.
+import Icon from './Icon.astro';
+import Crescent from './Crescent.astro';
+
+type Screen = 'chats' | 'chat' | 'feed' | 'call' | 'ask' | 'wallet';
+interface Props {
+  screen: Screen;
+  class?: string;
+  label?: string;
+}
+const { screen, class: cls, label } = Astro.props;
+
+const tabFor: Record<Screen, string | null> = {
+  chats: 'Chats',
+  chat: null,
+  feed: 'Feed',
+  call: null,
+  ask: 'Search',
+  wallet: 'Wallet',
+};
+const tabs = [
+  { name: 'Chats', icon: 'chats' },
+  { name: 'Feed', icon: 'feed' },
+  { name: 'Calls', icon: 'calls' },
+  { name: 'Wallet', icon: 'wallet' },
+] as const;
+const active = tabFor[screen];
+
+// The avatars read down the list as IMHOTEP.
+const chats = [
+  { n: 'Isis', m: 'Reacted ❤️‍🔥 to “Bail is dinner Friday.”', t: '9:41', v: true },
+  { n: 'Maat', m: 'Voice note · 0:42', t: '9:38', u: 4, v: true, timer: true },
+  { n: 'Hathor', m: 'Bold of you to text first.', t: '9:30', v: true },
+  { n: 'Osiris', m: 'Back from the dead. Missed me?', t: '9:20', v: true },
+  { n: 'Thoth', m: 'We’ve decoded spacetime. Notes attached.', t: '9:12' },
+  { n: 'Elliott', m: 'Sent you 42 · shielded', t: '8:50', v: true },
+  { n: 'Ptah', m: '✨🪽✨🌀👣🌀✨🪽✨', t: 'Wed', u: 12 },
+];
+---
+
+<figure class:list={['phone', cls]} aria-label={label}>
+  <div class="screen" data-screen={screen}>
+    <div class="status" aria-hidden="true">
+      <span>9:41</span>
+      <span class="island"></span>
+      <span class="sig"><i></i><i></i><i></i><i></i></span>
+    </div>
+
+    {screen === 'chats' && (
+      <div class="body">
+        <div class="nav">
+          <span class="capsule">Edit</span>
+          <span class="nav-trail">
+            <span class="glass-circle"><Icon name="more" /></span>
+            <span class="glass-circle"><Icon name="compose" /></span>
+          </span>
+        </div>
+        <h3 class="large">Chats</h3>
+        <div class="chips"><span class="on">All</span><span>People</span><span>Groups</span><span>Channels</span></div>
+        <ul class="rows">
+          {chats.map((c) => (
+            <li class="row">
+              <span class="avatar">{c.n[0]}</span>
+              <span class="row-main">
+                <span class="row-top">
+                  <b>{c.n}</b>
+                  {c.v && <span class="check" />}
+                  {c.timer && <span class="moon" />}
+                </span>
+                <span class="row-sub">{c.m}</span>
+              </span>
+              <span class="row-meta">
+                <span>{c.t}</span>
+                {c.u && <span class="badge">{c.u}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {screen === 'chat' && (
+      <div class="body chat">
+        <div class="chat-head">
+          <span class="glass-circle"><Icon name="back" /></span>
+          <span class="capsule who"><span class="avatar sm">I</span><b>Isis</b><span class="check" /></span>
+          <span class="capsule"><Icon name="calls" /><Icon name="video" /></span>
+        </div>
+        <p class="sys"><Icon name="lock" /> Post-quantum end-to-end encrypted</p>
+        <div class="b them">You left your hoodie here. It’s mine now.</div>
+        <div class="b me reacted">Bail is dinner Friday.<small>9:31</small><span class="react" aria-label="Isis reacted with a heart on fire">❤️‍🔥</span></div>
+        <div class="b them">Door code’s 4471. Try to be charming.<small><span class="moon" /> 2h left</small></div>
+        <div class="pay">
+          <span class="pay-k">Shielded payment</span>
+          <span class="pay-v">42</span>
+          <span class="pay-k dim">Hidden amount · no lasting record</span>
+        </div>
+        <div class="b them">For the wine. Charm isn’t free.<small>9:38</small></div>
+        <p class="typing">Isis is typing…</p>
+        <div class="composer">
+          <span class="glass-circle lg"><Icon name="plus" /></span>
+          <span class="field">Message <Icon name="mic" /></span>
+        </div>
+      </div>
+    )}
+
+    {screen === 'feed' && (
+      <div class="body">
+        <div class="nav">
+          <span class="capsule">Following</span>
+          <span class="nav-trail"><span class="glass-circle"><Icon name="compose" /></span></span>
+        </div>
+        <h3 class="large">Feed</h3>
+        <div class="chips"><span class="on">For you</span><span>Forums</span><span>Sites</span><span>Live</span></div>
+        <article class="post">
+          <header><span class="avatar sm">A</span><b>ada.khensu.nu</b><span class="check" /><span class="dim">· 2h</span></header>
+          <div class="media sunrise"><span>Lisbon, tram 28 at dawn</span></div>
+          <footer><Icon name="heart" /> 1.2k <Icon name="reply" /> 84 <Icon name="share" /><span class="signed">Signed</span></footer>
+        </article>
+        <article class="post">
+          <header><span class="live-dot">LIVE</span><b>Node operators</b><span class="dim">· 3.1k watching</span></header>
+          <div class="media stream"><span><Icon name="live" /> Ask us anything: running a node at home</span></div>
+        </article>
+        <article class="post">
+          <header><span class="avatar sm">M</span><b>forum/makers</b><span class="dim">· Mara</span></header>
+          <p class="post-text">Printed a stand for the shell. Files on my site, mara.khensu.nu</p>
+        </article>
+        <p class="anon">You read anonymously. Posters sign what they publish.</p>
+      </div>
+    )}
+
+    {screen === 'call' && (
+      <div class="body call">
+        <div class="call-top">
+          <span class="avatar xl">A</span>
+          <b class="call-name">Ada</b>
+          <span class="dim">khėnsu call · 04:12</span>
+          <span class="call-tag"><Icon name="shield" /> Post-quantum · relays change as you talk</span>
+        </div>
+        <div class="call-grid">
+          <span><span class="glass-circle xl"><Icon name="speaker" /></span>Speaker</span>
+          <span><span class="glass-circle xl"><Icon name="video" /></span>Camera</span>
+          <span><span class="glass-circle xl"><Icon name="mic" /></span>Mute</span>
+          <span><span class="glass-circle xl"><Icon name="plus" /></span>Add</span>
+          <span><span class="glass-circle xl"><Icon name="chats" /></span>Message</span>
+          <span><span class="glass-circle xl end"><Icon name="end" /></span>End</span>
+        </div>
+      </div>
+    )}
+
+    {screen === 'ask' && (
+      <div class="body">
+        <div class="nav">
+          <span></span>
+          <span class="nav-trail"><span class="glass-circle"><Icon name="more" /></span></span>
+        </div>
+        <h3 class="large">Ask khėnsu</h3>
+        <div class="field q"><Icon name="search" /> When is the Lisbon trip?</div>
+        <div class="answer">
+          <p class="answer-k"><Icon name="sparkle" /> Private AI on this iPhone</p>
+          <p>12–19 May. Ada moved it a week on Monday, and you booked a flat near Cais do Sodré.</p>
+          <ul class="cites">
+            <li><span class="tag">Chat</span> Ada: Lisbon moved to 12–19 May</li>
+            <li><span class="tag">Chat</span> Flat booked near Cais do Sodré</li>
+            <li><span class="tag">Note</span> Flights on hold until Friday</li>
+          </ul>
+        </div>
+        <p class="anon">Only you have your data. No AI servers, nothing to leak.</p>
+      </div>
+    )}
+
+    {screen === 'wallet' && (
+      <div class="body">
+        <div class="nav"><span></span><span class="nav-trail"><span class="glass-circle"><Icon name="plus" /></span></span></div>
+        <h3 class="large">Wallet</h3>
+        <div class="card-balance">
+          <span class="dim">Shielded balance</span>
+          <span class="bal">•••••</span>
+          <span class="dim small"><Icon name="lock" /> Only you can see it</span>
+        </div>
+        <ul class="rows tx">
+          <li class="row"><span class="avatar">E</span><span class="row-main"><b>Elliott</b><span class="row-sub">Sent · shielded</span></span><span class="row-meta">42</span></li>
+          <li class="row"><span class="avatar">A</span><span class="row-main"><b>Ada</b><span class="row-sub">Received · shielded</span></span><span class="row-meta">40</span></li>
+        </ul>
+        <div class="node-card">
+          <span class="node-k"><Crescent size="1.1em" /> Your node</span>
+          <b>Online for 6 days</b>
+          <span class="dim">Carrying traffic for people nearby</span>
+        </div>
+      </div>
+    )}
+
+    {active && (
+      <nav class="tabbar" aria-hidden="true">
+        <span class="tabs">
+          {tabs.map((t) => (
+            <span class:list={['tab', { on: t.name === active }]}>
+              <Icon name={t.icon} />
+              <span>{t.name}</span>
+            </span>
+          ))}
+        </span>
+        <span class:list={['glass-circle', 'lg', 'search-btn', { on: active === 'Search' }]}><Icon name="search" /></span>
+      </nav>
+    )}
+    <span class="home" aria-hidden="true"></span>
+  </div>
+</figure>
+
+<style>
+  .phone {
+    --star: #f2f1ec;
+    --silver: #c9ccd2;
+    --ash: #8a8f98;
+    --ink: #0b0c0e;
+    --fill: rgba(255, 255, 255, 0.07);
+    --fill-2: rgba(255, 255, 255, 0.11);
+    --stroke: rgba(255, 255, 255, 0.1);
+    container-type: inline-size;
+    width: var(--phone-w, 280px);
+    aspect-ratio: 9 / 19.5;
+    margin: 0;
+    padding: 2.6%;
+    border-radius: 16% / 7.4%;
+    background: linear-gradient(145deg, #3a3d43, #15171a 40%, #2b2e33);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 40px 80px -20px rgba(0, 0, 0, 0.8),
+      0 10px 30px rgba(0, 0, 0, 0.5);
+    flex: none;
+  }
+  .screen {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 13.6% / 6.4%;
+    background: #000;
+    color: var(--star);
+    font-family: -apple-system, 'SF Pro Text', var(--font-sans);
+    font-size: 4.1cqw;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-align: start;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4.2cqw 7cqw 0;
+    height: 12cqw;
+    font-weight: 600;
+    font-size: 4.3cqw;
+  }
+  .island {
+    width: 31cqw;
+    height: 9cqw;
+    border-radius: 5cqw;
+    background: #000;
+    box-shadow: 0 0 0 1px #000;
+  }
+  .sig {
+    display: inline-flex;
+    gap: 0.6cqw;
+    align-items: flex-end;
+    height: 3.2cqw;
+  }
+  .sig i {
+    width: 1cqw;
+    background: var(--star);
+    border-radius: 0.3cqw;
+  }
+  .sig i:nth-child(1) { height: 35%; }
+  .sig i:nth-child(2) { height: 55%; }
+  .sig i:nth-child(3) { height: 78%; }
+  .sig i:nth-child(4) { height: 100%; }
+  .body {
+    padding: 2cqw 4.5cqw 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.4cqw;
+  }
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 9cqw;
+  }
+  .nav-trail {
+    display: inline-flex;
+    gap: 2cqw;
+  }
+  .capsule,
+  .glass-circle,
+  .field,
+  .tabbar .tabs {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+  }
+  .capsule {
+    display: inline-flex;
+    align-items: center;
+    gap: 2.4cqw;
+    height: 9cqw;
+    padding: 0 3.6cqw;
+    border-radius: 5cqw;
+    font-weight: 500;
+  }
+  .glass-circle {
+    display: inline-grid;
+    place-items: center;
+    width: 9cqw;
+    height: 9cqw;
+    border-radius: 50%;
+  }
+  .glass-circle.lg {
+    width: 11cqw;
+    height: 11cqw;
+  }
+  .glass-circle.xl {
+    width: 17cqw;
+    height: 17cqw;
+    font-size: 6.4cqw;
+  }
+  .glass-circle.end {
+    background: #e5484d;
+    border-color: transparent;
+  }
+  .large {
+    margin: 0;
+    font-size: 9.6cqw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-family: inherit;
+  }
+  .chips {
+    display: flex;
+    gap: 1.6cqw;
+    font-size: 3.5cqw;
+  }
+  .chips span {
+    padding: 1.2cqw 3cqw;
+    border-radius: 4cqw;
+    background: var(--fill);
+    color: var(--silver);
+  }
+  .chips .on {
+    background: var(--star);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 3cqw;
+    padding: 2.4cqw 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 12cqw;
+    height: 12cqw;
+    position: relative;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.92);
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 55%),
+      linear-gradient(160deg, rgba(150, 156, 168, 0.55), rgba(58, 62, 69, 0.45));
+    box-shadow:
+      inset 0 0.25cqw 0.4cqw rgba(255, 255, 255, 0.45),
+      inset 0 -0.3cqw 0.6cqw rgba(0, 0, 0, 0.35),
+      0 0 0 0.15cqw rgba(255, 255, 255, 0.22),
+      0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2cqw) saturate(180%);
+    text-shadow: 0 0.15cqw 0.3cqw rgba(0, 0, 0, 0.35);
+    font-weight: 600;
+    font-size: 4.8cqw;
+  }
+  .avatar.sm {
+    width: 7cqw;
+    height: 7cqw;
+    font-size: 3.2cqw;
+  }
+  .avatar.xl {
+    width: 30cqw;
+    height: 30cqw;
+    font-size: 12cqw;
+    background: linear-gradient(160deg, #9aa0a9, #4a4e56);
+  }
+  .row-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .row-top {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+  }
+  .row-sub {
+    color: var(--ash);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 3.7cqw;
+  }
+  .row-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1cqw;
+    color: var(--ash);
+    font-size: 3.3cqw;
+  }
+  .badge {
+    min-width: 5.6cqw;
+    padding: 0.3cqw 1.6cqw;
+    border-radius: 3cqw;
+    background: var(--star);
+    color: var(--ink);
+    font-weight: 700;
+    text-align: center;
+  }
+  .check {
+    width: 3.2cqw;
+    height: 3.2cqw;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff3c4, #d4a94a 60%, #9c7426);
+    flex: none;
+  }
+  .moon {
+    display: inline-block;
+    width: 3.2cqw;
+    height: 3.2cqw;
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--star) 60%, rgba(255, 255, 255, 0.15) 60%);
+    vertical-align: -0.4cqw;
+  }
+  .dim {
+    color: var(--ash);
+  }
+  .small {
+    font-size: 3.3cqw;
+  }
+
+  /* chat */
+  .chat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .who {
+    padding-left: 1cqw;
+    gap: 1.6cqw;
+  }
+  .sys {
+    margin: 1cqw auto;
+    font-size: 3.1cqw;
+    color: var(--ash);
+    display: flex;
+    gap: 1cqw;
+    align-items: center;
+  }
+  .b {
+    max-width: 76%;
+    padding: 2.2cqw 3.4cqw;
+    border-radius: 5cqw;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 60%),
+      rgba(120, 124, 134, 0.22);
+    box-shadow:
+      inset 0 0.2cqw 0.3cqw rgba(255, 255, 255, 0.28),
+      inset 0 -0.2cqw 0.5cqw rgba(0, 0, 0, 0.25),
+      0 0 0 0.12cqw rgba(255, 255, 255, 0.12),
+      0 0.5cqw 1.4cqw rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(3cqw) saturate(180%);
+    display: flex;
+    flex-direction: column;
+  }
+  .b small {
+    align-self: flex-end;
+    font-size: 2.9cqw;
+    opacity: 0.75;
+    margin-top: 0.4cqw;
+  }
+  .b.me {
+    align-self: flex-end;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 60%),
+      rgba(214, 218, 226, 0.78);
+    box-shadow:
+      inset 0 0.2cqw 0.3cqw rgba(255, 255, 255, 0.85),
+      inset 0 -0.25cqw 0.5cqw rgba(0, 0, 0, 0.18),
+      0 0 0 0.12cqw rgba(255, 255, 255, 0.35),
+      0 0.5cqw 1.4cqw rgba(0, 0, 0, 0.35);
+    color: var(--ink);
+  }
+  .b.reacted {
+    position: relative;
+    margin-top: 4.6cqw;
+  }
+  .react {
+    position: absolute;
+    left: -3.6cqw;
+    top: -4.6cqw;
+    font-size: 5.2cqw;
+    line-height: 1.15;
+    padding: 1.1cqw 1.4cqw;
+    border-radius: 99px;
+    background: #2a2c31;
+    border: 1px solid var(--stroke);
+  }
+  .pay {
+    align-self: flex-end;
+    width: 68%;
+    display: flex;
+    flex-direction: column;
+    padding: 3cqw 3.6cqw;
+    border-radius: 5cqw;
+    border: 1px solid var(--star);
+    background: var(--fill);
+  }
+  .pay-k {
+    font-size: 3.1cqw;
+  }
+  .pay-v {
+    font-size: 7.4cqw;
+    font-weight: 700;
+  }
+  .typing {
+    margin: 0 0 0 1cqw;
+    font-size: 3.2cqw;
+    color: var(--ash);
+  }
+  .composer {
+    position: absolute;
+    left: 4.5cqw;
+    right: 4.5cqw;
+    bottom: 8cqw;
+    display: flex;
+    gap: 2cqw;
+  }
+  .field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2cqw;
+    height: 11cqw;
+    padding: 0 4cqw;
+    border-radius: 6cqw;
+    color: var(--ash);
+  }
+  .field.q {
+    flex: none;
+    justify-content: flex-start;
+    color: var(--star);
+    border-radius: 3.4cqw;
+  }
+
+  /* feed */
+  .post {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8cqw;
+    padding-bottom: 2.4cqw;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .post header,
+  .post footer {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    font-size: 3.6cqw;
+  }
+  .post footer {
+    color: var(--silver);
+    gap: 2cqw;
+  }
+  .signed {
+    margin-left: auto;
+    font-size: 3cqw;
+    padding: 0.4cqw 2cqw;
+    border-radius: 3cqw;
+    border: 1px solid var(--stroke);
+    color: var(--silver);
+  }
+  .media {
+    position: relative;
+    height: 34cqw;
+    border-radius: 4cqw;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 2.6cqw 3cqw;
+    font-size: 3.5cqw;
+    font-weight: 600;
+  }
+  .media.sunrise {
+    background:
+      radial-gradient(circle at 70% 75%, rgba(255, 214, 150, 0.95), transparent 22%),
+      linear-gradient(180deg, #2b3550 0%, #8d6a7c 55%, #e7a86c 85%, #3a2a24 100%);
+  }
+  .media.stream {
+    height: 24cqw;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(160, 170, 190, 0.5), transparent 40%),
+      linear-gradient(135deg, #1c1f25, #343842);
+  }
+  .media span {
+    display: inline-flex;
+    gap: 1.4cqw;
+    align-items: center;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+  .live-dot {
+    padding: 0.3cqw 1.6cqw;
+    border-radius: 1.4cqw;
+    background: #e5484d;
+    font-size: 2.9cqw;
+    font-weight: 700;
+  }
+  .post-text {
+    margin: 0;
+    font-size: 3.8cqw;
+  }
+  .anon {
+    margin: 0;
+    font-size: 3.1cqw;
+    color: var(--ash);
+    text-align: center;
+  }
+
+  /* call */
+  .screen[data-screen='call'] {
+    background: #000;
+  }
+  .call {
+    height: calc(100% - 12cqw);
+    justify-content: space-between;
+    padding-bottom: 16cqw;
+  }
+  .call-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6cqw;
+    margin-top: 12cqw;
+  }
+  .call-name {
+    font-size: 8cqw;
+    font-weight: 600;
+    margin-top: 2cqw;
+  }
+  .call-tag {
+    margin-top: 2cqw;
+    display: inline-flex;
+    gap: 1.4cqw;
+    align-items: center;
+    font-size: 3.1cqw;
+    padding: 1.2cqw 3cqw;
+    border-radius: 4cqw;
+    background: var(--fill);
+    color: var(--silver);
+  }
+  .call-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5cqw 2cqw;
+    padding: 0 4cqw;
+  }
+  .call-grid > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4cqw;
+    font-size: 3.2cqw;
+    color: var(--silver);
+  }
+
+  /* ask */
+  .answer {
+    display: flex;
+    flex-direction: column;
+    gap: 2cqw;
+    padding: 3.6cqw;
+    border-radius: 4cqw;
+    background: var(--fill);
+    border: 1px solid var(--stroke);
+  }
+  .answer p {
+    margin: 0;
+  }
+  .answer-k {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+    font-size: 3.2cqw;
+    color: var(--silver);
+  }
+  .cites {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4cqw;
+    font-size: 3.2cqw;
+    color: var(--silver);
+  }
+  .tag {
+    display: inline-block;
+    min-width: 9cqw;
+    padding: 0.2cqw 1.4cqw;
+    margin-right: 1cqw;
+    border-radius: 1.4cqw;
+    background: var(--fill-2);
+    color: var(--star);
+    font-size: 2.8cqw;
+    text-align: center;
+  }
+
+  /* wallet */
+  .card-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 1cqw;
+    padding: 5cqw;
+    border-radius: 5cqw;
+    background:
+      radial-gradient(circle at 85% 0%, rgba(255, 255, 255, 0.18), transparent 50%),
+      linear-gradient(150deg, #2e3137, #17191d);
+    border: 1px solid var(--stroke);
+  }
+  .bal {
+    font-size: 10cqw;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .card-balance .small {
+    display: inline-flex;
+    gap: 1cqw;
+    align-items: center;
+  }
+  .tx .row-meta {
+    color: var(--star);
+    font-size: 4cqw;
+    font-weight: 600;
+  }
+  .node-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8cqw;
+    padding: 4cqw;
+    border-radius: 4cqw;
+    border: 1px solid var(--stroke);
+  }
+  .node-k {
+    display: inline-flex;
+    gap: 1.6cqw;
+    align-items: center;
+    font-size: 3.2cqw;
+    color: var(--silver);
+  }
+
+  /* tab bar */
+  .tabbar {
+    position: absolute;
+    left: 4.5cqw;
+    right: 4.5cqw;
+    bottom: 7.5cqw;
+    display: flex;
+    gap: 2.4cqw;
+    align-items: center;
+  }
+  .tabs {
+    flex: 1;
+    display: flex;
+    justify-content: space-around;
+    height: 14cqw;
+    border-radius: 7cqw;
+    padding: 0 1.4cqw;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4cqw;
+    font-size: 2.5cqw;
+    color: var(--silver);
+    padding: 0 2.4cqw;
+    margin: 1.2cqw 0;
+    border-radius: 6cqw;
+  }
+  .tab :global(svg) {
+    width: 5.4cqw;
+    height: 5.4cqw;
+  }
+  .tab.on {
+    color: var(--star);
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .search-btn {
+    width: 14cqw;
+    height: 14cqw;
+    font-size: 5.4cqw;
+  }
+  .search-btn.on {
+    background: rgba(255, 255, 255, 0.22);
+  }
+  .home {
+    position: absolute;
+    bottom: 2.2cqw;
+    left: 50%;
+    width: 36cqw;
+    height: 1.4cqw;
+    margin-left: -18cqw;
+    border-radius: 1cqw;
+    background: rgba(255, 255, 255, 0.85);
+  }
+</style>

@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+
+// TODO(Elliott): set each `href` once the account exists, and add the handles to each repository's .github/FUNDING.yml.
+const channels: Array<{ name: string; href?: string; note: string }> = [
+  { name: 'GitHub Sponsors', note: 'Monthly or one-off sponsorship through GitHub.' },
+  { name: 'Open Collective', note: 'Donations with a public ledger of income and spending.' },
+];
+// TODO(Elliott): crypto tips; add wallet addresses (and which chains) here once they exist.
+---
+
+<Base title="Donate" description="Donations fund open-source maintenance and the bug bounty for elliottwave.studio lab projects.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">donate</p>
+      <h1>Support the open-source work.</h1>
+      <p class="lede">
+        The SDKs, samples and shells are free. Donations fund open-source maintenance and the
+        <a href="/security#bug-bounty">bug bounty</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <ul class="grid channels">
+        {channels.map((c) => (
+          <li class="card">
+            <h2>{c.name}</h2>
+            <p>{c.note}</p>
+            {c.href ? <a class="btn primary" href={c.href}>donate → {c.name}</a> : <span class="tag amber">coming soon</span>}
+          </li>
+        ))}
+        <li class="card">
+          <h2>Crypto tips</h2>
+          <p>Tips to a wallet address.</p>
+          <span class="tag amber">coming soon</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap prose">
+      <h2>Where the money goes</h2>
+      <ul>
+        <li><strong>Open-source maintenance:</strong> keeping the public repositories, samples and documentation current.</li>
+        <li>
+          <strong>The bug bounty:</strong> cash bounties are funded by donations until paying customers adopt MOQOM. See
+          <a href="/security#bug-bounty">/security</a>.
+        </li>
+      </ul>
+      <p>Donations don’t buy priority support or influence over the roadmap.</p>
+      <p>Prefer to give time? <a href="/open-source#contribute">Contribute →</a></p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .channels {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .channels li {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .channels h2 {
+    font-size: 1.4rem;
+  }
+  .channels p {
+    color: var(--text-dim);
+    flex: 1;
+  }
+</style>

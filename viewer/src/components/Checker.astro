@@ -1,0 +1,224 @@
+---
+// Browser version of viewer-check. Fetches the visitor's URL from their browser (reading at most
+// 16 bytes), so a page that uses this component must call allowVisitorModels(Astro) from lib/csp.
+---
+
+<section class="checker" id="checker" data-checker aria-labelledby="checker-title">
+  <h2 id="checker-title">Check a model URL</h2>
+  <p class="hint">
+    Your browser fetches the URL directly and reads at most the first 16 bytes. Nothing is sent to us. Because the request comes from this
+    page, a server that allows only your own site will show a CORS failure here; check that case with
+    <code>viewer-check &lt;url&gt; --origin https://your-site</code>.
+  </p>
+  <form>
+    <label>
+      <span>Model URL</span>
+      <input name="url" type="url" required inputmode="url" spellcheck="false" placeholder="https://your-models.web.app/models/chair.glb" />
+    </label>
+    <label>
+      <span>Your site (for the fix snippets)</span>
+      <input name="origin" type="url" inputmode="url" spellcheck="false" placeholder="https://www.example.com" />
+    </label>
+    <button type="submit" class="btn primary">Check</button>
+  </form>
+  <div data-result aria-live="polite"></div>
+</section>
+
+<script>
+  import { checkModelUrl, type Report } from '../vendor/hosting/check/check';
+  import { fixesFor } from '../vendor/hosting/check/fixes';
+
+  const SYMBOL = { pass: '✓', warn: '!', fail: '✕', info: 'i' } as const;
+  const SERVER_NAMES: Record<string, string> = {
+    apache: 'Apache',
+    nginx: 'Nginx',
+    netlify: 'Netlify',
+    vercel: 'Vercel',
+    cloudflare: 'Cloudflare',
+    s3: 'Amazon S3',
+    gcs: 'Google Cloud Storage / Firebase Storage',
+    'firebase-hosting': 'Firebase Hosting',
+    unknown: 'not detected',
+  };
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text?: string): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function render(report: Report, origin: string): HTMLElement[] {
+    const summary = el('p', report.ok ? 'summary ok' : 'summary fail', report.ok ? 'Nothing failed. The model should load.' : 'Something needs fixing before the model will load reliably.');
+    const list = el('ul', 'findings');
+    for (const f of report.findings) {
+      const item = el('li', f.level);
+      const mark = el('span', 'mark', SYMBOL[f.level]);
+      mark.setAttribute('aria-label', f.level);
+      const body = el('div', '');
+      body.append(el('strong', '', f.title), el('p', '', f.detail));
+      item.append(mark, body);
+      list.append(item);
+    }
+    const out: HTMLElement[] = [summary, list, el('p', 'hint', `Server: ${SERVER_NAMES[report.server] ?? report.server}.`)];
+    const fixable = ['cors', 'content-type', 'cache'];
+    if (report.findings.some((f) => (f.level === 'fail' || f.level === 'warn') && fixable.includes(f.topic))) {
+      const fixes = fixesFor(report.server, origin ? { origin } : {});
+      out.push(el('h3', '', report.server === 'unknown' ? 'Fixes by server' : 'Fix'));
+      for (const fix of fixes.slice(0, report.server === 'unknown' ? fixes.length : 1)) {
+        const wrap = el('div', 'code');
+        const head = el('div', 'code-head');
+        const button = el('button', 'copy', 'Copy');
+        button.type = 'button';
+        button.dataset.copy = '';
+        head.append(el('span', '', `${fix.label}: ${fix.file}`), button);
+        const pre = el('pre', '');
+        pre.append(el('code', '', fix.code));
+        wrap.append(head, pre, el('p', 'hint', fix.note));
+        out.push(wrap);
+      }
+      if (report.server !== 'unknown') {
+        const more = el('p', 'hint');
+        const link = el('a', '', 'Fixes for every server');
+        link.href = '#fixes';
+        more.append(link);
+        out.push(more);
+      }
+    }
+    return out;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-checker]').forEach((root) => {
+    const form = root.querySelector('form')!;
+    const result = root.querySelector<HTMLElement>('[data-result]')!;
+    const button = form.querySelector<HTMLButtonElement>('button')!;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const url = String(data.get('url') ?? '').trim();
+      let origin = '';
+      try {
+        const raw = String(data.get('origin') ?? '').trim();
+        if (raw) origin = new URL(raw).origin;
+      } catch {
+        origin = '';
+      }
+      button.disabled = true;
+      result.replaceChildren(el('p', 'hint', 'Checking…'));
+      try {
+        const report = await checkModelUrl({ url, mode: 'browser' });
+        result.replaceChildren(...render(report, origin));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  .checker {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem 1.5rem;
+    margin: 2rem 0;
+  }
+  .checker h2 {
+    margin-top: 0;
+  }
+  form {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) auto;
+    gap: 0.9rem;
+    align-items: end;
+  }
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  input {
+    font: 0.88rem var(--font-mono);
+    color: var(--text);
+    background: var(--bg-code);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 0.55em 0.7em;
+    width: 100%;
+  }
+  .hint {
+    color: var(--text-faint);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 720px) {
+    form {
+      grid-template-columns: 1fr;
+    }
+  }
+  [data-result] :global(.summary) {
+    margin-top: 1.25rem;
+    font-weight: 500;
+  }
+  [data-result] :global(.summary.ok) {
+    color: var(--ok);
+  }
+  [data-result] :global(.summary.fail) {
+    color: var(--fail);
+  }
+  [data-result] :global(.findings) {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+  }
+  [data-result] :global(.findings li) {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  [data-result] :global(.findings p) {
+    margin: 0.15rem 0 0;
+    color: var(--text-dim);
+    font-size: 0.88rem;
+  }
+  [data-result] :global(.mark) {
+    font: 0.8rem var(--font-mono);
+    text-align: center;
+    line-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+  }
+  [data-result] :global(.pass .mark) {
+    color: var(--ok);
+  }
+  [data-result] :global(.warn .mark) {
+    color: var(--warn);
+  }
+  [data-result] :global(.fail .mark) {
+    color: var(--fail);
+  }
+  [data-result] :global(.info .mark) {
+    color: var(--text-faint);
+  }
+  [data-result] :global(.code-head) {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font: 0.72rem var(--font-mono);
+    color: var(--text-faint);
+    padding: 0 0.25rem 0.35rem;
+  }
+  [data-result] :global(.copy) {
+    font: 0.72rem var(--font-mono);
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 0.2em 0.6em;
+    cursor: pointer;
+  }
+</style>

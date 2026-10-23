@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+import { REACT } from '../../lib/framework-examples';
+
+const props = [
+  ['src', 'Model URL (GLB or glTF). Required. https://, or a path on your site.'],
+  ['alt', 'Describes the model for screen readers. Required.'],
+  ['iosSrc, poster', 'USDZ for iPhone and iPad AR; image shown while loading.'],
+  ['ar, arLabel', 'AR button (default on) and its text.'],
+  ['cameraControls, autoRotate, rotationPerSecond', 'Orbit and zoom (default on); slow rotation (off for visitors who prefer reduced motion).'],
+  ['shadowIntensity, exposure, background', 'Lighting and background colour (default transparent).'],
+  ['height, loading, reveal, cameraOrbit', 'CSS height (default 480px), when to download, tap to load, starting camera.'],
+  ['className, style', 'For the wrapping <div>.'],
+  ['script', 'Where the bundle comes from. Default: jsDelivr with its SRI hash. Your own { url }, or false.'],
+  ['onLoad, onError', 'The model loaded, or failed to load.'],
+  ['ref', 'The <ew-viewer> element. Its modelViewer property is the underlying <model-viewer>.'],
+];
+---
+
+<Base title="React and Next.js" description={`The ${SITE.displayName} React component: SSR-safe, typed, and loads the pinned script once.`}>
+  <p class="eyebrow">Platforms · Built</p>
+  <h1>React and Next.js</h1>
+  <p><PriceBadge plugin="react" /></p>
+  <div class="prose">
+    <p>
+      <code>&lt;Viewer3D&gt;</code> renders a <code>&lt;{SITE.tagName}&gt;</code> element with validated attributes and adds the viewer
+      script once per page. Props use the same names and rules as the snippet generator; an invalid value (for example a
+      <code>javascript:</code> or <code>http:</code> URL, or missing alt text) renders an error message instead of the viewer.
+    </p>
+    <p>
+      Server rendering: nothing touches <code>window</code> or <code>document</code> at import time. On the server the component renders
+      the element with its attributes; the script is added in an effect after hydration. The package starts with
+      <code>'use client'</code>, so a Next.js App Router Server Component can render it directly. Tested with React 19; it declares
+      support for React 18 and later.
+    </p>
+  </div>
+
+  <Code title="Install" code={REACT.install} />
+  <Code title="Use" code={REACT.usage} />
+  <Code title="Next.js App Router" code={REACT.next} />
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Prop</th><th>What it does</th></tr></thead>
+      <tbody>{props.map(([name, text]) => <tr><td><code>{name}</code></td><td>{text}</td></tr>)}</tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h2>Host the script yourself</h2>
+    <p>
+      By default the script comes from jsDelivr with an integrity hash. For a strict Content Security Policy, serve your own copy and
+      pass it as <code>script</code>. The CSP needs are on the <a href="/platforms/html/#content-security-policy">HTML page</a>.
+    </p>
+  </div>
+  <Code title="script prop" code={REACT.selfHost} />
+
+  <LicenceKey plugin="react">
+    <li>Pass it to the component: <code>&lt;Viewer3D licenseKey="EWV-…" src="…" alt="…" /&gt;</code>. Keeping it in an environment variable is fine; it ends up in the page either way.</li>
+  </LicenceKey>
+</Base>

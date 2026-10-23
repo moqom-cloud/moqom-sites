@@ -1,0 +1,147 @@
+/* Copied from sites/_shared/glass/glass.css — the canonical copy lives in sites/_shared. Edit there, then re-copy. */
+/*
+ * Liquid glass for the MOQOM and elliottwave.studio lab sites.
+ *
+ * Import once per site, after the site's own tokens. Each site sets --glass-tint to its
+ * accent (MOQOM cyan, studio amber); everything else is shared.
+ *
+ * Accessibility constraints, not preferences:
+ *  - Text on glass must keep 4.5:1 against the *worst* backdrop, so panels carry a base fill
+ *    that alone meets contrast; the blur is decoration on top of it.
+ *  - prefers-reduced-transparency and forced-colors get solid panels.
+ *  - prefers-reduced-motion stops the ambient field.
+ *  - Browsers without backdrop-filter get the solid fill, never unreadable clear glass.
+ */
+
+:root {
+  --glass-tint: 34 211 238;            /* rgb triplet; override per site */
+  --glass-fill: rgb(14 16 22 / 0.62);
+  --glass-fill-strong: rgb(14 16 22 / 0.78);
+  --glass-solid: rgb(18 20 27);
+  --glass-edge: rgb(255 255 255 / 0.14);
+  --glass-edge-bright: rgb(255 255 255 / 0.32);
+  --glass-blur: 22px;
+  --glass-saturate: 170%;
+  --glass-radius: 22px;
+  --glass-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.06) inset,
+    0 -1px 0 0 rgb(0 0 0 / 0.25) inset,
+    0 18px 48px -18px rgb(0 0 0 / 0.65),
+    0 2px 8px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Ambient colour field the glass refracts. Put <div class="glass-field" aria-hidden="true">
+   as the first child of <body>. */
+.glass-field {
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40vmax 40vmax at 18% 22%, rgb(var(--glass-tint) / 0.22), transparent 60%),
+    radial-gradient(36vmax 36vmax at 82% 18%, rgb(168 85 247 / 0.16), transparent 62%),
+    radial-gradient(44vmax 44vmax at 70% 85%, rgb(var(--glass-tint) / 0.12), transparent 60%),
+    radial-gradient(30vmax 30vmax at 25% 80%, rgb(245 158 11 / 0.10), transparent 60%);
+  filter: blur(10px);
+  animation: glass-drift 38s ease-in-out infinite alternate;
+}
+
+@keyframes glass-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(2vmax, -1.5vmax, 0) rotate(8deg) scale(1.04); }
+  100% { transform: translate3d(-2vmax, 1vmax, 0) rotate(-6deg) scale(1.02); }
+}
+
+/* The panel. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background:
+      linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.015) 40%, transparent),
+      var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+  .glass--strong { background-color: var(--glass-fill-strong); }
+}
+
+/* Specular rim: a bright top edge fading down the sides, the cue that reads as "liquid". */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    var(--glass-edge-bright),
+    rgb(255 255 255 / 0.04) 35%,
+    rgb(var(--glass-tint) / 0.18) 70%,
+    rgb(255 255 255 / 0.10)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Interactive glass lifts and catches light on hover/focus. */
+.glass--interactive {
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1), box-shadow 220ms, border-color 220ms;
+}
+.glass--interactive:hover,
+.glass--interactive:focus-within {
+  transform: translateY(-3px);
+  border-color: rgb(var(--glass-tint) / 0.38);
+  box-shadow: var(--glass-shadow), 0 0 0 1px rgb(var(--glass-tint) / 0.12), 0 24px 60px -24px rgb(var(--glass-tint) / 0.35);
+}
+
+/* Glass navigation bar. */
+.glass-bar {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 50;
+  margin-inline: auto;
+  border-radius: 999px;
+}
+
+/* Pills and buttons. */
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.35em 0.85em;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  border: 1px solid var(--glass-edge);
+  background: rgb(255 255 255 / 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-field { animation: none; }
+  .glass--interactive { transition: none; }
+  .glass--interactive:hover, .glass--interactive:focus-within { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass--strong {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass-field { display: none; }
+}
+
+@media (forced-colors: active) {
+  .glass { background: Canvas; border-color: CanvasText; box-shadow: none; }
+  .glass::before, .glass-field { display: none; }
+}

@@ -1,0 +1,103 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import Base from '../layouts/Base.astro';
+
+// The portrait is checked at build time; without it the page renders the "E" monogram.
+const hasPortrait = fs.existsSync(path.join(process.cwd(), 'public/images/elliott.jpg'));
+
+const profiles = [
+  { href: 'https://github.com/elliott-io', label: 'GitHub', handle: 'elliott-io' },
+  { href: 'https://github.com/elliott-wave-labs', label: 'GitHub organisation', handle: 'elliott-wave-labs' },
+  { href: 'https://www.linkedin.com/in/elliottio/', label: 'LinkedIn', handle: 'elliottio' },
+  { href: 'https://www.instagram.com/khensu.nu', label: 'Instagram', handle: 'khensu.nu' },
+];
+---
+
+<Base title="About" description="elliottwave.dev is the developer hub of elliottwave.studio lab, founded by Elliott. SDKs, docs, status and security for MOQOM, six10nine and Unify.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">about</p>
+      <h1>Who builds this</h1>
+      <p class="lede">
+        elliottwave.dev is the developer hub of elliottwave.studio lab, the brand of Elliott Wave LLC. The lab builds MOQOM,
+        six10nine and Unify.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap founder">
+      {hasPortrait ? (
+        <img class="portrait" src="/images/elliott.jpg" alt="Justin Elliott Staffer in Tangier, Morocco" width="160" height="160" loading="lazy" decoding="async" />
+      ) : (
+        <div class="portrait monogram" role="img" aria-label="Elliott">E</div>
+      )}
+      <div class="prose">
+        <h2>Elliott</h2>
+        <p><strong>Founder, elliottwave.studio lab and Elliott Wave LLC.</strong></p>
+        <p>
+          Founder and sole engineer. Elliott is the sole author of the lab’s first-party technology, including MOQOM,
+          six10nine and Unify. Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its
+          projects, the open-source projects included. Patents pending.
+        </p>
+        <ul class="profiles">
+          {profiles.map((p) => (
+            <li>
+              <a href={p.href} rel="me noopener">{p.label} <span class="mono">{p.handle}</span></a>
+            </li>
+          ))}
+        </ul>
+        <div class="btn-row">
+          <a class="btn primary" href="https://elliottwave.studio/about">Full story · elliottwave.studio</a>
+          <a class="btn" href="/open-source#contribute">Contribute</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .founder {
+    display: grid;
+    gap: 1.5rem 3rem;
+    align-items: start;
+  }
+  @media (min-width: 760px) {
+    .founder {
+      grid-template-columns: 160px 1fr;
+    }
+  }
+  .portrait {
+    display: block;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--line-strong);
+  }
+  .monogram {
+    display: grid;
+    place-items: center;
+    font-size: 4.5rem;
+    line-height: 1;
+    color: var(--accent);
+    background: var(--bg-raised);
+    user-select: none;
+  }
+  .prose h2 {
+    margin-top: 0;
+  }
+  .profiles {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .profiles .mono {
+    color: var(--text-dim);
+    margin-left: 0.35rem;
+    font-size: 0.85rem;
+  }
+</style>

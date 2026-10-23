@@ -1,0 +1,840 @@
+---
+import RevealText from './RevealText.astro';
+import { APP_STORE_URL, GET_APPS } from '../../data/app';
+import { MOMENTS_TEMPLATES } from '../../data/moments-templates';
+
+const appHref = APP_STORE_URL || GET_APPS;
+const tplCats = [...new Set(MOMENTS_TEMPLATES.map((t) => t.category))];
+
+const features = [
+  {
+    id: 'timeline',
+    title: 'Frame-accurate editor',
+    body: 'A live preview with a scrubber, frame-by-frame stepping and split at the playhead. Trim, reorder, duplicate, speed from 0.25× to 4×, per-clip volume and mute, and reverse, made on the device. Text, stickers and effects sit in their own lanes under the clips.',
+  },
+  {
+    id: 'camera',
+    title: 'Camera',
+    body: 'Record straight into a project for up to 10 minutes, in 1080p or 4K, at 30 or 60 fps, with HDR, torch, pinch zoom and front or back camera.',
+  },
+  {
+    id: 'text',
+    title: 'Text and stickers',
+    body: 'Sixteen fonts, any colour, outline or a box behind, size, rotation and opacity. Sixteen in and out animations, including pop, typewriter, bounce, whip and drop. Drag anything into place on the preview. Emoji stickers and drawing with Apple Pencil or a finger.',
+  },
+  {
+    id: 'cutout',
+    title: 'Cutouts and green screen',
+    body: 'Lift the subject out of any photo as a reusable sticker. Drop the background behind a person in a clip, key out a green screen, or put a second photo or video on top as picture in picture. All with Vision on the device.',
+  },
+  {
+    id: 'effects',
+    title: '56 effects, 16 filters',
+    body: 'Zoom pulse, heartbeat, shake, glitch, RGB split, VHS lines, light leak, glow, mirror, kaleidoscope, pixelate, tilt-shift and more. Search them, set intensity and speed, place them on part of the video or across all of it as an adjustment layer.',
+  },
+  {
+    id: 'adjust',
+    title: 'Adjust and relight',
+    body: 'Exposure, contrast, saturation, warmth and sharpen on each clip, plus relight, which lifts shadows and adds a soft key light. Photos get push in, pull out, pan and drift.',
+  },
+  {
+    id: 'animate',
+    title: '3D photo motion',
+    body: 'Turn a still into a short camera move: push in, pull out, sway, orbit, rise or vertigo. Depth comes from the photo itself when it was taken in Portrait, otherwise from a depth model that runs on the device, so near things move more than far things. A 3-second 1080p move renders in about 3 seconds on iPhone 15 Pro.',
+  },
+  {
+    id: 'restyle',
+    title: 'Restyle',
+    body: 'Remake a photo as animation, illustration or sketch with Apple Image Playground on the device, with an optional prompt. It needs Apple Intelligence, never uses ChatGPT or any outside model, and keeps the original so you can switch back.',
+  },
+  {
+    id: 'datamosh',
+    title: 'Datamosh',
+    body: 'Three ways to mosh a clip: from the clip before, where its last frame is dragged by the next clip’s motion until that clip snaps in; bloom, where one moment of motion keeps repeating; and melt, where the clip moves only by its own motion vectors. Motion is measured on the device in 16-pixel blocks, like a codec. Set the amount, bake it in, undo any time.',
+  },
+  {
+    id: 'keyframes',
+    title: 'Keyframes',
+    body: 'Animate any text, sticker or clip over time: position, scale, rotation and opacity for overlays; zoom, move, rotation and opacity for clips. Add a keyframe at the playhead, pick linear, ease in, ease out, ease in and out or hold, and drag on the preview to set each pose.',
+  },
+  {
+    id: 'captions',
+    title: 'Captions',
+    body: 'Auto captions recognise speech on the device from clip sound and your voice-over, with each word highlighted as it is spoken. Eight styles, any font, colour, size and position. Edit any line or add your own at the playhead.',
+  },
+  {
+    id: 'audio',
+    title: 'Voice-over and voice effects',
+    body: 'Record a voice-over while the video plays. Enhance voice cuts rumble, lifts clarity and evens out the level. Ten voice effects: deep, chipmunk, robot, echo, big hall, radio, telephone, megaphone, alien and airy.',
+  },
+  {
+    id: 'beat',
+    title: 'Beat sync',
+    body: 'Bring your own track or make a beat at 70–170 BPM on the device. Onset detection re-times every cut. Auto-fit puts the strongest shot first, then cuts to the beat.',
+  },
+  {
+    id: 'templates',
+    title: '36 templates in 20 categories',
+    body: 'Trending, memories, travel, beauty, love, sport, motivation, marketing, business, seasonal, holidays, hygge, food, style, collage, tutorial and more. Each sets the look, transition, layout, motion, effects and title. Search them, or apply one to clips you have already cut.',
+  },
+  {
+    id: 'collage',
+    title: 'Collages',
+    body: 'Eight layouts play clips side by side: top and bottom, side by side, one plus two, three stacked, a grid of four, filmstrip and framed, on any background colour.',
+  },
+  {
+    id: 'carousels',
+    title: 'Carousels',
+    body: '4:5 slides from photos and videos together: photos become stills and videos stay videos, with the same filter, text and stickers. Seamless mode spreads one picture across up to ten slides.',
+  },
+  {
+    id: 'organise',
+    title: 'For You, ideas, folders, kits',
+    body: 'For You suggests moments from your library by day, trip and favourites, only when you tap it and only from what is on the device. Keep an ideas board, sort projects into folders, and save your colours, fonts, captions and effects as a kit.',
+  },
+  {
+    id: 'export',
+    title: 'Export up to 4K60',
+    body: '720p, 1080p or 4K, at 24, 30 or 60 fps, HEVC or H.264, with no watermark. Save to Photos or share anywhere. Formats: 9:16, 1:1, 4:5 and 16:9 on iPhone, iPad and Mac.',
+  },
+];
+
+const effects = [
+  { name: 'Film 35mm', img: '/khensu/moments/stills/s01-coast.webp', filter: 'sepia(.35) saturate(1.15) contrast(1.06)' },
+  { name: 'Digital Pop', img: '/khensu/moments/stills/s07-beauty.webp', filter: 'saturate(1.5) contrast(1.1)' },
+  { name: 'Haze', img: '/khensu/moments/stills/s02-lake.webp', filter: 'saturate(.82) brightness(1.07) contrast(.94)' },
+  { name: 'Printed', img: '/khensu/moments/stills/s15-product.webp', filter: 'saturate(.75) contrast(1.22)' },
+  { name: 'VHS', img: '/khensu/moments/stills/s03-neon.webp', filter: 'hue-rotate(18deg) saturate(1.35)' },
+  { name: 'Mono', img: '/khensu/moments/stills/s16-bts.webp', filter: 'grayscale(1) contrast(1.05)' },
+  { name: 'Noir', img: '/khensu/moments/stills/s09-boxing.webp', filter: 'grayscale(1) contrast(1.35) brightness(.92)' },
+  { name: 'Teal & orange', img: '/khensu/moments/stills/s11-autumn.webp', filter: 'hue-rotate(-12deg) saturate(1.3) contrast(1.1)' },
+  { name: 'Faded', img: '/khensu/moments/stills/s12-holiday.webp', filter: 'saturate(.7) contrast(.85) brightness(1.08)' },
+  { name: 'Instant', img: '/khensu/moments/stills/s10-couple.webp', filter: 'sepia(.2) saturate(1.2) brightness(1.05)' },
+  { name: 'Cool', img: '/khensu/moments/stills/s14-spooky.webp', filter: 'hue-rotate(20deg) saturate(.9)' },
+  { name: 'Pastel', img: '/khensu/moments/stills/s18-summer.webp', filter: 'saturate(.6) brightness(1.15) contrast(.9)' },
+];
+
+const fxNames = [
+  'Zoom pulse', 'Heartbeat', 'Shake', 'Earthquake', 'Slow zoom', 'Spin', 'Bounce', 'Strobe',
+  'Flash', 'Light leak', 'Glow', 'Bloom', 'Sparkle', 'Sun flare', 'Neon edges', 'Spotlight',
+  'Noir', 'Chrome', 'Faded', 'Instant', 'Tonal', 'Sepia', 'Invert', 'Rainbow shift', 'Thermal', 'Duotone', 'Posterize', 'Warm', 'Cool', 'Teal & orange',
+  'RGB split', 'Glitch', 'Film grain', 'VHS lines', 'Halftone', 'Letterbox', 'Vignette', 'Comic', 'Dot screen',
+  'Mirror', 'Mirror vertical', 'Quad', 'Kaleidoscope', 'Twirl', 'Bulge', 'Pinch', 'Pixelate', 'Hexagons', 'Crystal', 'Fisheye',
+  'Blur in', 'Zoom blur', 'Motion blur', 'Dreamy', 'Tilt-shift', 'Sharpen',
+];
+
+const carouselUses = [
+  'Educational posts',
+  'Trip recaps',
+  'Tutorials',
+  'Portfolio highlights',
+  'Storytelling slides',
+];
+
+const vsRows = [
+  { what: 'Clips leave your device for AI or scoring', us: false, them: true },
+  { what: 'Tracks you across apps and sites for ads', us: false, them: true },
+  { what: 'Beat sync runs entirely on device', us: true, them: false },
+  { what: 'Original kept under a non-destructive recipe', us: true, them: false },
+  { what: 'Template fetch that never reveals which pack you chose', us: true, them: false },
+  { what: 'Honest try-before-you-buy; no surprise paywall after setup', us: true, them: false },
+  { what: 'Tips go 100% to the person; app commerce a flat 10%', us: true, them: false },
+  { what: 'Share into a private network feed, not only public social', us: true, them: false },
+  { what: 'Generated detail is a choice, never forced into what you send', us: true, them: false },
+  { what: 'Desktop and phone share one project model', us: true, them: true },
+];
+---
+
+<div class="moments">
+  <section class="mo-hero" data-scene="stage" data-hero aria-labelledby="mo-title">
+    <div class="mo-stage">
+      <div class="mo-visual" aria-hidden="true">
+        <video
+          class="mo-reel"
+          src="/khensu/moments/hero-scenes.mp4"
+          poster="/khensu/moments/hero-scenes.webp"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+        ></video>
+        <div class="mo-phone">
+          <span class="mo-island"></span>
+          <video
+            class="mo-app mo-reel-phone"
+            src="/khensu/moments/hero-templates.mp4"
+            poster="/khensu/moments/hero-templates.webp"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+          ></video>
+          <span class="mo-chip">the real app · 0.1.0 (9)</span>
+        </div>
+      </div>
+      <div class="wrap mo-copy">
+        <p class="eyebrow">ñü.mømëntš</p>
+        <h1 id="mo-title">Boost the moments<br /><em>you actually keep.</em></h1>
+        <RevealText
+          parts={[
+            ['Templates, beat sync, captions and a full editor. ', false],
+            ['Everything runs on your device.', true],
+            [' Nobody else sees your clips.', true],
+          ]}
+        />
+        <div class="btn-row">
+          <a class="btn primary" href={appHref}>Get the app</a>
+          <a class="btn" href="#templates-section">Browse 36 templates</a>
+        </div>
+        <p class="mo-proof">
+          No upload to score a clip. No tracking for ads. Tips 100% to the person.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section mo-templates" id="templates-section" aria-labelledby="mo-tpl-title">
+    <div class="wrap">
+      <p class="eyebrow">templates</p>
+      <h2 id="mo-tpl-title">36 templates.<br /><span class="dim">Tap one, drop your clips, post.</span></h2>
+      <RevealText
+        parts={[
+          ['Every template sets the look, transition, layout, motion, effects and title. ', false],
+          ['Your shots land on the beat in seconds.', true],
+          [' Change anything, save it as a kit, and your originals stay untouched.', false],
+        ]}
+      />
+      <div class="mo-cats" role="toolbar" aria-label="Filter templates by category">
+        <button type="button" class="on" data-cat="">All</button>
+        {tplCats.map((c) => <button type="button" data-cat={c}>{c}</button>)}
+      </div>
+      <ul class="mo-tpl" role="list" aria-label="Template samples">
+        {MOMENTS_TEMPLATES.map((t) => (
+          <li class={t.wide ? 'wide' : undefined} data-cat={t.category}>
+            <video
+              src={`/khensu/moments/templates/${t.id}.mp4`}
+              poster={`/khensu/moments/templates/${t.id}.webp`}
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            ></video>
+            <span class="mo-tpl-cat">{t.category}</span>
+            <b>{t.title}</b>
+            <span class="mo-tpl-blurb">{t.blurb}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="btn-row mo-tpl-cta">
+        <a class="btn primary" href={appHref}>Get the app and try them</a>
+        <a class="btn" href="#studio-section">Try a look in your browser</a>
+      </div>
+      <p class="footnote">
+        Every sample above was rendered by the app's own renderer, frame for frame what an export gives you. The
+        photos are generated sample images, animated with 3D photo motion on the device.
+      </p>
+      <ul class="cards" role="list">
+        <li><b>On your device</b><span>Beat detection, shot scoring, speech, cutouts and every frame of the render run locally. No upload to score a clip.</span></li>
+        <li><b>Inside the app</b><span>All 36 templates in 20 categories ship with the app: no download, no account, no tracking of which one you opened.</span></li>
+        <li><b>Creators earn</b><span>Anyone can publish a template as a persona. Tips and sales go to them; app commerce stays a flat 10%.</span></li>
+        <li><b>Export your way</b><span>Reels up to 4K60, or carousel slides with photos and videos together, to Photos or anywhere through the share sheet.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section mo-highlights" id="highlights-section" aria-labelledby="mo-hl-title">
+    <div class="wrap">
+      <p class="eyebrow">get the highlights</p>
+      <h2 id="mo-hl-title">Made for creators who refuse the cloud.</h2>
+      <div class="mo-hl-rail" role="list">
+        <article class="mo-hl" role="listitem">
+          <img class="mo-hl-img" src="/khensu/moments/stills/s08-sprint.webp" alt="" loading="lazy" />
+          <b>Beat sync in one tap</b>
+          <span>Clips meet the song on the Neural Engine. Pro timing without a timeline.</span>
+        </article>
+        <article class="mo-hl" role="listitem">
+          <img class="mo-hl-img" src="/khensu/moments/stills/s06-fit.webp" alt="" loading="lazy" />
+          <b>Templates you can bend</b>
+          <span>36 templates set the look, layout, motion and title. Change any of it, or save your own style as a kit.</span>
+        </article>
+        <article class="mo-hl" role="listitem">
+          <img class="mo-hl-img" src="/khensu/moments/stills/s13-fireworks.webp" alt="" loading="lazy" />
+          <b>Private by construction</b>
+          <span>No Private Cloud Compute. No caption server. No “improve with AI” upload.</span>
+        </article>
+        <article class="mo-hl" role="listitem">
+          <img class="mo-hl-img" src="/khensu/moments/stills/s19-friends.webp" alt="" loading="lazy" />
+          <b>Post to the feed</b>
+          <span>Share into nu.network, or export HEVC and walk away. Your choice.</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features-section" data-scene="reveal">
+    <div class="wrap">
+      <p class="eyebrow">features</p>
+      <h2>From idea to post.<br /><span class="dim">Minutes, not hours.</span></h2>
+      <p class="lede">
+        nu.moments is a creator-first editor: templates, beat sync, captions, effects and a full video and photo
+        path. Design automation and AI editing stay on your Neural Engine. Nothing is processed on a server.
+      </p>
+      <ul class="feat" role="list">
+        {features.map((f, i) => (
+          <li style={`--i:${i}`} id={`${f.id}-section`}>
+            <b>{f.title}</b>
+            <span>{f.body}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="footnote">
+        What stays with the social apps: their licensed music catalogues, trending audio, Reels insights and posting
+        straight into their feeds. nu.moments uses your own tracks or beats it makes on the device, and hands the
+        finished file to any app through the share sheet. 3D photo motion moves a camera through depth estimated on the
+        device; it doesn't invent new movement in the scene. Restyle makes a new picture inspired by your photo rather
+        than filtering it, and works on photos, not video.
+      </p>
+    </div>
+  </section>
+
+  <section class="section mo-effects" id="effects-section" data-scene="reveal">
+    <div class="wrap">
+      <p class="eyebrow">effects shop</p>
+      <h2>Looks that stop the scroll.<br /><span class="dim">Rendered on your device.</span></h2>
+      <p class="lede">Sixteen filters and {fxNames.length} effects ship in the app and render into every preview and export through the same on-device renderer. The tiles show a few of the filters.</p>
+      <ul class="fx" role="list">
+        <li><video src="/khensu/moments/datamosh.mp4" poster="/khensu/moments/datamosh.webp" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><b>Datamosh</b></li>
+        {effects.map((fx, i) => (
+          <li style={`--i:${i}`}><img src={fx.img} alt="" loading="lazy" style={`filter:${fx.filter}`} /><b>{fx.name}</b></li>
+        ))}
+      </ul>
+      <ul class="fx-names" role="list" aria-label="Effects in the app">
+        {fxNames.map((n) => <li>{n}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="carousels-section" data-scene="reveal">
+    <div class="wrap">
+      <p class="eyebrow">the art of carousels</p>
+      <h2>Carousels that feel like you.<br /><span class="dim">Scrapbooks, not slides.</span></h2>
+      <p class="lede">
+        Swipeable, story-driven templates inspired by junk journals, photo dumps and visual diaries. Drop your
+        photos in; rearrange on the phone; export to the Feed or outside.
+      </p>
+      <div class="split">
+        <div>
+          <h3>From…</h3>
+          <ul class="plain" role="list">
+            {carouselUses.map((u) => <li>{u}</li>)}
+          </ul>
+        </div>
+        <div class="mo-carousel" aria-hidden="true">
+          <span class="slide s1"><img src="/khensu/moments/stills/s04-coffee.webp" alt="" loading="lazy" /><i>01</i><b>recap</b></span>
+          <span class="slide s2"><img src="/khensu/moments/stills/s05-pasta.webp" alt="" loading="lazy" /><i>02</i><b>detail</b></span>
+          <span class="slide s3"><img src="/khensu/moments/stills/s17-sunday.webp" alt="" loading="lazy" /><i>03</i><b>close</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <slot name="studio" />
+
+  <section class="section" id="vs-section" data-scene="reveal" aria-labelledby="mo-vs-title">
+    <div class="wrap">
+      <p class="eyebrow">worth the switch</p>
+      <h2 id="mo-vs-title">Built to beat the template apps<br /><span class="dim">you already tried.</span></h2>
+      <p class="lede">
+        Typical reel makers score your clips in the cloud, track you for ads, and hide the subscription until after
+        setup. nu.moments keeps every frame on the device you hold — and says so up front.
+      </p>
+      <div class="mo-vs" role="region" aria-label="How nu.moments compares" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">What happens</th>
+              <th scope="col" class="us">ñü.mømëntš</th>
+              <th scope="col">Typical template apps</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vsRows.map((r) => (
+              <tr>
+                <th scope="row">{r.what}</th>
+                <td class="us">
+                  {r.us ? <span class="yes" aria-label="Yes">●</span> : <span class="no" aria-label="No">–</span>}
+                </td>
+                <td>
+                  {r.them ? <span class="yes muted" aria-label="Yes">●</span> : <span class="no" aria-label="No">–</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        “Typical template apps” reflects common App Store privacy labels and cloud AI flows (contact info, device
+        identifiers and usage data used for tracking and advertising). nu.moments never collects those for ads and
+        never uploads your library to score a template.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="pricing-section">
+    <div class="wrap">
+      <p class="eyebrow">pricing</p>
+      <h2>Try everything.<br /><span class="dim">Pay when you buy.</span></h2>
+      <p class="lede">
+        Editing, beat sync, captions and templates on this device ship without a surprise monthly wall after
+        onboarding. When you buy a pack or tip a creator, app commerce is a flat 10% — the lowest in the industry —
+        and tips go 100% to the person.
+      </p>
+      <ul class="cards" role="list">
+        <li><b>On-device editor</b><span>Included. Your clips never leave to unlock a feature.</span></li>
+        <li><b>Creator packs</b><span>Buy once from the person who made them. No tracking inside a pack.</span></li>
+        <li><b>Tips</b><span>100% to the creator. khėnsu.ñü takes no cut on tips.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="privacy-section">
+    <div class="wrap">
+      <p class="eyebrow">privacy</p>
+      <h2>Your moments stay yours.</h2>
+      <p class="lede">
+        No Siri, no Private Cloud Compute, no Writing Tools in the composer, no iCloud for this path. Edits,
+        captions and templates resolve on the phone you hold. Generated detail is a choice you turn on, never a
+        default when you send with nu.media.
+      </p>
+      <div class="btn-row">
+        <a class="btn primary" href={appHref}>Get the app</a>
+        <a class="btn" href="https://media.khensu.nu">See nu.media</a>
+        <a class="btn" href="https://create.khensu.nu">For creators</a>
+      </div>
+      <p class="footnote">
+        nu.moments is the product name for the on-device editor described in
+        <a href="https://dev.khensu.nu/specs/nu-moments/">khensu-specs</a> (<span class="mono">design/nu-moments.md</span>,
+        <span class="mono">design/editor.md</span>). Address: <span class="mono">nu:moments.khensu.nu</span>.
+      </p>
+    </div>
+  </section>
+  <slot name="feed" />
+</div>
+
+<style>
+  .moments { --mo: #f0a8c8; --mo-deep: #7ee0c8; }
+  .mo-hero {
+    position: relative;
+    min-height: min(92vh, 920px);
+    padding: clamp(3rem, 8vw, 6rem) 0 clamp(2rem, 5vw, 4rem);
+    overflow: hidden;
+  }
+  .mo-hero.has-hero-net :global(.net) { opacity: 0.35; }
+  .mo-stage {
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: center;
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+  @media (min-width: 880px) {
+    .mo-stage {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+    }
+    .mo-copy { order: 2; }
+    .mo-visual { order: 1; }
+  }
+  .mo-copy .eyebrow { margin-bottom: 1rem; }
+  .mo-copy h1 {
+    font-size: clamp(2.6rem, 7vw, 4.6rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin: 0 0 1.25rem;
+  }
+  .mo-copy :global(.reveal-text) { text-align: left; margin: 0 0 1.75rem; max-width: 36rem; }
+  .mo-proof {
+    margin: 1.25rem 0 0;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    max-width: 34rem;
+  }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+  .dim { color: var(--text-dim); font-weight: 300; }
+
+  .mo-visual {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    max-width: 420px;
+    margin: 0 auto;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #0b0b0d;
+    isolation: isolate;
+  }
+  .mo-reel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.05) contrast(1.05);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  }
+  .mo-phone {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    translate: -50% 0;
+    width: min(58%, 210px);
+    aspect-ratio: 9 / 19.5;
+    border-radius: 28px;
+    padding: 8px;
+    background: linear-gradient(160deg, #2a2a2e, #0e0e10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  }
+  .mo-island {
+    display: block;
+    width: 38%;
+    height: 10px;
+    margin: 6px auto 8px;
+    border-radius: 999px;
+    background: #050505;
+  }
+  .mo-screen {
+    height: calc(100% - 24px);
+    border-radius: 20px;
+    background:
+      radial-gradient(120% 80% at 20% 0%, rgba(240, 168, 200, 0.35), transparent 55%),
+      radial-gradient(100% 70% at 90% 30%, rgba(126, 224, 200, 0.28), transparent 50%),
+      #12141a;
+    padding: 1rem 0.85rem;
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    color: #fff;
+  }
+  .mo-screen > b { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; opacity: 0.7; }
+  .mo-label { font-size: 0.95rem; font-weight: 600; letter-spacing: -0.02em; }
+  .mo-beats {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    align-items: end;
+    height: 48px;
+  }
+  .mo-beats li {
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--mo), var(--mo-deep));
+    height: calc(30% + (var(--h, 40%) ));
+    animation: beat 1.1s ease-in-out infinite;
+    animation-delay: calc(var(--d, 0) * 1s);
+  }
+  .mo-beats li:nth-child(1) { --h: 35%; --d: 0; }
+  .mo-beats li:nth-child(2) { --h: 70%; --d: 0.08; }
+  .mo-beats li:nth-child(3) { --h: 45%; --d: 0.16; }
+  .mo-beats li:nth-child(4) { --h: 90%; --d: 0.04; }
+  .mo-beats li:nth-child(5) { --h: 55%; --d: 0.2; }
+  .mo-beats li:nth-child(6) { --h: 75%; --d: 0.12; }
+  .mo-beats li:nth-child(7) { --h: 40%; --d: 0.18; }
+  .mo-beats li:nth-child(8) { --h: 65%; --d: 0.06; }
+  @keyframes beat {
+    0%, 100% { transform: scaleY(0.75); opacity: 0.75; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+  .mo-chip {
+    margin-top: auto;
+    justify-self: start;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(10, 12, 16, 0.45);
+    backdrop-filter: blur(12px);
+  }
+
+  .mo-hl-rail {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1rem;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 1fr);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+  }
+  .mo-hl {
+    scroll-snap-align: center;
+    min-height: min(52vh, 360px);
+    border-radius: 28px;
+    padding: 1.75rem 1.5rem;
+    display: grid;
+    align-content: end;
+    gap: 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+      radial-gradient(120% 90% at 15% 0%, rgba(240, 168, 200, 0.4), transparent 55%),
+      radial-gradient(100% 80% at 90% 80%, rgba(126, 224, 200, 0.28), transparent 50%),
+      #12141a;
+  }
+  .mo-hl:nth-child(2n) {
+    background:
+      radial-gradient(120% 90% at 85% 0%, rgba(126, 224, 200, 0.38), transparent 55%),
+      radial-gradient(100% 80% at 10% 90%, rgba(240, 168, 200, 0.25), transparent 50%),
+      #12141a;
+  }
+  .mo-hl b { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.03em; }
+  .mo-hl span { color: rgba(255, 255, 255, 0.62); font-size: 1.05rem; line-height: 1.45; }
+
+  .feat {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 900px) {
+    .feat { grid-template-columns: repeat(4, 1fr); }
+  }
+  .feat li {
+    display: grid;
+    gap: 0.45rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    min-height: 11rem;
+  }
+  .feat b { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; }
+  .feat span { color: var(--text-dim); font-size: 0.95rem; line-height: 1.45; }
+
+  .fx {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+  }
+  .fx li { position: relative; overflow: hidden; flex: 0 0 auto;
+    scroll-snap-align: start;
+    width: min(42vw, 160px);
+    aspect-ratio: 3 / 4;
+    border-radius: 22px;
+    display: grid;
+    place-items: end start;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+      radial-gradient(120% 90% at 20% 10%, rgba(240, 168, 200, 0.45), transparent 55%),
+      radial-gradient(100% 80% at 90% 80%, rgba(126, 224, 200, 0.35), transparent 50%),
+      #14161c;
+  }
+  .fx li:nth-child(2n) {
+    background:
+      radial-gradient(120% 90% at 80% 0%, rgba(126, 224, 200, 0.4), transparent 55%),
+      radial-gradient(100% 80% at 10% 90%, rgba(240, 168, 200, 0.3), transparent 50%),
+      #14161c;
+  }
+  .fx-names { list-style: none; margin: 1.5rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .fx-names li { font-size: 0.82rem; padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); color: var(--text-dim); }
+  .fx b { font-size: 0.95rem; font-weight: 600; position: relative; z-index: 1; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  .fx video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .fx img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .mo-app { width: 100%; height: calc(100% - 24px); object-fit: cover; object-position: top; border-radius: 20px; display: block; }
+  .mo-hl-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px; }
+  .slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 20px; opacity: .85; }
+  .slide i, .slide b { position: relative; z-index: 1; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+
+  .split {
+    margin-top: 2.5rem;
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  @media (min-width: 800px) {
+    .split { grid-template-columns: 0.9fr 1.1fr; }
+  }
+  .plain {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .plain li {
+    padding: 0.65rem 0.9rem;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .mo-carousel {
+    position: relative;
+    height: 280px;
+  }
+  .slide {
+    position: absolute;
+    width: min(52%, 220px);
+    aspect-ratio: 3 / 4;
+    border-radius: 20px;
+    padding: 1rem;
+    display: grid;
+    align-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+    background: #1a1c22;
+  }
+  .slide i { font-style: normal; font-family: var(--font-mono); font-size: 0.75rem; opacity: 0.55; }
+  .slide b { font-size: 1.2rem; font-weight: 600; }
+  .s1 { left: 4%; top: 18%; rotate: -8deg; background: linear-gradient(160deg, #3a2a32, #14161c); }
+  .s2 { left: 28%; top: 6%; rotate: 2deg; z-index: 2; background: linear-gradient(160deg, #2a3a36, #14161c); }
+  .s3 { left: 52%; top: 22%; rotate: 9deg; background: linear-gradient(160deg, #2a3040, #14161c); }
+
+  .mo-vs {
+    margin-top: 2rem;
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .mo-vs table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .mo-vs th, .mo-vs td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  .mo-vs thead th {
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+  }
+  .mo-vs tbody th {
+    font-weight: 500;
+    max-width: 28rem;
+  }
+  .mo-vs .us { color: var(--mo-deep); }
+  .mo-vs .yes { color: var(--mo-deep); }
+  .mo-vs .yes.muted { color: var(--text-faint); }
+  .mo-vs .no { color: var(--text-faint); }
+
+  .cards {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 1rem;
+  }
+  .cards li {
+    display: grid;
+    gap: 0.4rem;
+    padding: 1.4rem 1.25rem;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .cards b { font-weight: 600; }
+  .cards span { color: var(--text-dim); font-size: 0.95rem; }
+  .mo-templates { padding-top: clamp(2rem, 5vw, 3.5rem); }
+  .mo-cats { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .mo-cats button {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .mo-cats button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .mo-tpl li[hidden] { display: none; }
+  .mo-tpl-cta { margin-top: 2.5rem; }
+  .mo-tpl {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.25rem 1rem;
+  }
+  .mo-tpl li { display: grid; gap: 0.3rem; align-content: start; }
+  .mo-tpl li.wide { grid-column: span 2; }
+  .mo-tpl video {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    border-radius: 16px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    margin-bottom: 0.35rem;
+  }
+  .mo-tpl li.wide video { aspect-ratio: 16 / 9; align-self: center; }
+  .mo-tpl-cat { color: var(--text-faint); font-size: 0.75rem; text-transform: lowercase; letter-spacing: 0.02em; }
+  .mo-tpl b { font-weight: 600; font-size: 0.98rem; }
+  .mo-tpl-blurb { color: var(--text-dim); font-size: 0.85rem; line-height: 1.4; }
+  .footnote { margin-top: 2.5rem; color: var(--text-faint); font-size: 0.88rem; max-width: 70ch; }
+  .mono { font-family: var(--font-mono); font-size: 0.9em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mo-beats li { animation: none; }
+    .mo-reel { display: none; }
+  }
+  @media (max-width: 560px) {
+    .feat { grid-template-columns: 1fr; }
+    .feat li { min-height: 0; }
+  }
+</style>
+
+<script>
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll<HTMLVideoElement>('.mo-reel, .mo-reel-phone, .fx video').forEach((v) => {
+      v.removeAttribute('autoplay');
+      v.pause();
+    });
+  }
+
+  const samples = document.querySelectorAll<HTMLVideoElement>('.mo-tpl video');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const el = e.target as HTMLVideoElement;
+          if (e.isIntersecting) el.play().catch(() => {});
+          else el.pause();
+        }
+      },
+      { rootMargin: '120px 0px', threshold: 0.25 },
+    );
+    samples.forEach((el) => io.observe(el));
+  }
+
+  const cats = document.querySelectorAll<HTMLButtonElement>('.mo-cats button');
+  cats.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat ?? '';
+      cats.forEach((b) => b.classList.toggle('on', b === btn));
+      document.querySelectorAll<HTMLLIElement>('.mo-tpl li').forEach((li) => {
+        li.hidden = cat !== '' && li.dataset.cat !== cat;
+      });
+    }),
+  );
+</script>

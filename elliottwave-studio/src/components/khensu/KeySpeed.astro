@@ -1,0 +1,184 @@
+---
+// Seconds to process 10 s of video (300 frames). Ours measured 11 Oct 2026 on a 2021 MacBook Pro (M1 Pro) and an iPhone Air.
+type Row = { name: string; detail: string; seconds: number; label: string; ours?: boolean; slow?: boolean };
+const rows: Row[] = [
+  { name: 'Ray-traced film frames', detail: 'Toy Story 4: 60 to 160 render-farm hours per 4K frame (Pixar)', seconds: 300 * 60 * 3600, label: '18,000+ farm hours' },
+  { name: 'Rotoscoping by hand', detail: 'About 15 frames a day for a skilled artist (Roto++, SIGGRAPH 2016)', seconds: 20 * 8 * 3600, label: '20 working days' },
+  { name: 'ñü.media Ultra rebuild, on the host', detail: 'Apple’s super resolution to 4K: 0.93 frames a second on an M1 Pro', seconds: 300 / 0.93, label: '5.4 min', ours: true, slow: true },
+  { name: 'Decoding the video itself', detail: 'Hardware HEVC, the 4K Ultra file, M1 Pro: 138 frames a second', seconds: 300 / 138, label: '2.2 s' },
+  { name: 'AI cut-out, people only', detail: 'Robust Video Matting at 4K, 154 frames a second on a desktop RTX 3090, model time only', seconds: 300 / 154, label: '1.9 s' },
+  { name: 'Encoding ñü.media', detail: 'Hardware HEVC at 720 × 1280 on an iPhone Air: 203 frames a second', seconds: 300 / 203, label: '1.5 s', ours: true },
+  { name: 'ñü.media light key with glow and shadows', detail: '4K, in this browser’s GPU on an M1 Pro: 170+ frames a second', seconds: 300 / 170, label: '1.8 s', ours: true },
+  { name: 'ñü.media green-screen key', detail: '4K, in this browser’s GPU on an M1 Pro: 258+ frames a second', seconds: 300 / 258, label: '1.2 s', ours: true },
+].sort((a, b) => b.seconds - a.seconds);
+const MAX = 8; // 10^8 seconds on the log axis
+const width = (s: number) => Math.max(2, (Math.log10(Math.max(s, 1)) + 0.3) / (MAX + 0.3)) * 100;
+const ticks = [
+  { at: 0, label: '1 s' },
+  { at: 1.78, label: '1 min' },
+  { at: 3.56, label: '1 hour' },
+  { at: 4.94, label: '1 day' },
+  { at: 6.42, label: '1 month' },
+  { at: 7.5, label: '1 year' },
+];
+---
+
+<figure class="card wide ks" data-scene="reveal" aria-labelledby="ks-title">
+  <figcaption>
+    <b id="ks-title">How long it takes</b>
+    <span>Time to process 10 seconds of video, 300 frames. The scale is logarithmic: each step is ten times longer.</span>
+  </figcaption>
+  <ol class="rows" role="img" aria-label={rows.map((r) => `${r.name}: ${r.label}`).join('; ')}>
+    {rows.map((r) => (
+      <li class:list={{ ours: r.ours, slow: r.slow }}>
+        <span class="name"><b>{r.name}</b><small>{r.detail}</small></span>
+        <span class="track"><span class="bar" style={`--w:${width(r.seconds)}%`}></span><span class="val">{r.label}</span></span>
+      </li>
+    ))}
+  </ol>
+  <div class="axis" aria-hidden="true">
+    {ticks.map((t) => <span style={`--x:${((t.at + 0.3) / (MAX + 0.3)) * 100}%`}>{t.label}</span>)}
+  </div>
+
+  <div class="why">
+    <h3>Why the key is this fast</h3>
+    <ul>
+      <li><b>The hard part happened when it was filmed.</b> A green screen or a black sky already separates the subject. A rotoscope artist or an AI model has to work out, frame by frame, where the person ends; a key only has to read the colour of each pixel.</li>
+      <li><b>One pass, on the frame already decoded.</b> The key, glow and shadows are a single small program that runs on every pixel at once on the GPU, reading the frame the video decoder has just put there. Nothing is copied back, saved or sent anywhere.</li>
+      <li><b>Light that looks right, not light that is simulated.</b> The glow and shadows blur the light a few dozen times per pixel. Ray tracing follows millions of light paths through a whole 3D scene to get every reflection physically right, which is why a film frame takes hours on a render farm.</li>
+      <li><b>Transparency travels with the video.</b> nu.media carries the cut-out edge in the stream, so the receiver composites; it never recomputes it.</li>
+    </ul>
+    <h3>Where it isn’t a replacement</h3>
+    <p>A key needs a clean background. Footage with no green screen, hair against a busy wall or heavy motion blur still needs rotoscoping or an AI matte, and the effects here are a look, not physically accurate light. The slow step is ours too: rebuilding 4K for Ultra takes about 32 times longer than the video on an M1 Pro, which is why it runs once on the host, not on every viewer’s device.</p>
+  </div>
+  <p class="note">
+    Measured 11 October 2026: keys in Chrome’s WebGL with every frame forced to finish, so real playback is faster; decoding with FFmpeg and VideoToolbox; encoding on an iPhone Air with iOS 26.6.1. Cited:
+    <a href="https://www.awardsdaily.com/2019/05/28/director-josh-cooley-and-producers-jonas-riveras-and-mark-nielsen-take-us-behind-the-magic-of-toy-story-4/">Toy Story 4 render times</a>,
+    <a href="http://visual.cs.ucl.ac.uk/pubs/rotopp/">Roto++ (Li et al., SIGGRAPH 2016)</a>,
+    <a href="https://github.com/PeterL1n/RobustVideoMatting">Robust Video Matting benchmarks</a>.
+    Each row is a different job on different hardware, so compare orders of magnitude, not exact ratios.
+  </p>
+</figure>
+
+<style>
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  figcaption b {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  figcaption span,
+  .note,
+  small,
+  .why p,
+  .why li {
+    color: var(--text-dim);
+  }
+  .rows {
+    list-style: none;
+    margin: 1.4rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  .rows li {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.9fr) 2fr;
+    gap: 1rem;
+    align-items: center;
+  }
+  .name {
+    display: grid;
+    gap: 0.1rem;
+  }
+  .name b {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  small {
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+  .track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    height: 1.4rem;
+  }
+  .bar {
+    height: 0.7rem;
+    width: var(--w);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .ours .bar {
+    background: linear-gradient(90deg, #8b7bff, #b9b0ff);
+    box-shadow: 0 0 14px rgba(139, 123, 255, 0.45);
+  }
+  .ours.slow .bar {
+    background: linear-gradient(90deg, rgba(139, 123, 255, 0.45), rgba(185, 176, 255, 0.55));
+    box-shadow: none;
+  }
+  .ours .name b {
+    color: #b9b0ff;
+  }
+  .val {
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .axis {
+    position: relative;
+    height: 1.4rem;
+    margin: 0.6rem 0 0 calc(min(14rem, 31%) + 1rem);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .axis span {
+    position: absolute;
+    left: var(--x);
+    top: 0.3rem;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .why {
+    margin-top: 2rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .why h3 {
+    margin: 0.6rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+  .why ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .why li b {
+    color: var(--text, #fff);
+    font-weight: 500;
+  }
+  .why p {
+    margin: 0;
+  }
+  .note {
+    margin: 1.4rem 0 0;
+    font-size: 0.86rem;
+  }
+  @media (max-width: 760px) {
+    .rows li {
+      grid-template-columns: 1fr;
+      gap: 0.3rem;
+    }
+    .axis {
+      margin-left: 0;
+    }
+  }
+</style>

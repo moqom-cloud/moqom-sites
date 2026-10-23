@@ -1,0 +1,94 @@
+---
+// Green-screen demo: the original CC0 clip beside ñü.media's keyed composite, frame-locked.
+const DIR = '/khensu/codec/greenscreen/';
+const sides = [
+  { file: 'original', name: 'Original', note: 'Green screen, 8K source shown at 2560 × 1440', ours: false },
+  { file: 'nu-greenscreen', name: 'ñü.media', note: 'Green keyed out, edges despilled, new background', ours: true },
+];
+---
+
+<figure class="card wide gs" data-scene="reveal">
+  <figcaption><b>Green screen, keyed</b><span>nu.media carries transparency, so the receiver can put the subject over any background. Only the nu.media side is keyed.</span></figcaption>
+  <div class="two">
+    {sides.map((s) => (
+      <div class:list={['side', { ours: s.ours }]}>
+        <video muted loop playsinline autoplay preload="auto" width="2560" height="1440" poster={`${DIR}${s.file}.jpg`} src={`${DIR}${s.file}.mp4`}
+          aria-label={`${s.name}, ${s.note}`}></video>
+        <p class="tag"><b>{s.name}</b> <small>{s.note}</small></p>
+      </div>
+    ))}
+  </div>
+  <p class="note">Demo of the green-screen path, keyed with a chroma key and despill. The key runs at 258 or more frames a second at 4K on a 2021 M1 Pro, so it costs the viewer almost nothing; timings for every step are below. Foreground: “Chicken fillet roll green screen”, Wikimedia Commons, CC0, 7680 × 4320. Background: Rick Astley, “Never Gonna Give You Up” (1987), © Sony Music Entertainment, a short silent excerpt used as a meme.</p>
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>('.gs')) {
+    const [a, b] = [...fig.querySelectorAll('video')];
+    const lock = () => {
+      if (!b.paused && Math.abs(b.currentTime - a.currentTime) > 1 / 30) b.currentTime = a.currentTime;
+      a.requestVideoFrameCallback ? a.requestVideoFrameCallback(lock) : requestAnimationFrame(lock);
+    };
+    lock();
+  }
+</script>
+
+<style>
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .side {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+  }
+  .side.ours {
+    box-shadow: 0 0 0 1.5px rgba(139, 123, 255, 0.7);
+  }
+  .side video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .tag {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    width: fit-content;
+    margin: 0;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+  .tag small {
+    display: block;
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  .ours .tag b {
+    color: #b9b0ff;
+  }
+  @media (max-width: 760px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+    .tag {
+      font-size: 0.78rem;
+    }
+    .tag small {
+      font-size: 0.68rem;
+    }
+  }
+</style>

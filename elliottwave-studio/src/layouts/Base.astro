@@ -1,0 +1,253 @@
+---
+import Analytics from '../components/Analytics.astro';
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const SITE_NAME = 'elliottwave.studio lab';
+const DEFAULT_DESC =
+  'elliottwave.studio lab makes technology and art, and blurs the line between the two. We define new categories rather than enter crowded ones. Creators of khensu.nu, MOQOM, six10nine, Unify and Kalopsia.';
+
+const { title, description = DEFAULT_DESC, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Technology that defines its category`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+
+const nav = [
+  { href: '/khensu', label: 'khensu.nu' },
+  { href: '/work', label: 'Work' },
+  { href: '/approach', label: 'Approach' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0A0B0D" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Elliott Wave LLC',
+        alternateName: SITE_NAME,
+        url: 'https://elliottwave.studio',
+        email: 'hello@elliottwave.studio',
+        founder: { '@type': 'Person', name: 'Elliott' },
+      })}
+    />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a href="/" class="brand" aria-label="elliottwave.studio lab, home">
+          <svg viewBox="0 0 48 24" width="40" height="20" aria-hidden="true">
+            <path d="M2 20 L9 11 L13 15 L22 3 L26 10 L36 2 L40 9 L46 6" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>elliottwave.studio lab</span>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            {nav.map((n) => (
+              <li>
+                <a href={n.href} aria-current={path === n.href ? 'page' : undefined}>{n.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <div>
+          <p class="foot-brand">elliottwave.studio lab</p>
+          <p class="foot-tag">A lab for technology that defines its own category. Founded by Elliott.</p>
+        </div>
+        <ul class="foot-links">
+          <li><a href="/khensu">khensu.nu</a></li>
+          <li><a href="/work">Work</a></li>
+          <li><a href="/approach">Approach</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/press">Press</a></li>
+          <li><a href="/legal">Legal</a></li>
+          <li><a href="https://elliottwave.dev">Developers</a></li>
+        </ul>
+      </div>
+      <div class="wrap legal">
+        <p>
+          © 2026 Elliott Wave LLC. All rights reserved. khensu.nu™, MOQOM™, six10nine™, Unify™, Kalopsia™, Elliott Wave™ and
+          elliottwave.studio lab™ are trademarks of Elliott Wave LLC. Patents pending. MOQOM · Media Over QUIC Orchestration Mesh.
+        </p>
+        <p>Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its projects, the open-source projects included.</p>
+      </div>
+    </footer>
+    <Analytics site="elliottwave.studio" />
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 10;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    gap: 1rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  .brand:hover {
+    color: var(--text);
+  }
+  nav ul {
+    display: flex;
+    gap: clamp(0.9rem, 2.5vw, 2rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a {
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--text-dim);
+  }
+  nav a[aria-current='page'] {
+    color: var(--text);
+  }
+  nav a[aria-current='page']::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: var(--accent);
+    margin-top: 2px;
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding: 3.5rem 0 2.5rem;
+    margin-top: 2rem;
+    background: var(--bg-sunk);
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .foot-brand {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.25rem;
+  }
+  .foot-tag {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .foot-links {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 0.5rem 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .foot-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .legal p {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    max-width: none;
+    margin: 0;
+  }
+  .legal p + p {
+    margin-top: 0.4rem;
+  }
+  @media (max-width: 560px) {
+    .brand span {
+      display: none;
+    }
+    .foot-links {
+      grid-template-columns: repeat(2, auto);
+    }
+  }
+</style>

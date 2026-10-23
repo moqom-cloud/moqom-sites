@@ -1,0 +1,305 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import BenchBadge from "../components/BenchBadge.astro";
+import BarChart from "../components/BarChart.astro";
+import ResolutionTable from "../components/ResolutionTable.astro";
+import {
+  headline,
+  latencyBars,
+  fanoutLatencyBars,
+  fanoutLatency,
+  cloudflareVersus,
+  cloudflareLimits,
+} from "../data/benchmarks";
+import { SITE } from "../data/site";
+---
+
+<Base
+  title="Benchmarks"
+  description="Lab results for MOQOM: 56–57 ms median glass-to-glass latency between two iPhone 15 Pros, and 6,000 viewers at 5.46 Gbit/s from one 4-vCPU relay with zero loss."
+>
+  <PageHero
+    eyebrow="Benchmarks"
+    title="Measured end to end, reported with the conditions."
+    lede="We don't publish a number without the run behind it. Every figure below comes from a run whose raw output we keep, and each is labelled with the rig it ran on."
+  >
+    <BenchBadge />
+  </PageHero>
+
+  <section class="section">
+    <div class="container">
+      <div class="glass callout callout-warn status">
+        <p>
+          <strong>Lab results, not production SLAs.</strong> Phone and relay runs on August 2026 builds, and a run
+          through Cloudflare's MoQ relay in October 2026. They don't guarantee performance on your network. More load
+          testing is under way, and this page is updated as results come in.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="latency">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Glass to glass</span>
+        <h2>{headline.latencyMedian} median, {headline.latencyP95} p95</h2>
+        <p class="muted">
+          <em>Glass to glass</em> is the time from light hitting the sender's camera to the frame appearing on the
+          receiver's screen. It covers capture, encode, packetising, the network both ways through the relay, the
+          jitter buffer, decode and display. That is everything a person on a call experiences, not just the network.
+        </p>
+        <p class="muted">
+          About 22 ms of the median is the network round trip to the relay. Most of the rest happens on the phones.
+        </p>
+        <BenchBadge />
+      </div>
+      <div class="glass card depth-1">
+        <BarChart
+          title="Glass-to-glass latency, two iPhone 15 Pros via a relay in Los Angeles (ms)"
+          description="Median 56 to 57 ms and p95 70 ms at 720p30 with both directions at once; 61 ms with layout changing every 8 seconds; 66 ms alongside a shared AR game; 69 ms at 540p60 600 kbps."
+          bars={latencyBars}
+          max={100}
+          ticks={[0, 25, 50, 75, 100]}
+          reference={{ value: 60, label: "60 ms" }}
+        />
+      </div>
+    </div>
+    <div class="container">
+      <h3 class="rig-head">Rig</h3>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <tbody>
+            <tr><th scope="row">Devices</th><td>Two iPhone 15 Pros, chosen as a hard case: a model with known heat issues, older than the two latest generations MOQOM targets. Newer phones are preferred for clients.</td></tr>
+            <tr><th scope="row">Relay</th><td>Google Cloud Compute Engine, Los Angeles (us-west2)</td></tr>
+            <tr><th scope="row">Network</th><td>Ordinary home Wi-Fi in Venice Beach, California (about 108 Mbps down, 8 Mbps up), shared with TVs and other devices streaming movies during the runs. Mean round trip to the relay: 21.8 ms</td></tr>
+            <tr><th scope="row">Media</th><td>One 720p HEVC rung from the camera, hardware encode</td></tr>
+            <tr><th scope="row">Direction</th><td>Both phones publishing and subscribing at once, 90 s, every frame delivered</td></tr>
+            <tr><th scope="row">Clocks</th><td>Both synchronised to NTP. The clock-agreement error is reported next to every reading</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="resolution">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">By resolution</span>
+        <h2 class="text-sweep">Latency by resolution</h2>
+        <p class="lede">What is measured so far, and what is supported. <a href="/compare/">How MOQOM compares →</a></p>
+      </div>
+      <ResolutionTable />
+    </div>
+  </section>
+
+  <section class="section" id="fanout">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Fan-out</span>
+        <h2>{headline.fanoutSubscribers} viewers from one 4-vCPU relay, every frame delivered</h2>
+        <p class="muted">
+          One publisher, one track and up to 6,000 viewers on a single 4-vCPU machine. Every viewer received every frame,
+          and the relay's own counters were read alongside the viewers' reports, so a relay that quietly gave up on some
+          viewers can't look clean.
+        </p>
+        <p class="muted">
+          The median frame reached viewers in under 40 ms up to 5,500, and in {fanoutLatency.at6000.p50} at 6,000, with the
+          relay at 97% CPU; the slowest frame took {fanoutLatency.at6000.slowest}. 6,000 is the largest size we have run on
+          one machine, not the ceiling: relays scale out, so production traffic is spread across as many as it needs.
+        </p>
+        <BenchBadge />
+      </div>
+      <div class="glass card reveal">
+        <BarChart
+          title="One 4-vCPU relay: median delivery latency, every frame delivered (ms)"
+          description="Median delivery latency with zero loss: 16–19 ms at 4,000 viewers, 24–28 ms at 4,500, 30–32 ms at 5,000, 38 ms at 5,500 and 61 ms at 6,000."
+          bars={fanoutLatencyBars}
+          max={70}
+          ticks={[0, 20, 40, 60]}
+        />
+      </div>
+    </div>
+    <div class="container">
+      <p class="small faint">
+        Relay: Google Cloud n2-standard-4 (4 vCPU), us-east1-b. Viewers: two n2-standard-8 load generators. Publisher:
+        n2-standard-2. Synthetic traffic, 30 fps of 4,096-byte frames, 30 s per size. One zone, gVNIC, MTU 1460. The relay
+        was started fresh for each size. Latency here is delivery, from the publisher sending a frame to a viewer
+        receiving it. Egress reached {headline.fanoutThroughput}, about {headline.perVcpu} per vCPU.
+        <a href="/benchmarks/load-tests.md">Full test data →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="cloudflare">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Google Cloud and Cloudflare</span>
+        <h2>The same 6,000 viewers on Google Cloud Platform (GCP) and Cloudflare</h2>
+        <p class="muted">
+          We ran the same 6,000-viewer test, with the same load generator and traffic, on two networks: Google Cloud
+          Platform (GCP), with MOQOM's relay on a single 4-vCPU machine, and Cloudflare's MoQ relay network, which is in
+          beta. On GCP, all 6,000 viewers received every frame, confirmed by the relay's own counters. On Cloudflare, every
+          viewer who received video got every frame, but 241 got none: 23 were refused when connecting and 218 were
+          accepted but sent nothing.
+        </p>
+        <p class="muted">
+          Cloudflare's global network delivered frames faster than one GCP machine running at 97% CPU. Below full load,
+          the GCP relay's median was {fanoutLatency.at3500.p50}, and in production MOQOM spreads viewers across as many
+          relays as it needs, on GCP or anywhere else.
+        </p>
+        <BenchBadge />
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <caption class="visually-hidden">6,000 viewers on Google Cloud Platform and on Cloudflare</caption>
+          <thead>
+            <tr><th>6,000 viewers</th><th>Google Cloud Platform (GCP)</th><th>Cloudflare MoQ (beta)</th></tr>
+          </thead>
+          <tbody>
+            {
+              cloudflareVersus.map((r) => (
+                <tr>
+                  <th scope="row">{r.what}</th>
+                  <td class="col-moqom">{r.gcp}</td>
+                  <td>{r.cloudflare}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="container">
+      <h3 class="rig-head">What Cloudflare's beta relay leaves out</h3>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr><th>Feature</th><th>Cloudflare MoQ (beta)</th><th>moqom.cloud and self-hosted MOQOM</th></tr>
+          </thead>
+          <tbody>
+            {
+              cloudflareLimits.map((r) => (
+                <tr>
+                  <th scope="row">{r.feature}</th>
+                  <td>{r.cloudflare}</td>
+                  <td class="col-moqom">{r.moqom}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint">
+        Cloudflare run on 22 October 2026 with the same traffic, viewers opening 100 sessions a second from three Google
+        Cloud load generators in us-west2, frames counted once all were in. Its relay exposes no counters, so its figures
+        are what viewers reported. Delivery times, not glass to glass; the rigs differ, so read the comparison as
+        indicative. MOQOM's SDK runs on Cloudflare's relays too: <a href="/platforms/#cloudflare">how</a>.
+        <a href="/benchmarks/load-tests.md">Full test data and developer notes →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="encryption">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Encryption cost</span>
+        <h2>{headline.sframeCost} to encrypt a 1080p keyframe end to end</h2>
+        <p class="muted">
+          SFrame with AES-256-GCM, on the device, against a 33 ms frame budget. Encrypting media payloads costs a small
+          fraction of a frame.
+        </p>
+        <BenchBadge />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="methodology">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Methodology</span>
+        <h2>How we measure</h2>
+        <ul class="check-list">
+          <li>Latency is timestamped in software at capture and read at render, against a shared clock</li>
+          <li>A run is marked untrustworthy if the clock error exceeds the median it reports</li>
+          <li>Phone-side numbers are checked against the relay's counters. A smooth run that only looked smooth because frames were dropped doesn't count</li>
+          <li>Fan-out uses MOQOM's own load generator, which can drive any relay that speaks draft-19, and Cloudflare's on draft-16</li>
+          <li>Our relay restarts between sizes, so each size starts from cold state</li>
+        </ul>
+        <p class="muted">
+          A physical photodiode rig is planned, and its numbers are the ones we will quote in a contract. Cellular,
+          cross-city, Web, Android and desktop numbers will be published with each release.
+        </p>
+        <p class="muted">
+          No other MoQ stack publishes a glass-to-glass figure measured comparably, so the Cloudflare comparison above
+          is of delivery times only. The fair glass-to-glass test is the same two phones through each relay, and it is
+          on our list.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="/benchmarks/load-tests.md">Full load-test data (Markdown)</a>
+          <a class="btn" href={`${SITE.docs}/specs/methodology/`} rel="noopener">Full methodology on moqom.dev ↗</a>
+        </div>
+      </div>
+      <div class="glass card reveal">
+        <h3>Test coverage</h3>
+        <dl class="cov">
+          <div><dt>Swift SDK</dt><dd>~864 tests</dd></div>
+          <div><dt>Media engine</dt><dd>~944 tests</dd></div>
+        </dl>
+        <p class="small muted">
+          Plus coverage-guided fuzzing of every decoder on every change, and cross-language interop: a Swift publisher
+          and subscriber through the Rust relay, and both backend SDKs against the real control plane.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .status p {
+    margin: 0;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .rig-head {
+    margin-top: var(--space-6);
+  }
+  tbody th {
+    width: 160px;
+    color: var(--text-muted);
+    font-weight: 560;
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .cov {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+  }
+  .cov dt {
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .cov dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xl);
+    color: var(--accent);
+  }
+</style>

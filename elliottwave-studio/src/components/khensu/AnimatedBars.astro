@@ -1,0 +1,180 @@
+---
+// Horizontal bars that grow in, one after another, when the chart scrolls into view. The numbers are text in the
+// markup; without JavaScript or with reduced motion the bars simply show at full length.
+interface Row {
+  name: string;
+  note?: string;
+  value: number;
+  display: string;
+  ours?: boolean;
+}
+interface Props {
+  title: string;
+  unit?: string;
+  rows: Row[];
+  max?: number;
+  sources?: { name: string; url: string }[];
+  note?: string;
+}
+const { title, unit, rows, max = Math.max(...rows.map((r) => r.value)), sources = [], note } = Astro.props;
+const pct = (v: number) => `${Math.max(0.6, Math.min(100, (v / max) * 100))}%`;
+---
+
+<figure class="ab" data-ab>
+  <figcaption>
+    <span class="ab-t">{title}</span>
+    {unit && <span class="ab-u">{unit}</span>}
+  </figcaption>
+  <ol role="list">
+    {rows.map((r, i) => (
+      <li class:list={{ ours: r.ours }} style={`--w:${pct(r.value)};--i:${i}`}>
+        <span class="ab-name">{r.name}{r.note && <small>{r.note}</small>}</span>
+        <span class="ab-track"><span class="ab-bar" /></span>
+        <b class="ab-v">{r.display}</b>
+      </li>
+    ))}
+  </ol>
+  {(note || sources.length > 0) && (
+    <p class="ab-src">
+      {note}
+      {note && sources.length > 0 && ' '}
+      {sources.length > 0 && 'Sources: '}
+      {sources.map((s, i) => (
+        <>
+          <a href={s.url} rel="noopener">{s.name}</a>
+          {i < sources.length - 1 ? '; ' : '.'}
+        </>
+      ))}
+    </p>
+  )}
+</figure>
+
+<script>
+  const charts = document.querySelectorAll<HTMLElement>('[data-ab]:not(.ab-on)');
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('ab-in');
+          io.unobserve(e.target);
+        }
+      },
+      { threshold: 0.35 },
+    );
+    for (const c of charts) {
+      c.classList.add('ab-on');
+      io.observe(c);
+    }
+  }
+</script>
+
+<style>
+  .ab {
+    margin: 0 0 1.2rem;
+    padding: clamp(1.2rem, 2.4vw, 1.8rem);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .ab-t {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .ab-u {
+    font: 500 0.75rem/1.6 var(--font-mono);
+    color: var(--text-faint, #71717a);
+  }
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  li {
+    display: grid;
+    grid-template-columns: minmax(9rem, 15rem) 1fr minmax(4.5rem, auto);
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .ab-name {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .ab-name small {
+    display: block;
+    color: var(--text-faint, #71717a);
+    font-size: 0.78rem;
+  }
+  .ab-track {
+    height: 0.9rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .ab-bar {
+    display: block;
+    height: 100%;
+    width: var(--w);
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.42);
+  }
+  .ours .ab-bar {
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    box-shadow: 0 0 18px rgba(34, 245, 154, 0.6);
+  }
+  .ab-v {
+    font: 600 0.95rem var(--font-mono);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .ours .ab-name,
+  .ours .ab-v {
+    color: #6dffbf;
+  }
+  .ab-src {
+    margin: 1.2rem 0 0;
+    color: var(--text-faint, #71717a);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  .ab-src a {
+    color: inherit;
+  }
+  .ab-on .ab-bar {
+    width: 0;
+    transition: width 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--i) * 0.12s);
+  }
+  .ab-on .ab-v {
+    opacity: 0;
+    transition: opacity 0.5s ease calc(0.5s + var(--i) * 0.12s);
+  }
+  .ab-on.ab-in .ab-bar {
+    width: var(--w);
+  }
+  .ab-on.ab-in .ab-v {
+    opacity: 1;
+  }
+  @media (max-width: 640px) {
+    li {
+      grid-template-columns: 1fr auto;
+      gap: 0.35rem 0.8rem;
+    }
+    .ab-track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+</style>

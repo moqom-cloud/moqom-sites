@@ -1,0 +1,304 @@
+---
+// Snippet generator. Runs entirely in the browser with the same code as the viewer-snippet CLI;
+// nothing typed here is sent anywhere. The preview loads the visitor's model URL, so a page that
+// uses this component must call allowVisitorModels(Astro) from lib/csp.
+import { PLATFORMS, PLATFORM_LABELS, type Platform } from '../vendor/core/snippet-entry';
+
+interface Props {
+  platform?: Platform;
+  /** Hide the platform picker. */
+  fixed?: boolean;
+}
+const { platform = 'html', fixed = false } = Astro.props;
+const platforms = PLATFORMS.map((id) => ({ id, label: PLATFORM_LABELS[id] }));
+---
+
+<section class="generator" id="generator" data-generator aria-labelledby="generator-title">
+  <h2 id="generator-title">Make your snippet</h2>
+  <p class="hint">Runs in your browser. Nothing you type is sent to us.</p>
+  <form>
+    <div class="fields">
+      <label class:list={['wide', { hidden: fixed }]}>
+        <span>Platform</span>
+        <select name="platform">
+          {platforms.map((p) => <option value={p.id} selected={p.id === platform}>{p.label}</option>)}
+        </select>
+      </label>
+      <label class="wide">
+        <span>Model URL (GLB) <em>required</em></span>
+        <input name="src" type="url" required inputmode="url" spellcheck="false" placeholder="https://your-models.web.app/models/chair.glb" value="https://your-models.web.app/models/chair.glb" />
+      </label>
+      <label class="wide">
+        <span>Alt text <em>required</em></span>
+        <input name="alt" type="text" required maxlength="300" value="Oak chair with a woven seat" />
+      </label>
+      <label>
+        <span>USDZ URL for iOS</span>
+        <input name="iosSrc" type="url" inputmode="url" spellcheck="false" placeholder="optional" />
+      </label>
+      <label>
+        <span>Poster image URL</span>
+        <input name="poster" type="url" inputmode="url" spellcheck="false" placeholder="optional" />
+      </label>
+      <label>
+        <span>Height</span>
+        <input name="height" type="text" value="480px" spellcheck="false" />
+      </label>
+      <label>
+        <span>Background</span>
+        <input name="background" type="text" value="transparent" spellcheck="false" />
+      </label>
+    </div>
+    <fieldset>
+      <legend>Options</legend>
+      <label class="check"><input type="checkbox" name="ar" checked /> AR button</label>
+      <label class="check"><input type="checkbox" name="cameraControls" checked /> Orbit and zoom</label>
+      <label class="check"><input type="checkbox" name="autoRotate" /> Auto-rotate</label>
+      <label class="check"><input type="checkbox" name="tap" /> Tap to load</label>
+    </fieldset>
+  </form>
+  <p class="error" data-error role="alert" hidden></p>
+  <div data-output aria-live="polite"></div>
+  <ul class="notes" data-notes></ul>
+  <div class="btn-row">
+    <button type="button" class="btn" data-preview-button>Preview this model</button>
+  </div>
+  <div class="preview" data-preview hidden></div>
+</section>
+
+<script>
+  import {
+    PLATFORMS,
+    SnippetError,
+    ViewerOptionError,
+    cdnScript,
+    normalizeOptions,
+    platformSnippet,
+    toAttributes,
+    type Platform,
+    type ViewerOptions,
+  } from '../vendor/core/snippet-entry';
+  import release from '../vendor/release.json';
+
+  const script = cdnScript(release);
+
+  function codeBlock(title: string, code: string): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'code';
+    const head = document.createElement('div');
+    head.className = 'code-head';
+    const label = document.createElement('span');
+    label.textContent = title;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy';
+    button.dataset.copy = '';
+    button.textContent = 'Copy';
+    head.append(label, button);
+    const pre = document.createElement('pre');
+    const codeEl = document.createElement('code');
+    codeEl.textContent = code;
+    pre.append(codeEl);
+    wrap.append(head, pre);
+    return wrap;
+  }
+
+  function read(form: HTMLFormElement): { platform: Platform; options: ViewerOptions } {
+    const data = new FormData(form);
+    const text = (name: string) => String(data.get(name) ?? '').trim();
+    const chosen = text('platform');
+    const platform = (PLATFORMS as readonly string[]).includes(chosen) ? (chosen as Platform) : 'html';
+    const options: ViewerOptions = {
+      src: text('src'),
+      alt: text('alt'),
+      ar: data.has('ar'),
+      cameraControls: data.has('cameraControls'),
+      autoRotate: data.has('autoRotate'),
+      reveal: data.has('tap') ? 'interaction' : 'auto',
+    };
+    if (text('iosSrc')) options.iosSrc = text('iosSrc');
+    if (text('poster')) options.poster = text('poster');
+    if (text('height')) options.height = text('height');
+    if (text('background')) options.background = text('background');
+    return { platform, options };
+  }
+
+  function setup(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const output = root.querySelector<HTMLElement>('[data-output]')!;
+    const notes = root.querySelector<HTMLElement>('[data-notes]')!;
+    const error = root.querySelector<HTMLElement>('[data-error]')!;
+    const preview = root.querySelector<HTMLElement>('[data-preview]')!;
+    const previewButton = root.querySelector<HTMLButtonElement>('[data-preview-button]')!;
+
+    const render = () => {
+      const { platform, options } = read(form);
+      try {
+        const result = platformSnippet(platform, options, script);
+        error.hidden = true;
+        output.replaceChildren(...result.blocks.map((b) => codeBlock(b.where, b.code)));
+        notes.replaceChildren(
+          ...[...result.notes, ...result.warnings].map((n) => {
+            const li = document.createElement('li');
+            li.textContent = n;
+            return li;
+          }),
+        );
+        previewButton.disabled = false;
+      } catch (e) {
+        if (!(e instanceof ViewerOptionError || e instanceof SnippetError)) throw e;
+        error.textContent = e.message;
+        error.hidden = false;
+        output.replaceChildren();
+        notes.replaceChildren();
+        previewButton.disabled = true;
+      }
+    };
+
+    previewButton.addEventListener('click', async () => {
+      const { options } = read(form);
+      let attributes: [string, string | true][];
+      try {
+        attributes = toAttributes(normalizeOptions(options));
+      } catch {
+        return;
+      }
+      await import('../vendor/core/index');
+      const viewer = document.createElement('ew-viewer');
+      for (const [name, value] of attributes) viewer.setAttribute(name, value === true ? '' : value);
+      const status = document.createElement('p');
+      status.className = 'hint';
+      status.textContent = 'Loading… If nothing appears, check the URL with the checker on the hosting page.';
+      viewer.addEventListener('ew-load', () => (status.textContent = 'Loaded.'));
+      viewer.addEventListener('ew-error', () => {
+        status.textContent = 'The model did not load. The URL may be wrong, or the server may not allow cross-origin requests (CORS).';
+      });
+      preview.replaceChildren(viewer, status);
+      preview.hidden = false;
+      preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    form.addEventListener('input', render);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    render();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-generator]').forEach(setup);
+</script>
+
+<style>
+  .generator {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem 1.5rem;
+    margin: 2rem 0;
+  }
+  .generator h2 {
+    margin-top: 0;
+  }
+  .hint {
+    color: var(--text-faint);
+    font-size: 0.85rem;
+  }
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 0.9rem 1rem;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  .hidden {
+    display: none;
+  }
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  label em {
+    font-style: normal;
+    color: var(--amber);
+    font-size: 0.75rem;
+  }
+  input[type='text'],
+  input[type='url'],
+  select {
+    font: 0.88rem var(--font-mono);
+    color: var(--text);
+    background: var(--bg-code);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 0.55em 0.7em;
+    width: 100%;
+  }
+  input:focus-visible,
+  select:focus-visible {
+    border-color: var(--amber);
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 1rem 0 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+  }
+  legend {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text);
+  }
+  .check input {
+    accent-color: var(--amber);
+  }
+  .error {
+    color: var(--fail);
+    font-size: 0.9rem;
+    margin: 1rem 0 0;
+  }
+  .notes {
+    color: var(--text-dim);
+    font-size: 0.88rem;
+    padding-left: 1.2em;
+  }
+  .notes:empty {
+    display: none;
+  }
+  .preview {
+    margin-top: 1rem;
+  }
+  [data-output] :global(.code) {
+    margin: 1rem 0;
+  }
+  [data-output] :global(.code-head) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font: 0.72rem var(--font-mono);
+    color: var(--text-faint);
+    padding: 0 0.25rem 0.35rem;
+  }
+  [data-output] :global(.copy) {
+    font: 0.72rem var(--font-mono);
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 0.2em 0.6em;
+    cursor: pointer;
+  }
+  [data-output] :global(pre) {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+</style>

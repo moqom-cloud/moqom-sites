@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import moduleHtml from '../../vendor/hubspot/module.html.txt?raw';
+import fieldsJson from '../../vendor/hubspot/fields.json.txt?raw';
+import metaJson from '../../vendor/hubspot/meta.json.txt?raw';
+
+allowVisitorModels(Astro);
+---
+
+<Base title="HubSpot CMS" description={`The ${SITE.displayName} custom module for HubSpot CMS pages and blog posts.`}>
+  <p class="eyebrow">Platforms · Built</p>
+  <h1>HubSpot CMS</h1>
+  <p><PriceBadge plugin="hubspot" /></p>
+  <div class="note">
+    <p>
+      <strong>Not yet tested inside HubSpot.</strong> The module's template logic and escaping are tested with a Jinja-compatible engine,
+      not with HubSpot's own renderer. If something doesn't work, <a href={`${SITE.repoUrl}/issues`}>tell us</a>.
+    </p>
+  </div>
+  <div class="prose">
+    <p>
+      A custom module with fields for every option. It adds the viewer script with its integrity hash, escapes every field with
+      <code>escape_attr</code>, and shows nothing unless the model URL starts with <code>https://</code> and the alt text is set. Editors
+      see a notice instead.
+    </p>
+    <h2>Install</h2>
+    <ol>
+      <li>
+        With the HubSpot CLI: download <code>ew-viewer.module</code> from <a href={SITE.releasesUrl}>GitHub releases</a> and run
+        <code>hs upload ew-viewer.module ew-viewer.module</code>.
+      </li>
+      <li>
+        Without the CLI: in <strong>Content → Design Manager</strong>, create a module named <code>{SITE.displayName}</code> for pages and
+        blog posts, then copy <code>module.html</code> into its HTML + HubL panel and recreate the fields from <code>fields.json</code>
+        (verify the menu names on your HubSpot plan).
+      </li>
+      <li>Add the module to a page, set <strong>Model URL</strong> (or <strong>Model file</strong>) and <strong>Alt text</strong>, and publish.</li>
+    </ol>
+    <p>
+      Custom modules need a HubSpot plan that includes the CMS's developer tools (verify for your plan). A <code>.glb</code> in HubSpot's
+      file manager is served from HubSpot's file domain; whether it sends the CORS headers the viewer needs has not been checked. Test the
+      file URL with the <a href="/hosting/own-server/#checker">checker</a>, or use <a href="/hosting/firebase/">your own hosting</a>.
+    </p>
+  </div>
+
+  <Code title="module.html" code={moduleHtml} />
+  <Code title="fields.json" code={fieldsJson} />
+  <Code title="meta.json" code={metaJson} />
+
+  <Generator platform="hubspot" fixed />
+
+  <LicenceKey plugin="hubspot">
+    <li>Paste it into the module’s <strong>Licence key</strong> field on each page (or set it as the module’s default in Design Manager). HubL can’t make network requests, so unlike WordPress the check runs in the browser. The page editor never shows the badge.</li>
+  </LicenceKey>
+</Base>

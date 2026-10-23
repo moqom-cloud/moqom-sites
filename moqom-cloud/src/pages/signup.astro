@@ -1,0 +1,344 @@
+---
+import Base from "../layouts/Base.astro";
+import { SIGNUP, SITE } from "../data/site";
+---
+
+<Base
+  title="Sign up"
+  description="Create a MOQOM Cloud account, get your API key and add prepaid credit through Stripe-hosted checkout."
+>
+  <section class="section signup">
+    <div class="narrow">
+      <span class="eyebrow">Get started</span>
+      <h1 class="text-sweep">Create your MOQOM account</h1>
+      <p class="lede">
+        {SIGNUP.enabled ? "You'll" : "Once signups open, you'll"} get an API key right away. Then add credit through
+        Stripe-hosted checkout, starting at $10.
+      </p>
+
+      {!SIGNUP.enabled && (
+        <div class="glass glass--strong card form soon" role="status">
+          <span class="pill pill-accent">Coming soon</span>
+          <h2>Signups open soon</h2>
+          <p class="muted">
+            Self-serve accounts aren't open yet. Email <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a> and we'll
+            let you know as soon as they are, or set you up directly.
+          </p>
+          <div class="btn-row">
+            <a class="btn btn-primary" href={`mailto:${SITE.contact}?subject=MOQOM%20Cloud%20signup`}>Email {SITE.contact}</a>
+            <a class="btn" href={SITE.docs} rel="noopener">Read the docs ↗</a>
+          </div>
+        </div>
+      )}
+
+      {SIGNUP.enabled && (
+      <>
+      <form id="signup-form" class="glass glass--strong card form" data-api={SIGNUP.apiBase} novalidate>
+        <div class="field">
+          <label for="name">Name or company</label>
+          <input id="name" name="name" type="text" autocomplete="organization" required maxlength="200" />
+        </div>
+        <div class="field">
+          <label for="email">Work email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required maxlength="320" />
+        </div>
+        <label class="agree">
+          <input id="agree" name="agree" type="checkbox" required />
+          <span class="small muted">
+            I agree to the <a href="/legal/terms/">Terms</a> and the <a href="/legal/privacy/">Privacy Policy</a>.
+          </span>
+        </label>
+        <p id="form-error" class="error" role="alert" hidden></p>
+        <button id="submit" class="btn btn-primary" type="submit">Create account</button>
+        <p class="small faint">
+          Already have an account? Manage your balance, auto top-up and keys on the <a href="/account/">account page</a>
+          or through the <a href="/pricing/#api">billing API</a>.
+        </p>
+      </form>
+
+      <div id="result" class="result" hidden>
+        <div class="glass callout callout-danger">
+          <h2 class="warn-title">Store your API key now</h2>
+          <p>
+            This is the <strong>only time</strong> your key will be shown. We store only a hash of it, so we can't show
+            it to you again. If you lose it, you'll have to revoke it and issue a new one. Keep it in a password manager
+            or a secrets store, and never in client-side code or a git repository.
+          </p>
+        </div>
+
+        <div class="glass card key-card">
+          <label for="api-key">API key</label>
+          <div class="key-row">
+            <input id="api-key" class="mono" type="text" readonly spellcheck="false" autocomplete="off" />
+            <button id="copy" class="btn" type="button">Copy</button>
+          </div>
+          <p id="copy-status" class="small faint" aria-live="polite"></p>
+          <dl class="meta small">
+            <div><dt>Key ID</dt><dd id="key-id" class="mono"></dd></div>
+            <div><dt>Tenant</dt><dd id="tenant" class="mono"></dd></div>
+            <div><dt>Status</dt><dd id="status" class="mono"></dd></div>
+          </dl>
+          <p id="note" class="small muted"></p>
+        </div>
+
+        <label class="agree confirm">
+          <input id="stored" type="checkbox" />
+          <span>I have stored my API key somewhere safe.</span>
+        </label>
+        <div class="btn-row">
+          <a id="checkout" class="btn btn-primary" aria-disabled="true" tabindex="-1" href="#">Continue to checkout →</a>
+        </div>
+        <p class="small faint">
+          Checkout is hosted by Stripe. Card details go to Stripe and never reach MOQOM's servers. Afterwards, set up
+          auto top-up and more keys on the <a href="/account/">account page</a>.
+        </p>
+      </div>
+      </>
+      )}
+    </div>
+  </section>
+</Base>
+
+<script>
+  type SignupResponse = {
+    tenant: string;
+    status: string;
+    api_key: string;
+    key_id: string;
+    checkout_url: string;
+    note?: string;
+  };
+
+  // The form only renders when PUBLIC_SIGNUP_ENABLED is "true"; its data-api comes from SIGNUP in src/data/site.ts.
+  const form = document.getElementById("signup-form");
+  if (form instanceof HTMLFormElement) {
+    const API = form.dataset.api ?? "";
+    const byId = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    const errorEl = byId<HTMLParagraphElement>("form-error");
+    const submit = byId<HTMLButtonElement>("submit");
+    const result = byId<HTMLDivElement>("result");
+    const keyInput = byId<HTMLInputElement>("api-key");
+    const copyBtn = byId<HTMLButtonElement>("copy");
+    const copyStatus = byId<HTMLParagraphElement>("copy-status");
+    const stored = byId<HTMLInputElement>("stored");
+    const checkout = byId<HTMLAnchorElement>("checkout");
+
+    let keyShown = false;
+    let confirmed = false;
+
+    const showError = (message: string) => {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    };
+
+    const safeCheckoutUrl = (raw: string): string | null => {
+      try {
+        const url = new URL(raw);
+        return url.protocol === "https:" ? url.href : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const readError = async (res: Response) => {
+      try {
+        const body = await res.json();
+        if (body && typeof body.error === "string") return body.error;
+      } catch {
+        /* not JSON */
+      }
+      return "";
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorEl.hidden = true;
+
+      const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
+      const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
+      const agree = (form.elements.namedItem("agree") as HTMLInputElement).checked;
+      if (!name) return showError("Please enter a name or company.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Please enter a valid email address.");
+      if (!agree) return showError("Please accept the Terms and Privacy Policy to continue.");
+
+      submit.disabled = true;
+      submit.textContent = "Creating account…";
+
+      let res: Response;
+      try {
+        res = await fetch(`${API}/v1/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ name, email }),
+        });
+      } catch {
+        submit.disabled = false;
+        submit.textContent = "Create account";
+        return showError("We couldn't reach the MOQOM API. Check your connection and try again.");
+      }
+
+      if (res.status === 429) {
+        submit.disabled = false;
+        submit.textContent = "Create account";
+        return showError("Too many signups from this network. Please wait an hour and try again.");
+      }
+      if (res.status === 400) {
+        submit.disabled = false;
+        submit.textContent = "Create account";
+        const detail = await readError(res);
+        return showError(detail ? `We couldn't create the account: ${detail}` : "Please check your details and try again.");
+      }
+      if (!res.ok) {
+        submit.disabled = false;
+        submit.textContent = "Create account";
+        const detail = await readError(res);
+        return showError(detail ? `Signup failed: ${detail}` : `Signup failed (HTTP ${res.status}). Please try again later.`);
+      }
+
+      let data: SignupResponse;
+      try {
+        data = await res.json();
+      } catch {
+        submit.disabled = false;
+        submit.textContent = "Create account";
+        return showError("The server returned an unexpected response. Please try again later.");
+      }
+
+      keyInput.value = data.api_key ?? "";
+      byId("key-id").textContent = data.key_id ?? "";
+      byId("tenant").textContent = data.tenant ?? "";
+      byId("status").textContent = data.status ?? "";
+      byId("note").textContent = data.note ?? "";
+
+      // Session storage only, so the account page opens signed in when Stripe sends the customer back to this tab.
+      try {
+        if (data.api_key) sessionStorage.setItem("moqom.apiKey", data.api_key);
+      } catch {
+        /* storage blocked */
+      }
+
+      const url = safeCheckoutUrl(data.checkout_url ?? "");
+      if (url) {
+        checkout.href = url;
+      } else {
+        checkout.href = "/account/";
+        checkout.textContent = "Checkout is unavailable right now. Open your account →";
+      }
+
+      form.hidden = true;
+      result.hidden = false;
+      keyShown = true;
+      result.scrollIntoView({ block: "start" });
+      keyInput.focus();
+      keyInput.select();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(keyInput.value);
+        copyStatus.textContent = "Copied to clipboard.";
+        copyBtn.textContent = "Copied";
+      } catch {
+        keyInput.select();
+        copyStatus.textContent = "Couldn't copy automatically. The key is selected, so press ⌘C or Ctrl+C.";
+      }
+    });
+
+    stored.addEventListener("change", () => {
+      confirmed = stored.checked;
+      const usable = confirmed && checkout.href && !checkout.href.endsWith("#");
+      checkout.setAttribute("aria-disabled", usable ? "false" : "true");
+      checkout.tabIndex = usable ? 0 : -1;
+    });
+
+    checkout.addEventListener("click", (event) => {
+      if (checkout.getAttribute("aria-disabled") === "true") event.preventDefault();
+    });
+
+    window.addEventListener("beforeunload", (event) => {
+      if (keyShown && !confirmed) event.preventDefault();
+    });
+  }
+</script>
+
+<style>
+  .signup {
+    min-height: 70vh;
+  }
+  .form {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    margin-top: var(--space-5);
+  }
+  .form .btn {
+    justify-self: start;
+  }
+  .soon .pill {
+    justify-self: start;
+  }
+  .soon h2 {
+    margin: 0;
+  }
+  .form p {
+    margin: 0;
+  }
+  .agree {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-weight: 400;
+    margin: 0;
+    cursor: pointer;
+  }
+  .agree input {
+    margin-top: 3px;
+    flex: none;
+  }
+  .confirm {
+    margin: var(--space-5) 0 var(--space-4);
+    font-weight: 560;
+  }
+  .error {
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+  .result {
+    margin-top: var(--space-5);
+  }
+  .warn-title {
+    font-size: var(--text-lg);
+    color: var(--danger);
+    margin-bottom: var(--space-2);
+  }
+  .callout p:last-child {
+    margin-bottom: 0;
+  }
+  .key-card {
+    margin-top: var(--space-4);
+  }
+  .key-row {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .key-row input {
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+  }
+  .meta dt {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .meta dd {
+    margin: 0;
+    word-break: break-all;
+  }
+</style>

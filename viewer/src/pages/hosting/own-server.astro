@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import Checker from '../../components/Checker.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { fixes } from '../../vendor/hosting/check/fixes';
+
+allowVisitorModels(Astro);
+const all = fixes({ origin: 'https://www.example.com' });
+const cli = `npx -p ${SITE.hostingPackageName} viewer-check https://models.example.com/chair.glb --origin https://www.example.com
+# --fixes all prints the settings for every server below`;
+---
+
+<Base title="Your own server" description="Serve 3D models from your own server or bucket, and check that a model URL will work.">
+  <p class="eyebrow">Hosting</p>
+  <h1>Your own server</h1>
+  <div class="prose">
+    <p>Any server or storage bucket works if the model URL:</p>
+    <ul>
+      <li>uses <strong>https://</strong>;</li>
+      <li>returns the file itself (HTTP 200), not a login or error page;</li>
+      <li>
+        sends <strong>Access-Control-Allow-Origin</strong> for your site (or <code>*</code>) when the model is on a different domain from the
+        page;
+      </li>
+      <li>
+        sends the right <strong>Content-Type</strong>: <code>model/gltf-binary</code> for GLB, <code>model/gltf+json</code> for glTF and
+        <code>model/vnd.usdz+zip</code> for USDZ (iOS AR needs this one);
+      </li>
+      <li>allows caching, for example <code>Cache-Control: public, max-age=86400</code>.</li>
+    </ul>
+    <p>Range requests are a bonus, not a requirement. Files on the same domain as your site need no CORS headers.</p>
+  </div>
+
+  <Checker />
+
+  <Code title="Terminal" code={cli} />
+
+  <div class="prose">
+    <h2 id="fixes">Fixes by server</h2>
+    <p>
+      Each example allows <code>https://www.example.com</code>; replace it with your site, or use <code>*</code> to allow any site. The
+      checker fills in your own site when you enter it.
+    </p>
+  </div>
+  {
+    all.map((fix) => (
+      <section class="fix">
+        <h3 id={`fix-${fix.server}`}>{fix.label}</h3>
+        <Code title={fix.file} code={fix.code} />
+        <p class="prose">{fix.note}</p>
+      </section>
+    ))
+  }
+</Base>

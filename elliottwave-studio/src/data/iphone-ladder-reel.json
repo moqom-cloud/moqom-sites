@@ -1,0 +1,772 @@
+{
+  "clip": "reel",
+  "source": "@deemsterhotline on Instagram: H.264 High profile, 720 x 1280, 30 fps, 2.44 Mbit/s video, whole clip",
+  "seconds": 44.7,
+  "size": "720x1280",
+  "source_frames": 1341,
+  "vmaf_model": "vmaf_v0.6.1",
+  "transparent_vmaf": 93,
+  "device": "iPhone18,4",
+  "os": "Version 26.6.1 (Build 23G83)",
+  "codecs": {
+    "h264-hw": {
+      "label": "H.264, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 293.9,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 25.88,
+          "encode_fps_iphone": 219.9
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 293.9,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 25.88,
+          "encode_fps_iphone": 220.0
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 293.9,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 25.88,
+          "encode_fps_iphone": 220.1
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 350.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 30.6,
+          "encode_fps_iphone": 219.7
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.4,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 58.54,
+          "encode_fps_iphone": 217.7
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 80.12,
+          "encode_fps_iphone": 213.3
+        }
+      ]
+    },
+    "hevc-hw": {
+      "label": "HEVC, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 61.7,
+          "frames": 644,
+          "dropped": 697,
+          "vmaf": 18.33,
+          "encode_fps_iphone": 202.9
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 103.3,
+          "frames": 1182,
+          "dropped": 159,
+          "vmaf": 19.29,
+          "encode_fps_iphone": 203.3
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.4,
+          "frames": 1339,
+          "dropped": 2,
+          "vmaf": 32.64,
+          "encode_fps_iphone": 203.0
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 53.17,
+          "encode_fps_iphone": 202.3
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 73.49,
+          "encode_fps_iphone": 201.3
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 87.48,
+          "encode_fps_iphone": 198.8
+        }
+      ]
+    },
+    "av1-svt-rt": {
+      "label": "AV1, SVT-AV1 real time on the Mac (no iPhone AV1 encoder)",
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 149.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 35.83
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 198.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 44.77
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 306.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 55.62
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 517.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 66.88
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1007.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 79.66
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2006.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 91.11
+        }
+      ]
+    },
+    "nu-360p-lanczos": {
+      "label": "nu-media base layer 360 x 640, Lanczos upscale only",
+      "base": [
+        360,
+        640
+      ],
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 46.3,
+          "frames": 1317,
+          "dropped": 24,
+          "vmaf": 6.11,
+          "file": "l-reel-nu-360p-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 20.2,
+          "file": "l-reel-nu-360p-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 37.6,
+          "file": "l-reel-nu-360p-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 54.97,
+          "file": "l-reel-nu-360p-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 70.7,
+          "file": "l-reel-nu-360p-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.9,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 82.74,
+          "file": "l-reel-nu-360p-2000.mp4"
+        }
+      ]
+    },
+    "nu-360p": {
+      "label": "nu-media base layer 360 x 640, Neural Engine super resolution to 720 x 1280",
+      "base": [
+        360,
+        640
+      ],
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 46.3,
+          "frames": 1317,
+          "dropped": 24,
+          "vmaf": 7.45,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            365
+          ],
+          "file": "l-reel-nu-360p-64-sr1.mov"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 22.91,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            364
+          ],
+          "file": "l-reel-nu-360p-128-sr1.mov"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 41.13,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            361
+          ],
+          "file": "l-reel-nu-360p-250-sr1.mov"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 59.15,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            359
+          ],
+          "file": "l-reel-nu-360p-500-sr1.mov"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 74.97,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            356
+          ],
+          "file": "l-reel-nu-360p-1000-sr1.mov"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.9,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 86.41,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            356
+          ],
+          "file": "l-reel-nu-360p-2000-sr1.mov"
+        }
+      ]
+    },
+    "nu-180p-lanczos": {
+      "label": "nu-media base layer 180 x 320, Lanczos upscale only",
+      "base": [
+        180,
+        320
+      ],
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 46.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 6.5,
+          "file": "l-reel-nu-180p-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 15.51,
+          "file": "l-reel-nu-180p-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.4,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 26.34,
+          "file": "l-reel-nu-180p-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 38.86,
+          "file": "l-reel-nu-180p-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.7,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 50.57,
+          "file": "l-reel-nu-180p-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1400.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 59.02,
+          "file": "l-reel-nu-180p-2000.mp4"
+        }
+      ]
+    },
+    "nu-180p": {
+      "label": "nu-media base layer 180 x 320, Neural Engine super resolution to 720 x 1280",
+      "base": [
+        180,
+        320
+      ],
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 46.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 14.71,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            751,
+            384
+          ],
+          "file": "l-reel-nu-180p-64-sr2.mov"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 27.35,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            696,
+            382
+          ],
+          "file": "l-reel-nu-180p-128-sr2.mov"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.4,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 39.71,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            719,
+            381
+          ],
+          "file": "l-reel-nu-180p-250-sr2.mov"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 51.76,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            723,
+            380
+          ],
+          "file": "l-reel-nu-180p-500-sr2.mov"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.7,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 60.98,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            736,
+            376
+          ],
+          "file": "l-reel-nu-180p-1000-sr2.mov"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1400.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 66.75,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            731,
+            378
+          ],
+          "file": "l-reel-nu-180p-2000-sr2.mov"
+        }
+      ]
+    },
+    "nu-720p": {
+      "label": "nu-media base layer at full size (720 x 1280), hardware HEVC",
+      "base": [
+        720,
+        1280
+      ],
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 61.7,
+          "frames": 644,
+          "dropped": 697,
+          "vmaf": 18.33,
+          "encode_fps_iphone": 202.9,
+          "file": "l-reel-hevc-hw-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 103.3,
+          "frames": 1182,
+          "dropped": 159,
+          "vmaf": 19.29,
+          "encode_fps_iphone": 203.3,
+          "file": "l-reel-hevc-hw-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.4,
+          "frames": 1339,
+          "dropped": 2,
+          "vmaf": 32.64,
+          "encode_fps_iphone": 203.0,
+          "file": "l-reel-hevc-hw-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 53.17,
+          "encode_fps_iphone": 202.3,
+          "file": "l-reel-hevc-hw-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 73.49,
+          "encode_fps_iphone": 201.3,
+          "file": "l-reel-hevc-hw-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 87.48,
+          "encode_fps_iphone": 198.8,
+          "file": "l-reel-hevc-hw-2000.mp4"
+        }
+      ]
+    },
+    "nu-media": {
+      "label": "nu-media, best base size and enhancement at each bitrate",
+      "points": [
+        {
+          "target_kbps": 64,
+          "actual_kbps": 46.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 14.71,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            751,
+            384
+          ],
+          "file": "l-reel-nu-180p-64-sr2.mov",
+          "from": "nu-180p",
+          "base": [
+            180,
+            320
+          ]
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.0,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 27.35,
+          "neural_passes": 2,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            696,
+            382
+          ],
+          "file": "l-reel-nu-180p-128-sr2.mov",
+          "from": "nu-180p",
+          "base": [
+            180,
+            320
+          ]
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.3,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 41.13,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            361
+          ],
+          "file": "l-reel-nu-360p-250-sr1.mov",
+          "from": "nu-360p",
+          "base": [
+            360,
+            640
+          ]
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 351.2,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 59.15,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            359
+          ],
+          "file": "l-reel-nu-360p-500-sr1.mov",
+          "from": "nu-360p",
+          "base": [
+            360,
+            640
+          ]
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 700.8,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 74.97,
+          "neural_passes": 1,
+          "neural_output": "720x1280",
+          "neural_fps_iphone": [
+            356
+          ],
+          "file": "l-reel-nu-360p-1000-sr1.mov",
+          "from": "nu-360p",
+          "base": [
+            360,
+            640
+          ]
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1399.6,
+          "frames": 1341,
+          "dropped": 0,
+          "vmaf": 87.48,
+          "encode_fps_iphone": 198.8,
+          "file": "l-reel-hevc-hw-2000.mp4",
+          "from": "nu-720p",
+          "base": [
+            720,
+            1280
+          ]
+        }
+      ]
+    }
+  },
+  "same_as_reference": {
+    "reference": "hevc-hw at 2000 kbit/s",
+    "vmaf": 87.48,
+    "reference_kbps": 1399.6,
+    "kbps": {
+      "nu-media": {
+        "kbps": 1399.6,
+        "bound": "interpolated"
+      },
+      "h264-hw": null,
+      "hevc-hw": {
+        "kbps": 1399.6,
+        "bound": "interpolated"
+      },
+      "av1-svt-rt": {
+        "kbps": 1612.6,
+        "bound": "interpolated"
+      }
+    }
+  },
+  "same_as_original": {
+    "vmaf": 93,
+    "kbps": {
+      "nu-media": null,
+      "h264-hw": null,
+      "hevc-hw": null,
+      "av1-svt-rt": null
+    }
+  },
+  "tiles": {
+    "size": [
+      720,
+      1280
+    ],
+    "order": [
+      "original",
+      "nu-media",
+      "h264-hw",
+      "hevc-hw",
+      "av1-svt-rt"
+    ],
+    "original": "original.mp4",
+    "rates": {
+      "2000": {
+        "nu-media": {
+          "file": "2000-nu-media.mp4",
+          "actual_kbps": 1399.6,
+          "vmaf": 87.48,
+          "dropped": 0,
+          "base": [
+            720,
+            1280
+          ],
+          "neural": false
+        },
+        "h264-hw": {
+          "file": "2000-h264-hw.mp4",
+          "actual_kbps": 1399.2,
+          "vmaf": 80.12,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "2000-hevc-hw.mp4",
+          "actual_kbps": 1399.6,
+          "vmaf": 87.48,
+          "dropped": 0
+        },
+        "av1-svt-rt": {
+          "file": "2000-av1-svt-rt.mp4",
+          "actual_kbps": 2006.2,
+          "vmaf": 91.11,
+          "dropped": 0
+        }
+      },
+      "500": {
+        "nu-media": {
+          "file": "500-nu-media.mp4",
+          "actual_kbps": 351.2,
+          "vmaf": 59.15,
+          "dropped": 0,
+          "base": [
+            360,
+            640
+          ],
+          "neural": true
+        },
+        "h264-hw": {
+          "file": "500-h264-hw.mp4",
+          "actual_kbps": 350.8,
+          "vmaf": 30.6,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "500-hevc-hw.mp4",
+          "actual_kbps": 351.2,
+          "vmaf": 53.17,
+          "dropped": 0
+        },
+        "av1-svt-rt": {
+          "file": "500-av1-svt-rt.mp4",
+          "actual_kbps": 517.8,
+          "vmaf": 66.88,
+          "dropped": 0
+        }
+      },
+      "64": {
+        "nu-media": {
+          "file": "64-nu-media.mp4",
+          "actual_kbps": 46.3,
+          "vmaf": 14.71,
+          "dropped": 0,
+          "base": [
+            180,
+            320
+          ],
+          "neural": true
+        },
+        "h264-hw": {
+          "file": "64-h264-hw.mp4",
+          "actual_kbps": 293.9,
+          "vmaf": 25.88,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "64-hevc-hw.mp4",
+          "actual_kbps": 61.7,
+          "vmaf": 18.33,
+          "dropped": 697
+        },
+        "av1-svt-rt": {
+          "file": "64-av1-svt-rt.mp4",
+          "actual_kbps": 149.6,
+          "vmaf": 35.83,
+          "dropped": 0
+        }
+      }
+    }
+  }
+}

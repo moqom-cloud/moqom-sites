@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+import component from '../../vendor/framer/Viewer3D.tsx.txt?raw';
+
+const controls = [
+  ['Model', 'Upload a GLB or glTF file.'],
+  ['Model URL', 'An https:// URL. Overrides the uploaded file.'],
+  ['Alt text', 'Required. Describes the model for screen readers.'],
+  ['Poster', 'Image shown while the model loads.'],
+  ['AR button / AR label', 'Shows “View in your space” where AR is available.'],
+  ['USDZ (iOS) / USDZ URL', 'Optional model for iPhone and iPad AR.'],
+  ['Orbit & zoom', 'Let visitors drag and zoom.'],
+  ['Auto-rotate / Speed', 'Off for visitors who prefer reduced motion.'],
+  ['Shadow, Exposure', 'Lighting.'],
+  ['Transparent / Background', 'Show the page behind the model, or a colour.'],
+  ['Loading', 'Lazy (default) waits until the viewer is near the screen.'],
+  ['Tap to load', 'Waits for a tap before downloading the model.'],
+];
+---
+
+<Base title="Framer" description={`Add ${SITE.displayName} to a Framer site as a code component.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Framer</h1>
+  <p><PriceBadge plugin="framer" /></p>
+  <div class="prose">
+    <p>A code component with property controls. It works on any Framer plan that allows code components.</p>
+    <ol>
+      <li>In your Framer project, open <strong>Assets → Code</strong>, click <strong>+</strong> and create a new code file named <code>Viewer3D</code>.</li>
+      <li>Replace its contents with the component below and save.</li>
+      <li>Drag <strong>Viewer3D</strong> from Assets onto the canvas, then set <strong>Model</strong> (or <strong>Model URL</strong>) and <strong>Alt text</strong>.</li>
+      <li>Check the result in Preview or on the published site.</li>
+    </ol>
+    <p>
+      The component loads the viewer script from jsDelivr with an integrity hash, once per page. If a model uploaded to Framer does not
+      appear, Framer's file hosting may not be sending the cross-origin (CORS) headers the viewer needs; we have not verified it. Use
+      <strong>Model URL</strong> with <a href="/hosting/firebase/">your own hosting</a> instead.
+    </p>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+      <tbody>{controls.map(([name, text]) => <tr><td>{name}</td><td>{text}</td></tr>)}</tbody>
+    </table>
+  </div>
+
+  <Code title={`Viewer3D.tsx (${SITE.displayName} ${SITE.release.version})`} code={component} />
+
+  <div class="prose">
+    <h2>Framer Marketplace</h2>
+    <p>
+      This component is not listed on the Framer Marketplace. A listing would be sold through Framer’s billing and terms (verify), not
+      with a licence key, so it is sold here instead.
+    </p>
+  </div>
+
+  <LicenceKey plugin="framer">
+    <li>Select the component and paste the key into its <strong>Licence key</strong> property. One licence covers your custom domain and your framer.website address if you enter it at checkout. The canvas never shows the badge.</li>
+  </LicenceKey>
+</Base>

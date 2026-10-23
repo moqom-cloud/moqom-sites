@@ -1,0 +1,108 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import { PARTNERSHIPS, SITE } from "../data/site";
+---
+
+<Base title="Company" description="MOQOM Cloud is built by elliottwave.studio lab. Elliott Wave LLC owns all intellectual property in MOQOM.">
+  <PageHero
+    eyebrow="Company"
+    title="MOQOM is built by elliottwave.studio lab."
+    lede="MOQOM stands for Media Over QUIC Orchestration Mesh: a relay, a control plane and client SDKs for real-time video on the IETF's Media over QUIC standard."
+  />
+
+  <section class="section">
+    <div class="narrow stack">
+      <p class="reveal">
+        We started MOQOM because real-time video had become a choice between building it yourself and renting a black
+        box priced per minute. Media over QUIC is a better foundation: an open standard, designed for relays, that
+        runs in browsers and native apps alike. We wrote our own implementation of it so that latency, encryption and
+        cost are under our control rather than inherited from someone else's stack.
+      </p>
+      <p class="reveal">
+        MOQOM began as a way to test <a href="https://github.com/microsoft/mlvc" rel="noopener">MLVC ↗</a>,
+        Microsoft's learned video codec. Development started the same day Microsoft released it, in July 2026.
+        MLVC's encoder and decoder aren't fully ready yet, so MOQOM runs on the device's hardware codecs, H.264
+        and HEVC. Of those, HEVC was the fastest in our tests.
+      </p>
+      <p class="reveal">
+        Our pricing follows the same idea. You pay what delivery actually costs, plus a margin we state openly, and never
+        more than Agora's list price for the same tier.
+      </p>
+      <p class="reveal">
+        MOQOM is automated and turnkey, like every company out of the lab. Signup, billing, top-ups, API keys and
+        spend limits are self-serve, with no sales call and no onboarding project. When you need a person, support is
+        there, from the people who built it: <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>.
+      </p>
+
+      <div class="glass card founder reveal">
+        <span class="eyebrow parent-eyebrow">Founder</span>
+        <p class="founder-line">Elliott — Founder of elliottwave.studio lab and Elliott Wave LLC.</p>
+      </div>
+
+      <h2 class="reveal">Ownership</h2>
+      <p class="reveal">
+        Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in MOQOM — the open-source
+        SDKs included. An open-source licence lets you use the code; it does not transfer ownership. Patents pending.
+      </p>
+
+      <h2 class="reveal">Partnerships</h2>
+      <p class="reveal">{PARTNERSHIPS}</p>
+
+      <div class="grid grid-2 links">
+        <a class="glass glass--interactive card link reveal" href={SITE.parent} rel="noopener">
+          <span class="eyebrow parent-eyebrow">Built by</span>
+          <h2>{SITE.parentName} ↗</h2>
+          <p class="small muted">elliottwave.studio</p>
+        </a>
+        <a class="glass glass--interactive card link reveal" href={SITE.docs} rel="noopener">
+          <span class="eyebrow">Developers</span>
+          <h2>Documentation ↗</h2>
+          <p class="small muted">moqom.dev</p>
+        </a>
+        <a class="glass glass--interactive card link reveal" href={SITE.contribute} rel="noopener">
+          <span class="eyebrow">Open source</span>
+          <h2>Contribute ↗</h2>
+          <p class="small muted">moqom.dev/community/contributing</p>
+        </a>
+        <a class="glass glass--interactive card link reveal" href={SITE.donate} rel="noopener">
+          <span class="eyebrow">Support</span>
+          <h2>Donate ↗</h2>
+          <p class="small muted">elliottwave.dev/donate</p>
+        </a>
+      </div>
+
+      <h2>Contact</h2>
+      <p class="muted">
+        Sales, partnerships and press: <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>. Security reports:
+        <a href={`mailto:${SITE.security}`}>{SITE.security}</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .links {
+    margin-block: var(--space-6);
+  }
+  .link {
+    color: inherit;
+  }
+  .link:hover {
+    text-decoration: none;
+  }
+  .link h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+  }
+  .parent-eyebrow {
+    color: var(--parent);
+  }
+  .founder-line {
+    font-size: var(--text-lg);
+    margin: 0;
+  }
+  .stack h2 {
+    margin-top: var(--space-6);
+  }
+</style>

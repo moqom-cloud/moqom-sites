@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import { PLATFORMS } from '../data/moqom';
+
+const updated = '2026-10-06';
+// TODO(Elliott): bump `updated` whenever a row changes. This page is platform availability, not live service health;
+// link a real status page here if MOQOM Cloud gets one.
+---
+
+<Base title="Status" description="MOQOM platform availability: iOS and macOS available; Web, Android, Desktop and OBS plugin planned for October 2026.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">status</p>
+      <h1>Platform status</h1>
+      <p class="lede">Where MOQOM runs today and what is coming next.</p>
+      <p class="mono updated">last updated {updated}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th scope="col">Platform</th><th scope="col">SDK</th><th scope="col">Status</th></tr>
+          </thead>
+          <tbody>
+            {PLATFORMS.map((p) => (
+              <tr>
+                <td><strong>{p.name}</strong></td>
+                <td><code>{p.sdk}</code></td>
+                <td>
+                  <span class:list={['dot', p.status]} aria-hidden="true"></span>
+                  <span class:list={['tag', p.status === 'available' ? 'ok' : 'amber']}>{p.note}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote legend">
+        <span class="tag ok">Available</span> shipped and supported ·
+        <span class="tag">In progress</span> being built now ·
+        <span class="tag amber">Scoped</span> designed and in development; dates are plans, not commitments
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .updated {
+    color: var(--text-faint);
+    font-size: 0.8rem;
+  }
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.6rem;
+    vertical-align: middle;
+  }
+  .dot.available {
+    background: var(--ok);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent);
+  }
+  .dot.building {
+    background: var(--accent);
+  }
+  .dot.scoped {
+    background: var(--amber);
+  }
+  .tag {
+    white-space: normal;
+  }
+  .legend {
+    margin-top: 1.25rem;
+    line-height: 2;
+  }
+</style>

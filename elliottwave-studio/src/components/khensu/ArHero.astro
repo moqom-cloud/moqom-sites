@@ -1,0 +1,125 @@
+---
+// Product hero: the real-size GLB in <ew-viewer>, turning on its own, drag to turn, "View in your space" opens AR
+// (Quick Look on iPhone, Scene Viewer on Android, WebXR elsewhere) at true size, because the models are in metres.
+interface Props { src: string; alt: string; name: string; poster?: string }
+const { src, alt, name, poster } = Astro.props;
+---
+
+<section class="arh" data-hero>
+  <div class="arh-stage">
+    <ew-viewer
+      src={src}
+      poster={poster}
+      alt={alt}
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      ar-scale="fixed"
+      ar-label="View in your space"
+      camera-controls
+      auto-rotate
+      rotation-per-second="24deg"
+      shadow-intensity="1.2"
+      exposure="1.1"
+      camera-orbit="0deg 80deg auto"
+      background="transparent"
+      loading="eager"
+      height="100%"
+    ></ew-viewer>
+  </div>
+  <div class="arh-copy wrap">
+    <p class="arh-name">{name}</p>
+    <h1 class="arh-head"><slot /></h1>
+    <p class="arh-hint">Drag to turn. On iPhone or Android, tap “View in your space” to see it at real size.</p>
+  </div>
+</section>
+
+<script is:inline type="module" src="/vendor/ew-viewer/ew-viewer.min.js"></script>
+<script>
+  // Touching the model fades the text over it until shortly after the drag ends.
+  for (const hero of document.querySelectorAll<HTMLElement>('.arh')) {
+    const stage = hero.querySelector('.arh-stage')!;
+    let t = 0;
+    const end = () => {
+      clearTimeout(t);
+      t = window.setTimeout(() => hero.classList.remove('touching'), 900);
+    };
+    stage.addEventListener('pointerdown', () => {
+      clearTimeout(t);
+      hero.classList.add('touching');
+      window.addEventListener('pointerup', end, { once: true });
+      window.addEventListener('pointercancel', end, { once: true });
+    });
+  }
+</script>
+
+<style>
+  .arh {
+    position: relative;
+    padding-top: 4.5rem;
+    background: radial-gradient(60% 50% at 50% 35%, rgba(139, 123, 255, 0.12), transparent 70%), #000;
+  }
+  .arh-stage {
+    height: min(78svh, 760px);
+    max-width: 1100px;
+    margin-inline: auto;
+  }
+  ew-viewer {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .arh-copy {
+    padding-block: 0.5rem 3rem;
+    transition: opacity 0.35s ease;
+  }
+  .touching .arh-copy {
+    opacity: 0.08;
+  }
+  @media (min-width: 700px) {
+    .arh {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: center;
+      min-height: min(92svh, 900px);
+    }
+    .arh-stage {
+      grid-row: 1;
+      grid-column: 1 / 9;
+      width: 100%;
+      height: min(86svh, 840px);
+      max-width: none;
+    }
+    .arh-copy {
+      grid-row: 1;
+      grid-column: 7 / 13;
+      position: relative;
+      z-index: 1;
+      padding: 0 clamp(1.5rem, 5vw, 4rem) 0 0;
+      pointer-events: none;
+    }
+    .arh-head {
+      font-size: clamp(2.8rem, 5.6vw, 5.6rem);
+    }
+  }
+  .arh-name {
+    margin: 0 0 0.4rem;
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .arh-head {
+    margin: 0;
+    font-size: clamp(2.8rem, 8vw, 6rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .arh-head :global(em) {
+    font-style: normal;
+    color: #2fe0c8;
+  }
+  .arh-hint {
+    margin: 1rem 0 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+  }
+</style>

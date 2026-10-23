@@ -1,0 +1,126 @@
+---
+/*
+ * Google Analytics 4 (the same property Firebase Analytics reports into) with Consent Mode v2.
+ * Renders nothing unless PUBLIC_GA_ID is set at build time.
+ * EEA, UK and Switzerland start denied until the visitor says yes; elsewhere it starts granted
+ * and "No thanks" turns it off. Ads storage is always denied: these sites run no ads.
+ */
+interface Props {
+  site: string;
+}
+const { site } = Astro.props;
+const id = import.meta.env.PUBLIC_GA_ID as string | undefined;
+const linked = ["moqom.cloud", "moqom.dev", "elliottwave.studio", "elliottwave.dev"];
+---
+
+{
+  id && (
+    <>
+      <script is:inline define:vars={{ id, site, linked }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        window.gtag = gtag;
+        const choice = localStorage.getItem("ew-analytics");
+        const denied = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        gtag("consent", "default", { ...denied, analytics_storage: "denied", wait_for_update: 500,
+          region: ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IS","IE","IT","LV","LI","LT","LU","MT","NL","NO","PL","PT","RO","SK","SI","ES","SE","GB","CH"] });
+        gtag("consent", "default", { ...denied, analytics_storage: "granted" });
+        if (choice) gtag("consent", "update", { analytics_storage: choice });
+        gtag("js", new Date());
+        gtag("config", id, { site_name: site, linker: { domains: linked }, allow_google_signals: false });
+        const s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
+      </script>
+
+      <div class="ew-consent glass" role="region" aria-label="Analytics" hidden>
+        <p>We count visits with Google Analytics. No ads, no selling. Your call.</p>
+        <button type="button" data-consent="granted">Fine</button>
+        <button type="button" data-consent="denied">No thanks</button>
+      </div>
+
+      <script is:inline>
+        (() => {
+          const bar = document.querySelector(".ew-consent");
+          if (bar && !localStorage.getItem("ew-analytics")) bar.hidden = false;
+          bar?.addEventListener("click", (e) => {
+            const v = e.target.closest("[data-consent]")?.dataset.consent;
+            if (!v) return;
+            localStorage.setItem("ew-analytics", v);
+            gtag("consent", "update", { analytics_storage: v });
+            bar.hidden = true;
+          });
+
+          const rules = [
+            [/\/signup/, "sign_up_click"],
+            [/apps\.apple\.com/, "app_store_click"],
+            [/github\.com/, "github_click"],
+            [/hackerone\.com/, "bug_bounty_click"],
+            [/(news\.ycombinator\.com|producthunt\.com)/, "press_click"],
+            [/(sponsors|opencollective)/, "donate_click"],
+            [/(moqom\.dev|\/docs)/, "docs_click"],
+          ];
+          document.addEventListener("click", (e) => {
+            const el = e.target.closest("a, button, [data-track]");
+            if (!el) return;
+            const href = el.getAttribute("href") || "";
+            const name = el.dataset.track || rules.find(([re]) => re.test(href))?.[1];
+            if (name) gtag("event", name, { link_url: href, link_text: (el.textContent || "").trim().slice(0, 80) });
+          });
+
+          let estimated = false;
+          document.addEventListener("input", (e) => {
+            if (estimated || !e.target.closest("form, .estimator, [data-track-form]")) return;
+            estimated = true;
+            gtag("event", "estimator_used", { page_path: location.pathname });
+          });
+        })();
+      </script>
+    </>
+  )
+}
+
+<style is:global>
+  .ew-consent {
+    position: fixed;
+    inset: auto 1rem 1rem auto;
+    z-index: 50;
+    max-width: 22rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 18px;
+    font-size: 0.875rem;
+    color: #e6edf7;
+    background: rgb(15 20 30 / 0.82);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+  }
+  .ew-consent[hidden] {
+    display: none;
+  }
+  .ew-consent p {
+    margin: 0;
+    flex: 1 1 100%;
+  }
+  .ew-consent button {
+    font: inherit;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .ew-consent button[data-consent="granted"] {
+    background: #e6edf7;
+    color: #0b1220;
+    border-color: transparent;
+  }
+</style>

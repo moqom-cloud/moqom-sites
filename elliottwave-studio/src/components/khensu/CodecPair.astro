@@ -1,0 +1,321 @@
+---
+// Two encodes side by side, whole frames, frame-locked. One side is always the original or ñü.media.
+// `run` is khensu-specs bench/out/ladder*/results-ladder-*.json; files live in public/khensu/codec/<dir>/.
+type Tile = { file: string; actual_kbps: number; vmaf: number; dropped: number; base?: number[]; neural?: boolean };
+type Run = { size: string; seconds: number; tiles: { size: number[]; original: string; rates: Record<string, Record<string, Tile>> } };
+const { run, dir, title, sub, origin, srcKbps, srcName, start } = Astro.props as {
+  run: Run; dir: string; title: string; sub: string; origin: string; srcKbps: number; srcName: string; start?: number;
+};
+
+const T = run.tiles;
+const DIR = `/khensu/codec/${dir}/`;
+const [tw, th] = T.size;
+const rates = Object.keys(T.rates).map(Number).sort((a, b) => b - a);
+const startRate = start && rates.includes(start) ? start : rates[0];
+// One significant figure: 1.7 -> 2, 6.9 -> 7, 53 -> 50.
+const about = (x: number) => { const p = 10 ** Math.floor(Math.log10(x)); return Math.max(1, Math.round(x / p) * p); };
+const heads: Record<string, { n: number; vmaf: number; hevc: number }> = {};
+for (const r of rates) {
+  const nu = T.rates[String(r)]['nu-media'];
+  heads[r] = { n: about(srcKbps / nu.actual_kbps), vmaf: Math.round(nu.vmaf), hevc: Math.round(T.rates[String(r)]['hevc-hw'].vmaf) };
+}
+const h0 = heads[startRate];
+const rate = (k: number) => (k < 1000 ? `${Math.round(k)} kbit/s` : `${(k / 1000).toFixed(1)} Mbit/s`);
+const rateName = (k: number) => (k < 1000 ? `${k} kbit/s` : `${k / 1000} Mbit/s`);
+const [sw, sh] = run.size.split('x').map(Number);
+
+const NAMES: Record<string, string> = { original: 'Original', 'nu-media': 'ñü.media', 'h264-hw': 'H.264', 'hevc-hw': 'H.265 (HEVC)', 'av1-svt-rt': 'AV1' };
+const PAIRS = [
+  ['original', 'nu-media'],
+  ['nu-media', 'h264-hw'],
+  ['nu-media', 'hevc-hw'],
+  ['nu-media', 'av1-svt-rt'],
+  ['original', 'h264-hw'],
+  ['original', 'hevc-hw'],
+  ['original', 'av1-svt-rt'],
+];
+
+NAMES['nu-media-4k'] = 'ñü.media in 4K';
+const has4k = rates.some((r) => T.rates[String(r)]['nu-media-4k']);
+const how = (k: string, t: Tile) => {
+  if (k === 'nu-media-4k') {
+    const s = (t as any).size as number[];
+    return (t as any).neural_pass
+      ? `Same bits, Neural Engine ${(t as any).neural_pass}, then upscaled to ${s[0]} × ${s[1]}`
+      : `Same bits, upscaled to ${s[0]} × ${s[1]}: Apple’s scaler stops at ${sw} × ${sh}`;
+  }
+  if (k === 'nu-media') {
+    const b = t.base!;
+    const full = b[0] === sw && b[1] === sh;
+    return full ? 'Full-size base, iPhone hardware' : `${b[0]} × ${b[1]} sent, rebuilt to ${sw} × ${sh}${t.neural ? ' on the Neural Engine' : ''}`;
+  }
+  return k === 'av1-svt-rt' ? 'Software, on a Mac' : 'iPhone hardware';
+};
+type Side = { src: string; poster: string; name: string; note: string; ours: boolean };
+const data: Record<string, Record<string, Side>> = {};
+for (const r of rates) {
+  const row: Record<string, Side> = {
+    original: { src: DIR + T.original, poster: DIR + T.original.replace('.mp4', '.jpg'), name: 'Original', note: origin, ours: false },
+  };
+  for (const [k, t] of Object.entries(T.rates[String(r)])) {
+    const drops = t.dropped ? ` · ${t.dropped} frames dropped` : '';
+    row[k] = { src: DIR + t.file, poster: DIR + t.file.replace('.mp4', '.jpg'), name: NAMES[k], ours: k.startsWith('nu-media'),
+               note: `${how(k, t)} · ${rate(t.actual_kbps)} · VMAF ${t.vmaf.toFixed(0)}${drops}` };
+  }
+  data[r] = row;
+}
+const first = data[startRate];
+const portrait = th > tw;
+---
+
+<figure class:list={['card wide pair', { portrait }]} data-scene="reveal" data-pair={JSON.stringify(data)} data-heads={JSON.stringify(heads)} data-start={startRate}>
+  <p class="kicker">{title}</p>
+  <h3 class="head">
+    <span>About <i data-n>{h0.n}</i>× less data than {srcName}.</span>
+    <span>So it arrives about <i data-n>{h0.n}</i>× faster and costs about <i data-n>{h0.n}</i>× less to deliver.</span>
+  </h3>
+  <ul class="stats" role="list">
+    <li><b><i data-n>{h0.n}</i>× smaller</b><small>than {srcName}, measured</small></li>
+    <li><b><i data-n>{h0.n}</i>× faster</b><small>to arrive on the same connection</small></li>
+    <li><b><i data-n>{h0.n}</i>× cheaper</b><small>to deliver, per view</small></li>
+    <li><b>VMAF <i data-vmaf>{h0.vmaf}</i></b><small>benchmark; H.265 scores <i data-hevc>{h0.hevc}</i> at the same bitrate</small></li>
+  </ul>
+  <p class="sub">{sub}</p>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Bitrate">
+      {rates.map((r) => <button type="button" data-rate={r} aria-pressed={r === startRate ? 'true' : 'false'}>{rateName(r)}</button>)}
+    </div>
+    <div class="seg" role="group" aria-label="Compare">
+      {PAIRS.map(([a, b], i) => <button type="button" data-a={a} data-b={b} aria-pressed={i === 0 ? 'true' : 'false'}>{NAMES[a]} <span>vs</span> {NAMES[b]}</button>)}
+    </div>
+    {has4k && (
+      <div class="seg" role="group" aria-label="ñü.media output">
+        <button type="button" data-out="native" aria-pressed="true">ñü.media at {sw} × {sh}</button>
+        <button type="button" data-out="4k" aria-pressed="false">Rebuilt to 4K</button>
+      </div>
+    )}
+    <div class="seg" role="group" aria-label="Zoom">
+      <button type="button" data-zoom="1" aria-pressed="true">Whole frame</button>
+      <button type="button" data-zoom="3" aria-pressed="false">Zoom 3×</button>
+    </div>
+  </div>
+  <div class="two" style={`--ar:${tw} / ${th}`}>
+    {PAIRS[0].map((k) => (
+      <div class:list={['side', { ours: first[k].ours }]}>
+        <video muted loop playsinline autoplay preload="auto" width={tw} height={th} poster={first[k].poster} src={first[k].src}
+          aria-label={`${first[k].name}, ${first[k].note}`}></video>
+        <p class="tag"><b>{first[k].name}</b> <small>{first[k].note}</small></p>
+      </div>
+    ))}
+  </div>
+  <slot />
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>('.pair[data-pair]')) {
+    const data = JSON.parse(fig.dataset.pair!);
+    const sides = [...fig.querySelectorAll<HTMLElement>('.side')];
+    const vids = sides.map((s) => s.querySelector('video')!);
+    const rateBtns = [...fig.querySelectorAll<HTMLButtonElement>('[data-rate]')];
+    const pairBtns = [...fig.querySelectorAll<HTMLButtonElement>('[data-a]')];
+    const heads = JSON.parse(fig.dataset.heads!);
+    let rate = fig.dataset.start!;
+    let pair = [pairBtns[0].dataset.a!, pairBtns[0].dataset.b!];
+    const outBtns = [...fig.querySelectorAll<HTMLButtonElement>('[data-out]')];
+    const zoomBtns = [...fig.querySelectorAll<HTMLButtonElement>('[data-zoom]')];
+    let out4k = false;
+
+    // The right video follows the left one to within a frame.
+    const lock = () => {
+      const [a, b] = vids;
+      if (!b.paused && Math.abs(b.currentTime - a.currentTime) > 1 / 30) b.currentTime = a.currentTime;
+      a.requestVideoFrameCallback ? a.requestVideoFrameCallback(lock) : requestAnimationFrame(lock);
+    };
+    lock();
+
+    const show = () => {
+      const t = vids[0].currentTime;
+      const h = heads[rate];
+      fig.querySelectorAll('[data-n]').forEach((e) => (e.textContent = String(h.n)));
+      fig.querySelector('[data-vmaf]')!.textContent = String(h.vmaf);
+      fig.querySelector('[data-hevc]')!.textContent = String(h.hevc);
+      pair.forEach((k0, i) => {
+        const k = k0 === 'nu-media' && out4k && data[rate]['nu-media-4k'] ? 'nu-media-4k' : k0;
+        const d = data[rate][k];
+        const v = vids[i];
+        sides[i].classList.toggle('ours', d.ours);
+        const tag = sides[i].querySelector('.tag')!;
+        tag.querySelector('b')!.textContent = d.name;
+        tag.querySelector('small')!.textContent = d.note;
+        v.setAttribute('aria-label', `${d.name}, ${d.note}`);
+        if (!v.src.endsWith(d.src)) {
+          v.poster = d.poster;
+          v.src = d.src;
+          v.addEventListener('loadedmetadata', () => { v.currentTime = t; v.play().catch(() => {}); }, { once: true });
+        }
+      });
+    };
+    const press = (btns: HTMLButtonElement[], on: HTMLButtonElement) => btns.forEach((x) => x.setAttribute('aria-pressed', String(x === on)));
+    rateBtns.forEach((b) => b.addEventListener('click', () => { rate = b.dataset.rate!; press(rateBtns, b); show(); }));
+    pairBtns.forEach((b) => b.addEventListener('click', () => { pair = [b.dataset.a!, b.dataset.b!]; press(pairBtns, b); show(); }));
+    outBtns.forEach((b) => b.addEventListener('click', () => { out4k = b.dataset.out === '4k'; press(outBtns, b); show(); }));
+    zoomBtns.forEach((b) => b.addEventListener('click', () => { fig.style.setProperty('--zoom', b.dataset.zoom!); press(zoomBtns, b); }));
+  }
+</script>
+
+<style>
+  .pair {
+    grid-column: 1 / -1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    container-type: inline-size;
+  }
+  .kicker {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .sub {
+    margin: 0;
+    max-width: 52rem;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.66);
+  }
+  .head {
+    display: grid;
+    gap: 0.15rem;
+    margin: 0;
+    max-width: none;
+    font-size: clamp(1.25rem, 3.4cqi, 2rem);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .head span + span {
+    color: rgba(255, 255, 255, 0.62);
+  }
+  .head i,
+  .stats i {
+    font-style: normal;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    gap: 1rem 1.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .stats li {
+    display: grid;
+    gap: 0.2rem;
+    align-content: start;
+  }
+  .stats b {
+    font-size: clamp(1.2rem, 3cqi, 1.9rem);
+    line-height: 1.15;
+    white-space: nowrap;
+    color: #b9b0ff;
+  }
+  .stats small {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.66);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+  }
+  .seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  .seg button {
+    font: inherit;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.72);
+    background: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+  }
+  .seg button span {
+    opacity: 0.55;
+  }
+  .seg button[aria-pressed='true'] {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .portrait .two {
+    max-width: 52rem;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .side {
+    position: relative;
+    aspect-ratio: var(--ar);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+  }
+  .side.ours {
+    box-shadow: 0 0 0 1.5px rgba(139, 123, 255, 0.7);
+  }
+  .side video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: scale(var(--zoom, 1));
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .tag {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    width: fit-content;
+    margin: 0;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+  .tag small {
+    display: block;
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  .ours .tag b {
+    color: #b9b0ff;
+  }
+  @media (max-width: 760px) {
+    .two:not(.portrait .two) {
+      grid-template-columns: 1fr;
+    }
+    .tag {
+      font-size: 0.78rem;
+    }
+    .tag small {
+      font-size: 0.68rem;
+    }
+  }
+</style>

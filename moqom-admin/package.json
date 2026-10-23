@@ -1,0 +1,11 @@
+{
+  "name": "moqom-admin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MOQOM Cloud operator console (admin.moqom.cloud). Static, no dependencies, not part of the public site.",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "MOQOM_ADMIN_DEV=1 MOQOM_ADMIN_API=${MOQOM_ADMIN_API:-http://localhost:8090} node build.mjs && node serve.mjs"
+  }
+}

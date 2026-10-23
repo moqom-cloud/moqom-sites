@@ -1,0 +1,62 @@
+[
+  {
+    "id": "strap",
+    "name": "strap",
+    "lensCenter": 0.0375,
+    "lensWidth": 0.061,
+    "lensHeight": 0.046,
+    "bridge": 0.014,
+    "width": 0.1469,
+    "templeLength": 0.145,
+    "wire": false,
+    "strap": true
+  },
+  {
+    "id": "shade",
+    "name": "shade",
+    "lensCenter": 0.0362,
+    "lensWidth": 0.0524,
+    "lensHeight": 0.0424,
+    "bridge": 0.02,
+    "width": 0.141,
+    "templeLength": 0.145,
+    "wire": false,
+    "strap": false
+  },
+  {
+    "id": "print",
+    "name": "ñü print",
+    "lensCenter": 0.0375,
+    "lensWidth": 0.057,
+    "lensHeight": 0.0424,
+    "bridge": 0.018,
+    "width": 0.162,
+    "templeLength": 0.145,
+    "wire": false,
+    "strap": false
+  },
+  {
+    "id": "wayfarer",
+    "name": "wayfarer",
+    "lensCenter": 0.0345,
+    "lensWidth": 0.05,
+    "lensHeight": 0.039,
+    "bridge": 0.019,
+    "width": 0.1487,
+    "templeLength": 0.145,
+    "wire": false,
+    "strap": false
+  },
+  {
+    "id": "round",
+    "name": "round",
+    "lensCenter": 0.0331,
+    "lensWidth": 0.0472,
+    "lensHeight": 0.0456,
+    "bridge": 0.019,
+    "width": 0.1174,
+    "templeLength": 0.145,
+    "wire": true,
+    "strap": false
+  }
+]

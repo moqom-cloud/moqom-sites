@@ -1,0 +1,390 @@
+---
+// iPhone mock of a nu.Fi Back campaign in the khėnsu.ñü app: always dark, Liquid Glass chrome, status time 10:10.
+// Sized in container units like AppScreen, so it renders the same at any width.
+import Icon from './Icon.astro';
+import { BACKERS, DAILY_MET, DAYS, GOAL, PHONE_DAY, phonePledged, total, usd } from '../../data/nufi-campaign';
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const pct = Math.round((phonePledged / GOAL) * 100);
+const backers = Math.round((BACKERS * phonePledged) / total(DAILY_MET) / 10) * 10;
+const rewards = [
+  { t: 'Digital release', s: 'Stream and download in 4K', p: 15, n: 512 },
+  { t: 'Premiere ticket', s: 'Live room on opening night', p: 40, n: 288 },
+  { t: 'Name in the credits', s: 'Plus both rewards above', p: 100, n: 64 },
+];
+---
+
+<figure class:list={['nphone', cls]} aria-label={`Illustration: a nu.Fi Back campaign for the film Night Tide in the khėnsu.ñü app. ${usd(phonePledged)} pledged of a ${usd(GOAL)} goal, ${pct}%, ${DAYS - PHONE_DAY} days left. Pays only if the goal is met by the deadline; otherwise every pledge is refunded. Your pledge is shielded.`}>
+  <div class="np-frame" aria-hidden="true">
+  <div class="np-screen">
+    <div class="np-status">
+      <span>10:10</span>
+      <span class="np-island"></span>
+      <span class="np-sig"><i></i><i></i><i></i><i></i></span>
+    </div>
+
+    <div class="np-cover">
+      <div class="np-nav">
+        <span class="np-glass np-circle"><Icon name="back" /></span>
+        <span class="np-glass np-cap">nu.Fi Back</span>
+        <span class="np-glass np-circle"><Icon name="share" /></span>
+      </div>
+      <div class="np-title">
+        <b>Night Tide</b>
+        <span>A feature film · mara.khensu.nu</span>
+      </div>
+    </div>
+
+    <div class="np-body">
+      <div class="np-amount">
+        <b>{usd(phonePledged)}</b>
+        <span>pledged of {usd(GOAL)}</span>
+      </div>
+      <div class="np-bar"><span style={`--w:${pct}%`}></span><i></i></div>
+      <div class="np-stats">
+        <span><b>{pct}%</b>funded</span>
+        <span><b>{backers.toLocaleString('en-US')}</b>backers</span>
+        <span><b>{DAYS - PHONE_DAY}</b>days left</span>
+      </div>
+
+      <p class="np-rule"><Icon name="shield" /> Pays only if the goal is met by 30 Nov. If not, every pledge refunds.</p>
+
+      <ul class="np-rewards">
+        {rewards.map((r, i) => (
+          <li class:list={{ on: i === 1 }}>
+            <span class="np-r-main"><b>{r.t}</b><small>{r.s}</small></span>
+            <span class="np-r-p">${r.p}</span>
+          </li>
+        ))}
+      </ul>
+
+      <p class="np-terms"><Icon name="lock" /> Terms signed · can’t change after anyone pledges</p>
+    </div>
+
+    <div class="np-dock">
+      <p class="np-private"><Icon name="lock" /> Your pledge is shielded. Mara sees the total, not you.</p>
+      <span class="np-cta">Pledge $40</span>
+    </div>
+    <span class="np-home"></span>
+  </div>
+  </div>
+  <figcaption>Illustrative. Amounts are an example.</figcaption>
+</figure>
+
+<style>
+  .nphone {
+    --star: #f2f1ec;
+    --silver: #c9ccd2;
+    --ash: #8a8f98;
+    --ink: #050607;
+    --mint: #bff5e4;
+    color-scheme: dark;
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.8rem;
+  }
+  .np-frame {
+    container-type: inline-size;
+    width: var(--phone-w, 300px);
+    aspect-ratio: 9 / 19.5;
+    padding: 2.6%;
+    border-radius: 16% / 7.4%;
+    background: linear-gradient(145deg, #3a3d43, #15171a 40%, #2b2e33);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 40px 90px -20px rgba(0, 0, 0, 0.85),
+      0 0 120px rgba(94, 230, 192, 0.12);
+  }
+  .np-screen {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 13.6% / 6.4%;
+    background: var(--ink);
+    color: var(--star);
+    font-family: -apple-system, 'SF Pro Text', var(--font-sans);
+    font-size: 4.1cqw;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-align: start;
+  }
+  .np-circle :global(svg) {
+    width: 5cqw;
+    height: 5cqw;
+  }
+  .np-status {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4.2cqw 7cqw 0;
+    height: 12cqw;
+    font-weight: 600;
+    font-size: 4.3cqw;
+  }
+  .np-island {
+    width: 31cqw;
+    height: 9cqw;
+    border-radius: 5cqw;
+    background: #000;
+  }
+  .np-sig {
+    display: inline-flex;
+    gap: 0.6cqw;
+    align-items: flex-end;
+    height: 3.2cqw;
+  }
+  .np-sig i {
+    width: 1cqw;
+    background: var(--star);
+    border-radius: 0.3cqw;
+  }
+  .np-sig i:nth-child(1) { height: 35%; }
+  .np-sig i:nth-child(2) { height: 55%; }
+  .np-sig i:nth-child(3) { height: 78%; }
+  .np-sig i:nth-child(4) { height: 100%; }
+
+  .np-cover {
+    position: relative;
+    height: 74cqw;
+    padding: 14cqw 4.5cqw 4cqw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(circle at 72% 34%, #f4f7ff 0 4.6cqw, rgba(230, 240, 255, 0.55) 5.2cqw, rgba(230, 240, 255, 0.12) 14cqw, transparent 30cqw),
+      radial-gradient(120% 60% at 50% 110%, rgba(30, 90, 110, 0.9), transparent 70%),
+      linear-gradient(180deg, #0c1424 0%, #16314a 48%, #0b2a35 72%, #050607 100%);
+  }
+  .np-cover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 52%;
+    height: 22%;
+    background: repeating-linear-gradient(180deg, rgba(220, 235, 255, 0.16) 0 0.4cqw, transparent 0.4cqw 2.2cqw);
+    mask-image: radial-gradient(50% 100% at 70% 0%, #000, transparent);
+    -webkit-mask-image: radial-gradient(50% 100% at 70% 0%, #000, transparent);
+  }
+  .np-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .np-glass {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0.3cqw 0.4cqw rgba(255, 255, 255, 0.25), 0 1cqw 3cqw rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(3cqw) saturate(180%);
+    -webkit-backdrop-filter: blur(3cqw) saturate(180%);
+  }
+  .np-circle {
+    display: inline-grid;
+    place-items: center;
+    width: 10cqw;
+    height: 10cqw;
+    border-radius: 50%;
+  }
+  .np-cap {
+    display: inline-flex;
+    align-items: center;
+    height: 10cqw;
+    padding: 0 4cqw;
+    border-radius: 5cqw;
+    font-weight: 600;
+    font-size: 3.8cqw;
+  }
+  .np-title {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 0.6cqw;
+    text-shadow: 0 0.4cqw 2cqw rgba(0, 0, 0, 0.6);
+  }
+  .np-title b {
+    font-size: 8.6cqw;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .np-title span {
+    font-size: 3.5cqw;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .np-body {
+    padding: 4cqw 4.5cqw 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.6cqw;
+  }
+  .np-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 2cqw;
+  }
+  .np-amount b {
+    font-size: 8cqw;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  .np-amount span {
+    color: var(--ash);
+    font-size: 3.6cqw;
+  }
+  .np-bar {
+    position: relative;
+    height: 2.2cqw;
+    border-radius: 2cqw;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .np-bar span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w);
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6fd8bb, var(--mint));
+    box-shadow: 0 0 3cqw rgba(94, 230, 192, 0.5);
+  }
+  .np-bar i {
+    position: absolute;
+    right: 0;
+    top: -1.2cqw;
+    bottom: -1.2cqw;
+    width: 0.5cqw;
+    border-radius: 0.3cqw;
+    background: rgba(255, 255, 255, 0.7);
+  }
+  .np-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2cqw;
+  }
+  .np-stats span {
+    display: grid;
+    color: var(--ash);
+    font-size: 3.2cqw;
+  }
+  .np-stats b {
+    color: var(--star);
+    font-size: 5cqw;
+    font-weight: 650;
+  }
+  .np-rule,
+  .np-terms,
+  .np-private {
+    margin: 0;
+    display: flex;
+    gap: 1.6cqw;
+    align-items: flex-start;
+    font-size: 3.2cqw;
+    line-height: 1.35;
+    color: var(--silver);
+  }
+  .np-rule {
+    padding: 2.6cqw 3.2cqw;
+    border-radius: 3.6cqw;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .np-rule :global(svg),
+  .np-terms :global(svg),
+  .np-private :global(svg) {
+    flex: none;
+    margin-top: 0.3cqw;
+  }
+  .np-rewards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.8cqw;
+  }
+  .np-rewards li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2cqw;
+    padding: 2.4cqw 3.2cqw;
+    border-radius: 3.6cqw;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .np-rewards li.on {
+    background: rgba(191, 245, 228, 0.1);
+    border-color: rgba(191, 245, 228, 0.55);
+  }
+  .np-r-main {
+    display: grid;
+  }
+  .np-r-main b {
+    font-size: 3.8cqw;
+    font-weight: 600;
+  }
+  .np-r-main small {
+    font-size: 3cqw;
+    color: var(--ash);
+  }
+  .np-r-p {
+    font-weight: 650;
+    font-size: 4cqw;
+  }
+  .np-terms {
+    color: var(--ash);
+    font-size: 3cqw;
+  }
+  .np-dock {
+    position: absolute;
+    left: 3.5cqw;
+    right: 3.5cqw;
+    bottom: 6cqw;
+    display: grid;
+    gap: 2cqw;
+    padding: 3cqw;
+    border-radius: 7cqw;
+    background: rgba(28, 30, 34, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 0.3cqw 0.5cqw rgba(255, 255, 255, 0.14), 0 2cqw 6cqw rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5cqw) saturate(180%);
+    -webkit-backdrop-filter: blur(5cqw) saturate(180%);
+  }
+  .np-private {
+    padding: 0 1cqw;
+    font-size: 3cqw;
+  }
+  .np-cta {
+    display: grid;
+    place-items: center;
+    height: 12cqw;
+    border-radius: 6cqw;
+    background: linear-gradient(180deg, #ffffff, #e4e6ea);
+    color: #000;
+    font-weight: 650;
+    font-size: 4.4cqw;
+    box-shadow: inset 0 -0.4cqw 0.6cqw rgba(0, 0, 0, 0.12);
+  }
+  .np-home {
+    position: absolute;
+    bottom: 2cqw;
+    left: 50%;
+    width: 36cqw;
+    height: 1.4cqw;
+    margin-left: -18cqw;
+    border-radius: 1cqw;
+    background: rgba(255, 255, 255, 0.85);
+  }
+  .nphone figcaption {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    margin-top: 0.6rem;
+  }
+</style>

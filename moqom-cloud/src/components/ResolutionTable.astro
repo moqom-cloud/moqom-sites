@@ -1,0 +1,45 @@
+---
+import { resolutionRows } from "../data/compare";
+import BenchFootnote from "./BenchFootnote.astro";
+---
+
+<div class="glass glass--strong table-wrap reveal">
+  <table>
+    <caption class="visually-hidden">Median glass-to-glass latency by resolution</caption>
+    <thead>
+      <tr><th>Resolution</th><th>Typical use</th><th>Median glass-to-glass</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {
+        resolutionRows.map((r) => (
+          <tr class:list={[r.lead && "lead"]}>
+            <th scope="row">{r.res}</th>
+            <td>{r.use}</td>
+            <td class:list={["nowrap", r.measured ? "col-moqom" : "faint"]}>
+              {r.median}
+              {r.measured && <sup class="star">*</sup>}
+            </td>
+            <td class="muted">{r.status}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+<BenchFootnote />
+
+<style>
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .lead th {
+    color: var(--accent);
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+  .star {
+    color: var(--warn);
+  }
+</style>

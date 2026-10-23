@@ -1,0 +1,103 @@
+---
+// Diagram-level architecture: publisher -> relay -> viewers, control plane alongside.
+const viewers = [0, 1, 2, 3, 4];
+---
+
+<figure class="flow">
+  <svg viewBox="0 0 880 392" role="img" aria-labelledby="flow-t flow-d">
+    <title id="flow-t">How MOQOM delivers a stream</title>
+    <desc id="flow-d">
+      A publisher sends encrypted media over QUIC to a MOQOM relay. The relay pulls each track once and fans it out to
+      many viewers. A control plane issues tokens and applies moderation to the relay.
+    </desc>
+    <defs>
+      <linearGradient id="flow-g" x1="0" x2="1">
+        <stop offset="0" stop-color="#22D3EE"></stop>
+        <stop offset="1" stop-color="#8B5CF6"></stop>
+      </linearGradient>
+      <marker id="flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0L10 5L0 10z" fill="#22D3EE"></path>
+      </marker>
+      <marker id="flow-arrow-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0L10 5L0 10z" fill="#8B5CF6"></path>
+      </marker>
+    </defs>
+
+    <!-- control plane -->
+    <rect x="330" y="14" width="220" height="62" rx="12" fill="#111317" stroke="#323843"></rect>
+    <text x="440" y="40" text-anchor="middle" class="h">Control plane</text>
+    <text x="440" y="60" text-anchor="middle" class="s">tokens · rooms · moderation</text>
+    <path d="M440 76 V128" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#flow-arrow-v)"></path>
+    <text x="452" y="108" class="tag">mutual TLS</text>
+
+    <!-- publisher -->
+    <rect x="20" y="150" width="200" height="92" rx="14" fill="#111317" stroke="#323843"></rect>
+    <text x="120" y="182" text-anchor="middle" class="h">Publisher</text>
+    <text x="120" y="204" text-anchor="middle" class="s">capture · encode</text>
+    <text x="120" y="222" text-anchor="middle" class="s">SFrame encrypt</text>
+
+    <path d="M220 196 H322" stroke="url(#flow-g)" stroke-width="3" marker-end="url(#flow-arrow)"></path>
+    <text x="271" y="186" text-anchor="middle" class="tag">MoQ / QUIC</text>
+
+    <!-- relay -->
+    <rect x="330" y="136" width="220" height="120" rx="16" fill="#0D1A1F" stroke="url(#flow-g)" stroke-width="2"></rect>
+    <text x="440" y="172" text-anchor="middle" class="h big">MOQOM relay</text>
+    <text x="440" y="196" text-anchor="middle" class="s">each track pulled once</text>
+    <text x="440" y="214" text-anchor="middle" class="s">fanned out to every viewer</text>
+    <text x="440" y="232" text-anchor="middle" class="s">joins start on a keyframe</text>
+
+    <!-- viewers -->
+    {
+      viewers.map((i) => {
+        const y = 92 + i * 52;
+        return (
+          <g>
+            <path d={`M550 196 C 610 196, 620 ${y + 20}, 676 ${y + 20}`} stroke="url(#flow-g)" stroke-width="2" fill="none" marker-end="url(#flow-arrow)" opacity={1 - i * 0.08} />
+            <rect x="684" y={y} width="176" height="40" rx="10" fill="#111317" stroke="#323843" />
+            <text x="772" y={y + 25} text-anchor="middle" class="s">
+              {i === 4 ? "… thousands more" : `Viewer ${i + 1}`}
+            </text>
+          </g>
+        );
+      })
+    }
+
+    <text x="440" y="380" text-anchor="middle" class="foot">
+      TLS 1.3 on every hop · tokens checked on every request · media payload encrypted with SFrame
+    </text>
+  </svg>
+</figure>
+
+<style>
+  .flow {
+    margin: 0;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+  }
+  text {
+    font-family: var(--font-sans);
+  }
+  .h {
+    fill: #e8eaed;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .big {
+    font-size: 17px;
+  }
+  .s {
+    fill: #9aa0a6;
+    font-size: 12.5px;
+  }
+  .tag {
+    fill: #22d3ee;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .foot {
+    fill: #6b7178;
+    font-size: 12px;
+  }
+</style>

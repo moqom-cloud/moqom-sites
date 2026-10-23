@@ -1,0 +1,30 @@
+{#- 3D Viewer HubSpot module. Required Notice: Copyright (c) 2026 Elliott Wave LLC (https://elliottwave.studio)
+    Elliott Wave Plugin Licence: use needs a paid licence per domain. Docs: https://viewer.elliottwave.studio/platforms/hubspot/
+    Every value is escaped with escape_attr; model URLs must start with https://. <ew-viewer> validates
+    every attribute again in the browser. HubL can't call out or check signatures, so <ew-viewer>
+    checks the licence key in the visitor's browser (one cached request per page, no cookies). -#}
+{%- set src = (module.model_url or "")|trim -%}
+{%- if not src and module.model_file -%}{%- set src = module.model_file|trim -%}{%- endif -%}
+{%- set ios = (module.ios_url or "")|trim -%}
+{%- if not ios and module.ios_file -%}{%- set ios = module.ios_file|trim -%}{%- endif -%}
+{%- set poster = (module.poster_url or "")|trim -%}
+{%- set alt = (module.alt or "")|trim -%}
+{%- if src is string_startingwith "https://" and alt -%}
+<script type="module" src="https://cdn.jsdelivr.net/npm/@elliottwave/viewer@0.1.0/dist/ew-viewer.min.js" integrity="sha384-KWnwxLSOxp4XkIskC2b2xU5Jd8yZLgF1NQfAoSPc8Bj7C664zdKhqjKb3rZED6y5" crossorigin="anonymous"></script>
+<ew-viewer src="{{ src|escape_attr }}"
+  {%- if ios is string_startingwith "https://" %} ios-src="{{ ios|escape_attr }}"{% endif %}
+  {%- if poster is string_startingwith "https://" %} poster="{{ poster|escape_attr }}"{% endif %}
+  alt="{{ alt|truncate(300, true, '')|escape_attr }}"
+  {%- if module.ar %} ar{% if module.ar_label|trim %} ar-label="{{ module.ar_label|trim|truncate(60, true, '')|escape_attr }}"{% endif %}{% endif %}
+  {%- if module.camera_controls %} camera-controls{% endif %}
+  {%- if module.auto_rotate %} auto-rotate{% endif %}
+  {%- if module.shadow_intensity is number %} shadow-intensity="{{ module.shadow_intensity|escape_attr }}"{% endif %}
+  {%- if module.exposure is number %} exposure="{{ module.exposure|escape_attr }}"{% endif %}
+  {%- if module.background|trim %} background="{{ module.background|trim|escape_attr }}"{% endif %}
+  {%- if module.height|trim %} height="{{ module.height|trim|escape_attr }}"{% endif %}
+  {%- if module.loading %} loading="{{ module.loading|escape_attr }}"{% endif %}
+  {%- if module.tap_to_load %} reveal="interaction"{% endif %} plugin="hubspot"
+  {%- if is_in_editor %} license-state="editor"{% elif module.license_key|trim %} license-key="{{ module.license_key|trim|truncate(64, true, '')|escape_attr }}"{% endif %}></ew-viewer>
+{%- elif is_in_editor -%}
+<p class="ew-viewer-notice">3D Viewer: add a model URL that starts with https:// and alt text that describes the model. Only editors see this message.</p>
+{%- endif -%}

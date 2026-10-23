@@ -1,0 +1,59 @@
+{
+  "clip": "reel",
+  "source": "deemsterhotline.mp4",
+  "start": 8.0,
+  "seconds": 6,
+  "size": "720x1280",
+  "want_kbps": 500,
+  "device": "iPhone18,4",
+  "os": "Version 26.6.1 (Build 23G83)",
+  "vmaf_model": "vmaf_v0.6.1",
+  "tiles": {
+    "nu-media": {
+      "label": "nu-media: HEVC iPhone hardware at 360 x 640 + Apple low-latency super resolution (Neural Engine)",
+      "actual_kbps": 500.0,
+      "vmaf": 62.66
+    },
+    "h264-hw": {
+      "label": "H.264, iPhone hardware",
+      "actual_kbps": 497.1,
+      "vmaf": 52.69
+    },
+    "hevc-hw": {
+      "label": "HEVC, iPhone hardware",
+      "actual_kbps": 500.5,
+      "vmaf": 72.63
+    },
+    "av1-rt": {
+      "label": "AV1, SVT-AV1 real time",
+      "actual_kbps": 502.2,
+      "vmaf": 72.85
+    },
+    "av1-best": {
+      "label": "AV1, SVT-AV1 best quality (preset 4, lookahead; not live)",
+      "actual_kbps": 505.1,
+      "vmaf": 86.11
+    },
+    "vp9-rt": {
+      "label": "VP9, libvpx real time",
+      "actual_kbps": 507.7,
+      "vmaf": 64.01
+    },
+    "hevc-x265": {
+      "label": "HEVC, x265 software (preset slow)",
+      "actual_kbps": 500.3,
+      "vmaf": 81.31
+    },
+    "nu-base-lanczos": {
+      "label": "nu-media base with a Lanczos upscale instead of super resolution",
+      "actual_kbps": 500.0,
+      "vmaf": 69.35
+    }
+  },
+  "iphone_fps": {
+    "h264-hw": 214,
+    "hevc-hw": 198,
+    "nu-base": 375,
+    "super_resolution": 441
+  }
+}

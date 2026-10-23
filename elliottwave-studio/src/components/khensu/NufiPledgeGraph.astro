@@ -1,0 +1,322 @@
+---
+// Pledge progress for the example ñüFi Back campaign: the running total over 30 days against the goal, drawn when it
+// scrolls into view. A toggle switches between a campaign that meets its goal (released to the creator) and one that
+// misses (every pledge refunded). Without JS or with reduced motion the met campaign shows fully drawn.
+import { DAILY_MET, DAILY_MISSED, DAYS, GOAL, cumulative, total, usd } from '../../data/nufi-campaign';
+
+const W = 640;
+const H = 320;
+const L = 56;
+const R = 20;
+const T = 24;
+const B = 40;
+const MAX = 50_000;
+const x = (i: number) => L + (i / DAYS) * (W - L - R);
+const y = (v: number) => H - B - (v / MAX) * (H - T - B);
+const line = (daily: number[]) => cumulative(daily).map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+const area = (daily: number[]) => `${line(daily)} L${x(DAYS)} ${y(0)} L${x(0)} ${y(0)} Z`;
+
+const runs = [
+  {
+    id: 'met',
+    label: 'Goal met',
+    daily: DAILY_MET,
+    outcome: 'Released to the creator',
+    detail: 'The goal was reached before the deadline, so the network releases the escrow to the creator’s wallet.',
+  },
+  {
+    id: 'missed',
+    label: 'Goal missed',
+    daily: DAILY_MISSED,
+    outcome: 'Refunded to every backer',
+    detail: 'The deadline passed short of the goal, so every pledge goes back to the backer who made it, automatically.',
+  },
+].map((r) => {
+  const t = total(r.daily);
+  return { ...r, total: t, pct: Math.round((t / GOAL) * 100), line: line(r.daily), area: area(r.daily), end: y(t) };
+});
+const ticks = [0, 10_000, 20_000, 30_000, 40_000, 50_000];
+const label = runs.map((r) => `${r.label}: ${usd(r.total)} pledged of a ${usd(GOAL)} goal, ${r.pct}%. ${r.outcome}.`).join(' ');
+---
+
+<figure class="npg" data-run="met" id="nufi-pledge-graph">
+  <div class="npg-top">
+    <div class="npg-read" aria-live="polite">
+      {runs.map((r) => (
+        <p class="npg-state" data-for={r.id}>
+          <b class="npg-pct"><span data-count={r.pct}>{r.pct}</span>%</b>
+          <span class="npg-of">{usd(r.total)} of {usd(GOAL)} <small>example</small></span>
+        </p>
+      ))}
+    </div>
+    <div class="npg-toggle" role="group" aria-label="Campaign outcome" hidden>
+      {runs.map((r, i) => <button type="button" data-pick={r.id} aria-pressed={i === 0 ? 'true' : 'false'}>{r.label}</button>)}
+    </div>
+  </div>
+
+  <svg class="npg-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
+    <defs>
+      <linearGradient id="npg-met" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5ee6c0" stop-opacity="0.35" />
+        <stop offset="1" stop-color="#5ee6c0" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient id="npg-missed" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9aa0a9" stop-opacity="0.3" />
+        <stop offset="1" stop-color="#9aa0a9" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    {ticks.map((t) => (
+      <g class="npg-grid">
+        <line x1={L} x2={W - R} y1={y(t)} y2={y(t)} />
+        <text x={L - 10} y={y(t) + 4}>{t ? `$${t / 1000}k` : '$0'}</text>
+      </g>
+    ))}
+    <line class="npg-goal" x1={L} x2={W - R} y1={y(GOAL)} y2={y(GOAL)} />
+    <text class="npg-goal-t" x={L + 8} y={y(GOAL) - 8}>Goal {usd(GOAL)}</text>
+    <line class="npg-deadline" x1={x(DAYS)} x2={x(DAYS)} y1={T} y2={H - B} />
+    <text class="npg-axis" x={L} y={H - 14}>Launch</text>
+    <text class="npg-axis end" x={W - R} y={H - 14}>Deadline, day {DAYS}</text>
+    {runs.map((r) => (
+      <g class="npg-run" data-for={r.id}>
+        <path class="npg-area" d={r.area} fill={`url(#npg-${r.id})`} />
+        <path class="npg-line" d={r.line} pathLength="1" />
+        <circle class="npg-dot" cx={x(DAYS)} cy={r.end} r="6" />
+      </g>
+    ))}
+  </svg>
+
+  <figcaption class="npg-out">
+    {runs.map((r) => (
+      <p class="npg-state" data-for={r.id}>
+        <b>{r.outcome}</b>
+        <span>{r.detail}</span>
+      </p>
+    ))}
+  </figcaption>
+</figure>
+
+<script>
+  const fig = document.querySelector<HTMLElement>('.npg');
+  if (fig) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const toggle = fig.querySelector<HTMLElement>('.npg-toggle')!;
+    toggle.hidden = false;
+    const count = (run: string) => {
+      const el = fig.querySelector<HTMLElement>(`.npg-state[data-for="${run}"] [data-count]`);
+      if (!el || reduce) return;
+      const to = Number(el.dataset.count);
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / 1600);
+        el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    const play = (run: string) => {
+      fig.dataset.run = run;
+      toggle.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pick === run)));
+      if (reduce) return;
+      fig.classList.remove('drawn');
+      void fig.offsetWidth;
+      fig.classList.add('drawn');
+      count(run);
+    };
+    toggle.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-pick]');
+      if (b) play(b.dataset.pick!);
+    });
+    if (!reduce) {
+      fig.classList.add('armed');
+      const io = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) { play(fig.dataset.run || 'met'); io.disconnect(); }
+      }, { threshold: 0.45 });
+      io.observe(fig);
+    }
+  }
+</script>
+
+<style>
+  .npg {
+    margin: 0;
+    padding: clamp(1.2rem, 3vw, 2rem);
+    border-radius: 28px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 30px 80px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+  .npg-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .npg-state {
+    margin: 0;
+  }
+  .npg[data-run='met'] .npg-state[data-for='missed'],
+  .npg[data-run='missed'] .npg-state[data-for='met'],
+  .npg[data-run='met'] .npg-run[data-for='missed'],
+  .npg[data-run='missed'] .npg-run[data-for='met'] {
+    display: none;
+  }
+  .npg-read .npg-state {
+    display: grid;
+    gap: 0.1rem;
+  }
+  .npg-pct {
+    font-size: clamp(2.8rem, 6vw, 4.2rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+  .npg[data-run='met'] .npg-pct {
+    color: #bff5e4;
+  }
+  .npg-of {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+  .npg-of small {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    font-size: 0.72rem;
+    color: var(--text-faint);
+  }
+  .npg-toggle {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .npg-toggle[hidden] {
+    display: none;
+  }
+  .npg-toggle button {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 0.88rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.3s;
+  }
+  .npg-toggle button[aria-pressed='true'] {
+    background: rgba(255, 255, 255, 0.92);
+    color: #000;
+    font-weight: 500;
+  }
+  .npg-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 1.2rem 0 0.6rem;
+    overflow: visible;
+  }
+  .npg-grid line {
+    stroke: rgba(255, 255, 255, 0.07);
+  }
+  .npg-grid text,
+  .npg-axis {
+    fill: var(--text-faint);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-anchor: end;
+  }
+  .npg-axis {
+    text-anchor: start;
+  }
+  .npg-axis.end {
+    text-anchor: end;
+  }
+  .npg-goal {
+    stroke: rgba(255, 255, 255, 0.55);
+    stroke-dasharray: 5 6;
+  }
+  .npg-goal-t {
+    fill: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  .npg-deadline {
+    stroke: rgba(255, 255, 255, 0.18);
+  }
+  .npg-line {
+    fill: none;
+    stroke: #bff5e4;
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+  .npg-run[data-for='missed'] .npg-line {
+    stroke: #c9ccd2;
+  }
+  .npg-dot {
+    fill: #fff;
+    stroke: rgba(94, 230, 192, 0.45);
+    stroke-width: 8;
+  }
+  .npg-run[data-for='missed'] .npg-dot {
+    stroke: rgba(201, 204, 210, 0.35);
+  }
+  .armed:not(.drawn) .npg-line {
+    stroke-dashoffset: 1;
+  }
+  .armed:not(.drawn) .npg-area,
+  .armed:not(.drawn) .npg-dot,
+  .armed:not(.drawn) .npg-out {
+    opacity: 0;
+  }
+  .drawn .npg-line {
+    animation: npg-draw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .drawn .npg-area {
+    animation: npg-fade 0.8s ease 0.9s both;
+  }
+  .drawn .npg-dot,
+  .drawn .npg-out {
+    animation: npg-fade 0.6s ease 1.5s both;
+  }
+  @keyframes npg-draw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes npg-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .npg-out .npg-state {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .npg-out b {
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .npg-out span {
+    color: var(--text-dim);
+    font-size: 0.96rem;
+    max-width: 52ch;
+  }
+  @media (max-width: 480px) {
+    .npg-toggle {
+      width: 100%;
+    }
+    .npg-toggle button {
+      flex: 1;
+    }
+  }
+</style>

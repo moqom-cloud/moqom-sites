@@ -1,0 +1,210 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import PriceCards from "../components/PriceCards.astro";
+import { AGORA, RATE, TIERS, usd } from "../data/pricing";
+import { gaps } from "../data/compare";
+import { SITE } from "../data/site";
+
+const guide = `${SITE.docs}/guides/migrate-from-agora/`;
+
+const mapping: [string, string][] = [
+  ["Project and App ID", "A tenant and a backend API key, which stays on your servers"],
+  ["App Certificate and your token server", "Your token server calls MintToken with the backend key"],
+  ["Channel", "Room, created by your backend with its own policy"],
+  ["Host or broadcaster", "A token with publish rights"],
+  ["Audience", "A token without publish rights"],
+  ["Kick and ban", "Moderation calls that close the open connection, with an audit entry for each"],
+  ["Usage by resolution tier", "The same tier boundaries, so minutes compare directly"],
+];
+
+const changes = [
+  {
+    title: "Tokens are bound to the device",
+    body: "A token names one user, one device and one room, lasts at most 15 minutes, and does not work if copied to another device. The SDK renews it through your backend.",
+  },
+  {
+    title: "End-to-end encryption is always on",
+    body: "Every room is post-quantum end-to-end encrypted, with no setting to turn it off.",
+  },
+  {
+    title: "Prepaid, not invoiced",
+    body: "Buy credit and use it, with optional auto top-up and spend alerts. Every rate is 15% under Agora's list price at every tier and every volume band, and always at least 1¢ under.",
+  },
+  {
+    title: "Recording has no fee",
+    body: "Recording is done by a room agent you run, billed as a subscriber for the bytes it receives. A hosted recorder is in development.",
+  },
+  {
+    title: "Calls and broadcast on one protocol",
+    body: "The stream that carries a call also reaches a large audience, without moving to a second product or latency level.",
+  },
+  {
+    title: "Your relays or ours",
+    body: "Self-host relays anywhere and pay only the 5¢/GiB platform fee.",
+  },
+];
+---
+
+<Base
+  title="Migrate from Agora"
+  description="What changes when you move from Agora to MOQOM: end-to-end encryption in every room, how concepts map, how list prices compare tier by tier, and what to check before you switch."
+>
+  <PageHero
+    eyebrow="Migrate"
+    title="Moving from Agora."
+    lede="Your users, your auth and your rooms stay yours. What changes is the token your backend mints, the SDK in your app, and the bill."
+  >
+    <div class="btn-row">
+      <a class="btn btn-primary" href={guide} rel="noopener">Migration guide ↗</a>
+      <a class="btn" href="#prices">Compare prices</a>
+    </div>
+  </PageHero>
+
+  <section class="section" id="mapping">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">What maps to what</span>
+        <h2>Agora concepts, in MOQOM</h2>
+      </div>
+      <div class="glass glass--strong table-wrap reveal">
+        <table>
+          <thead><tr><th>Agora</th><th>MOQOM</th></tr></thead>
+          <tbody>
+            {
+              mapping.map(([a, m]) => (
+                <tr>
+                  <th scope="row">{a}</th>
+                  <td class="muted">{m}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Agora is described from its public documentation only. The step-by-step version, with code, is the
+        <a href={guide} rel="noopener">migration guide on moqom.dev ↗</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="changes">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">What changes</span>
+        <h2>Differences you will notice</h2>
+      </div>
+      <div class="grid grid-3">
+        {
+          changes.map((c) => (
+            <div class="glass card reveal">
+              <h3>{c.title}</h3>
+              <p class="small muted">{c.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="cards-band" id="scenarios">
+    <div class="container">
+      <PriceCards heading="What the same hour costs" showKeyPoints={false} />
+    </div>
+  </section>
+
+  <section class="section" id="prices">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Tier by tier</span>
+        <h2>Agora list price vs MOQOM</h2>
+        <p class="lede">
+          USD per 1,000 participant-minutes, on Agora's own tier boundaries. These are first-band rates; past 100,000
+          minutes a month both drop with the same volume discount, and MOQOM stays 15% under.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Tier</th>
+              <th colspan="2" class="group">Hosts &amp; interactive audience</th>
+              <th colspan="2" class="group">Broadcast audience</th>
+            </tr>
+            <tr>
+              <th class="num">Agora list</th>
+              <th class="num">MOQOM</th>
+              <th class="num">Agora list</th>
+              <th class="num">MOQOM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              TIERS.map((t) => (
+                <tr>
+                  <th scope="row">{t.label}</th>
+                  <td class="num">{usd(AGORA.interactive[t.id])}</td>
+                  <td class="num col-moqom">{usd(RATE.interactive[t.id])}</td>
+                  <td class="num">{usd(AGORA.broadcast[t.id])}</td>
+                  <td class="num col-moqom">{usd(RATE.broadcast[t.id])}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Agora: Interactive Live Streaming list prices from docs.agora.io, retrieved October 2026. If you have negotiated
+        rates with Agora, compare against those. <a href="/pricing/#estimate">Estimate your own bill →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="preview">
+    <div class="narrow">
+      <div class="glass card reveal">
+        <h2>Price your real Agora usage</h2>
+        <p class="muted">
+          Once you have an account, the console's Migrate from Agora tab can read your Agora project list and the last 90
+          days of usage by tier, and price those minutes on MOQOM beside Agora's list. It uses an Agora Customer ID and
+          Secret for that one request and does not store them. Create a new Secret for it and delete it afterwards.
+        </p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="/signup/">Get an API key</a>
+          <a class="btn" href="/account/">Account console</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="gaps">
+    <div class="container">
+      <div class="glass callout callout-warn reveal">
+        <h3>Check these before you switch</h3>
+        <ul class="check-list">
+          {gaps.map((g) => <li class="small muted">{g}</li>)}
+        </ul>
+        <p class="small"><a href="/compare/">Full comparison with Agora and others →</a></p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cards-band {
+    padding-bottom: var(--space-6);
+  }
+  .group {
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .note {
+    margin-top: var(--space-4);
+    max-width: 90ch;
+  }
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,86 @@
+---
+import CodeWindow from "./CodeWindow.astro";
+
+const curl = `
+# Public rate card: every rate, at every volume band
+curl https://api.moqom.cloud/v1/rates
+
+# Your balance, status and recent ledger
+curl -H "Authorization: Bearer $MOQOM_API_KEY" \\
+     https://api.moqom.cloud/v1/billing
+
+# Auto top-up: add $50 whenever the balance drops below $10
+curl -X PUT -H "Authorization: Bearer $MOQOM_API_KEY" \\
+     -d '{"enabled":true,"below_cents":1000,"amount_cents":5000}' \\
+     https://api.moqom.cloud/v1/billing/auto-top-up
+`;
+
+const endpoints = [
+  ["GET", "/v1/rates", "Public rate card", "none"],
+  ["POST", "/v1/signup", "New account, first API key, first checkout", "none"],
+  ["GET", "/v1/billing", "Balance, status, recent ledger", "backend key"],
+  ["POST", "/v1/billing/checkout", "Open a Stripe-hosted top-up", "backend key"],
+  ["POST", "/v1/billing/portal", "Stripe customer portal: cards, receipts", "backend key"],
+  ["PUT", "/v1/billing/auto-top-up", "Configure automatic top-ups", "backend key"],
+  ["GET", "/v1/keys", "List API keys", "backend key"],
+  ["POST", "/v1/keys", "Issue a key (shown once)", "backend key"],
+  ["DELETE", "/v1/keys/{id}", "Revoke a key", "backend key"],
+  ["POST", "/v1/usage", "Usage from a self-hosted relay", "relay key"],
+];
+---
+
+<section class="section" id="api">
+  <div class="container api">
+    <div>
+      <span class="eyebrow">Billing API</span>
+      <h2>Everything is an API call.</h2>
+      <p class="muted">
+        Balance, top-ups, auto top-up and API keys are all available over HTTPS with your backend key. A key's secret
+        is shown once, when it is issued. After that it can be revoked and replaced, but not recovered.
+      </p>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>Path</th><th>What</th><th>Auth</th></tr></thead>
+          <tbody>
+            {
+              endpoints.map(([m, p, w, a]) => (
+                <tr>
+                  <td class="mono method">{m}</td>
+                  <td class="mono path">{p}</td>
+                  <td>{w}</td>
+                  <td class="faint">{a}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <CodeWindow code={curl} lang="sh" filename="billing.sh" />
+  </div>
+</section>
+
+<style>
+  .api {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+  .api > * {
+    min-width: 0;
+  }
+  @media (max-width: 960px) {
+    .api {
+      grid-template-columns: 1fr;
+    }
+  }
+  .method {
+    color: var(--accent);
+    font-size: var(--text-xs);
+  }
+  .path {
+    white-space: nowrap;
+    font-size: var(--text-xs);
+  }
+</style>

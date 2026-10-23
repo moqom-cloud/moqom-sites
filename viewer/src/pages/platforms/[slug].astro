@@ -1,0 +1,92 @@
+---
+// Generated pages: paste-in builders (steps come from the snippet generator's blocks) and planned
+// platforms (what is planned, and what works today). Platforms with their own .astro file are not
+// generated here.
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { PLATFORM_LIST, STATUS_LABEL, type PlatformEntry } from '../../data/platforms';
+import { allowVisitorModels } from '../../lib/csp';
+import { exampleFor } from '../../lib/examples';
+
+export function getStaticPaths() {
+  return PLATFORM_LIST.filter((p) => !p.href && (p.snippet || p.planned)).map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+
+const { p } = Astro.props as { p: PlatformEntry };
+if (p.snippet) allowVisitorModels(Astro);
+const example = p.snippet ? exampleFor(p.snippet) : null;
+---
+
+<Base title={p.name} description={`${SITE.displayName} on ${p.name}: ${p.summary}`}>
+  <p class="eyebrow">Platforms · {STATUS_LABEL[p.status]}</p>
+  <h1>{p.name}</h1>
+  {p.status !== 'planned' && <p><PriceBadge plugin={p.plugin} /> {p.plugin ? '' : 'Free for any site, including commercial use.'}</p>}
+
+  {
+    example && (
+      <>
+        {p.plan && (
+          <div class="note">
+            <p>{p.plan}</p>
+          </div>
+        )}
+        <div class="prose">
+          <ol>
+            <li>
+              <a href="/quick-start/">Host your model</a> and check its URL with the <a href="/hosting/own-server/#checker">checker</a>.
+            </li>
+            {example.blocks.map((b) => (
+              <li>{b.where}.</li>
+            ))}
+            <li>Publish, then check the page in a private window.</li>
+          </ol>
+          {example.notes.length > 0 && (
+            <ul>
+              {example.notes.map((n) => (
+                <li>{n}</li>
+              ))}
+            </ul>
+          )}
+          <p>
+            These steps follow {p.name}'s help pages at the time of writing. Menu names marked “verify” have not been checked in {p.name}{' '}
+            itself; if yours differ, <a href={`${SITE.repoUrl}/issues`}>tell us</a>.
+          </p>
+        </div>
+        {example.blocks.map((b, i) => (
+          <Code title={example.blocks.length > 1 ? `Step ${i + 2}` : 'Paste this'} code={b.code} />
+        ))}
+        <Generator platform={p.snippet} fixed />
+      </>
+    )
+  }
+
+  {
+    p.planned && (
+      <div class="prose">
+        <p>
+          <strong>Status: planned.</strong> Nothing for {p.name} has been built or published yet.
+        </p>
+        <h2>What is planned</h2>
+        <p>{p.planned.what}</p>
+        <h2>What works today</h2>
+        <p>{p.planned.today}</p>
+        {p.planned.workaround === 'html' && (
+          <p>
+            Get the code from the <a href="/platforms/html/">HTML guide</a>.
+          </p>
+        )}
+        {p.planned.workaround === 'embed' && (
+          <p>
+            Get the code from the <a href="/platforms/embed/">iframe embed guide</a>.
+          </p>
+        )}
+        <p>
+          The plan, the review process and the licence questions are in <a href={`${SITE.repoUrl}/blob/main/docs/PLATFORMS.md`}>docs/PLATFORMS.md</a>.
+        </p>
+      </div>
+    )
+  }
+</Base>

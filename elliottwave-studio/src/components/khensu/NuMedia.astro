@@ -1,0 +1,805 @@
+---
+// ñü.media charts. Video figures are measured: data/iphone-*.json is khensu-specs bench/iphone-*.json, with
+// H.264 and HEVC encoded on an iPhone Air and AV1 on a Mac (the iPhone has no AV1 encoder).
+// Each card draws from its own --e (scripts/scenes.ts, reveal); without the script they show complete.
+import reel from '../../data/iphone-reel.json';
+import nasa4k from '../../data/iphone-nasa4k.json';
+import lad4k from '../../data/iphone-ladder-nasa4k.json';
+import ladReel from '../../data/iphone-ladder-reel.json';
+import formats from '../../data/formats.json';
+import CodecPair from './CodecPair.astro';
+import LadderChart from './LadderChart.astro';
+import BigFormats from './BigFormats.astro';
+import GreenScreen from './GreenScreen.astro';
+import GlowKey from './GlowKey.astro';
+import KeySpeed from './KeySpeed.astro';
+import ProReel from './ProReel.astro';
+
+type Point = { actual_kbps: number; vmaf: number };
+type Run = { codecs: Record<string, { points: Point[] }>; grid: { want_kbps: number; codecs: Record<string, Point> } };
+type P = { k: number; v: number };
+
+const pts = (run: Run, key: string, scale = 1): P[] =>
+  run.codecs[key].points.map((p) => ({ k: p.actual_kbps * scale, v: p.vmaf })).sort((a, b) => a.k - b.k);
+
+// Published estimates, scaled from the measured AV1 curve (see the footnote).
+const AV2 = 0.7; // AOMedia: about 30% fewer bits than AV1
+const LEARNED = 0.65; // DCVC-RT, from its published gain over H.266
+
+const series = (run: Run) => [
+  { name: 'H.264, iPhone hardware', cls: 'c264', ps: pts(run, 'h264-hw') },
+  { name: 'HEVC, iPhone hardware', cls: 'c265', ps: pts(run, 'hevc-hw') },
+  { name: 'AV1 software, real time', cls: 'cav1rt', ps: pts(run, 'av1-svt-rt') },
+  { name: 'ñü.media base layer only', cls: 'cnub', ps: pts(run, 'nu-base') },
+  ...(run.codecs['nu-sr'] ? [{ name: 'ñü.media with Apple super resolution, all on iPhone', cls: 'cnu', ps: pts(run, 'nu-sr') }] : []),
+  { name: 'AV2, published estimate', cls: 'cav2', ps: pts(run, 'av1-svt-rt', AV2), est: true },
+  { name: 'Learned codec (DCVC-RT), estimate', cls: 'cml', ps: pts(run, 'av1-svt-rt', LEARNED), est: true },
+];
+
+// Rate-quality chart geometry: log bitrate across, VMAF up.
+const W = 560, H = 300, L = 40, R = 548, T = 12, B = 262;
+const chart = (run: Run, x0: number, x1: number, y0: number, step: number, ticks: number[]) => {
+  const x = (k: number) => L + ((Math.log(k) - Math.log(x0)) / (Math.log(x1) - Math.log(x0))) * (R - L);
+  const y = (v: number) => B - ((v - y0) / (100 - y0)) * (B - T);
+  const lines = series(run).map((l) => ({
+    ...l,
+    d: l.ps.map((p, i) => `${i ? 'L' : 'M'}${x(p.k).toFixed(1)} ${y(p.v).toFixed(1)}`).join(' '),
+    dots: l.est ? [] : l.ps.map((p) => ({ cx: x(p.k), cy: y(p.v) })),
+  }));
+  const gy = Array.from({ length: Math.round((100 - y0) / step) + 1 }, (_, i) => y0 + step * i).map((v) => ({ v, y: y(v) }));
+  const gx = ticks.map((k) => ({ k, x: x(k), label: k < 1000 ? `${k}k` : `${k / 1000}M` }));
+  return { lines, gy, gx };
+};
+const charts = [
+  { title: '720p video, iPhone Air', sub: '720 × 1280 portrait, 30 fps', ...chart(reel as Run, 150, 2500, 20, 20, [250, 500, 1000, 2000]) },
+  { title: '4K video, iPhone Air', sub: '3840 × 2160, 30 fps, NASA aurora from the ISS', ...chart(nasa4k as Run, 600, 10000, 30, 10, [1000, 2000, 4000, 8000]) },
+];
+const key = series(reel as Run);
+
+// Bitrate each codec needs for VMAF 80 on the 720p clip, interpolated on log bitrate.
+const at = (ps: P[], target: number) => {
+  for (let i = 1; i < ps.length; i++) {
+    if (ps[i - 1].v <= target && ps[i].v >= target) {
+      const f = (target - ps[i - 1].v) / (ps[i].v - ps[i - 1].v);
+      return Math.round(Math.exp(Math.log(ps[i - 1].k) + f * (Math.log(ps[i].k) - Math.log(ps[i - 1].k))));
+    }
+  }
+  return Math.round(ps[ps.length - 1].k);
+};
+const r = reel as Run;
+const need = [
+  { name: 'H.264', note: 'iPhone hardware', kbps: at(pts(r, 'h264-hw'), 80), rt: 'Yes, hardware' },
+  { name: 'ñü.media base layer', note: 'HEVC at half size, no enhancement', kbps: at(pts(r, 'nu-base'), 80), rt: 'Yes, hardware', ours: true },
+  { name: 'AV1, real time', note: 'SVT-AV1 on a Mac', kbps: at(pts(r, 'av1-svt-rt'), 80), rt: 'No AV1 encoder on iPhone' },
+  { name: 'HEVC', note: 'iPhone hardware', kbps: at(pts(r, 'hevc-hw'), 80), rt: 'Yes, hardware' },
+  { name: 'AV2', note: 'Published estimate', kbps: at(pts(r, 'av1-svt-rt', AV2), 80), rt: 'No: no hardware yet', est: true },
+  { name: 'Learned codec', note: 'DCVC-RT, estimate', kbps: at(pts(r, 'av1-svt-rt', LEARNED), 80), rt: 'No: datacenter GPU', est: true },
+  { name: 'ñü.media + super resolution', note: 'Apple’s model on the Neural Engine, measured', kbps: at(pts(r, 'nu-sr'), 80), rt: 'Yes, all on iPhone', ours: true, over: pts(r, 'nu-sr').every((p) => p.v < 80) },
+].sort((a, b) => b.kbps - a.kbps);
+const needMax = Math.max(...need.map((n) => n.kbps));
+
+const rg = r.grid.codecs;
+const at500 = [
+  { name: 'ñü.media', note: 'Base layer only, before the Neural Engine', vmaf: rg['nu-base'].vmaf, ours: true },
+  { name: 'H.264', note: 'iPhone hardware', vmaf: rg['h264-hw'].vmaf },
+  { name: 'H.265 (HEVC)', note: 'iPhone hardware', vmaf: rg['hevc-hw'].vmaf },
+  { name: 'AV1', note: 'Software, on a Mac', vmaf: rg['av1-svt-rt'].vmaf },
+];
+
+const rate = (k: number) => (k < 1000 ? `${Math.round(k)} kbit/s` : `${(k / 1000).toFixed(1)} Mbit/s`);
+
+const chips = [
+  { name: 'A13', cores: 8 },
+  { name: 'A14', cores: 16 },
+  { name: 'A15', cores: 16 },
+  { name: 'A16', cores: 16 },
+  { name: 'A17 Pro', cores: 16 },
+  { name: 'A18', cores: 16 },
+  { name: 'A19', cores: 16 },
+  { name: 'A20 Pro', cores: 32, ours: true },
+];
+
+const { full = false } = Astro.props as { full?: boolean };
+---
+
+<section class="section numedia" aria-labelledby="numedia-title">
+  <div class="wrap">
+    <p class="eyebrow">ñü.media</p>
+    <h2 id="numedia-title" class="big">Less data. Same picture.</h2>
+    <p class="lede">
+      Our own image and video codec runs on your iPhone’s Neural Engine. Photos and video take a fraction of the data,
+      keep their resolution and HDR, and still travel inside the stealth rhythm.
+    </p>
+
+    <div class="charts">
+      {full && (<>
+      <CodecPair run={ladReel as any} dir="ladder-reel" origin="Instagram · 720 × 1280 · 2.44 Mbit/s"
+        srcKbps={2437.958} srcName="Instagram’s own file" start={500}
+        title="The whole reel, two at a time"
+        sub={`All ${Math.round((ladReel as any).seconds)} seconds, whole frames, encoded on an iPhone Air over USB. nu.media here is its low-data mode, which sends a smaller picture and rebuilds it on the receiving iPhone. Pick a bitrate and a pair; one side is always the original or nu.media.`}>
+        <p class="note">Source: @deemsterhotline on Instagram, used with thanks: H.264, 720 × 1280 at 30 fps, 2.44 Mbit/s. A dropped frame shows as the previous frame held, and is counted in the label. Rebuilt to 4K (2160 × 3840) from the same bits, the reel scores the same as at 720p: VMAF 87 at 1.4 Mbit/s and 59 at 351 kbit/s, no dropped frames. The iPhone’s low-latency scaler doesn’t accept 720 × 1280 frames, so on the phone that step is a plain upscale; nu.media Ultra, below, rebuilds 4K on the host’s Mac instead. VMAF is Netflix’s 0 to 100 quality score; 93 and up looks the same as the original to most viewers.</p>
+      </CodecPair>
+
+      <CodecPair run={lad4k as any} dir="ladder-4k" origin="NASA · 3840 × 2160 · 16 Mbit/s"
+        srcKbps={16197} srcName="YouTube’s 4K stream" start={4000}
+        title="4K, two at a time: ñü.media rebuilt to 4K"
+        sub="nu.media sends a smaller picture and the receiving iPhone rebuilds it to the full 3840 × 2160. Whole frames, shown at 2560 × 1440; use Zoom 3× to see the detail. Encoded on an iPhone Air over USB; AV1 in software on a Mac, because iPhone has no AV1 encoder.">
+        <p class="note">Stunning Aurora Borealis from Space in Ultra-High Definition (4K), NASA, filmed from the International Space Station; public domain. The source is YouTube’s best stream, VP9 at about 16 Mbit/s. nu.media picks the base size that scores best at each bitrate and rebuilds it on the receiving iPhone’s Neural Engine; Apple’s scaler, measured here, stops at 1920 × 1080, so in these runs the last step to 4K is a plain upscale.</p>
+      </CodecPair>
+
+      <ProReel />
+
+      <BigFormats formats={formats as any} ladder={lad4k as any} />
+
+      <GreenScreen />
+      <GlowKey />
+      <KeySpeed />
+      </>)}
+
+      {full && (<>
+        <LadderChart run={lad4k as any} title="How low 4K can go, measured" refName="H.265 at 4 Mbit/s"
+          sub="Quality against bitrate on iPhone Air, 32 kbit/s to 4 Mbit/s. nu.media in colour." />
+        <LadderChart run={ladReel as any} title="How low 720p can go, measured" refName="H.265 at 2 Mbit/s"
+          sub="The whole Instagram reel on iPhone Air, 64 kbit/s to 2 Mbit/s. nu.media in colour." />
+      </>)}
+
+      <figure class="card">
+        <figcaption><b>Progressive</b><span>Preview first, full detail in seconds</span></figcaption>
+        <div class="prog">
+        <span class="timer" aria-hidden="true"></span>
+        <svg class="scene" viewBox="0 0 320 180" role="img" aria-label="A photo of the Portara on Naxos at dawn, sharpening as it arrives">
+          <defs>
+            <linearGradient id="nm-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2b1e4a" />
+              <stop offset="0.55" stop-color="#d9786a" />
+              <stop offset="1" stop-color="#f6c48a" />
+            </linearGradient>
+            <linearGradient id="nm-sea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a4f7a" />
+              <stop offset="1" stop-color="#121a33" />
+            </linearGradient>
+          </defs>
+          <g class="sharpen">
+            <rect width="320" height="120" fill="url(#nm-sky)" />
+            <circle cx="214" cy="112" r="22" fill="#ffe2a8" />
+            <rect y="112" width="320" height="68" fill="url(#nm-sea)" />
+            <path d="M0 124 L70 110 L130 118 L190 108 L250 120 L320 114 L320 132 L0 132 Z" fill="#1b2240" />
+            <path d="M96 132 V70 H164 V132 H150 V84 H110 V132 Z" fill="#0d1022" />
+            <path d="M206 136 h70 M190 146 h40 M240 152 h56" stroke="#ffd9a0" stroke-opacity="0.5" stroke-width="2" />
+          </g>
+        </svg>
+        </div>
+        <p class="note">A preview lands in the first slot and sharpens as the rest arrive.</p>
+      </figure>
+
+      {full && (<>
+      <figure class="card" data-scene="reveal">
+        <figcaption><b>Video calls, same data</b><span>Quality at 500 kbit/s, 720p, encoded on iPhone Air</span></figcaption>
+        <ul class="q500" role="list">
+          {at500.map((r, i) => (
+            <li class:list={[{ ours: r.ours }]} style={`--w:${r.vmaf};--i:${i}`}>
+              <span class="label"><b>{r.name}</b> <small>{r.note}</small></span>
+              <span class="track"><span class="fill" /></span>
+              <span class="value"><b>{r.vmaf.toFixed(0)}</b></span>
+            </li>
+          ))}
+        </ul>
+        <p class="note"><a href="https://github.com/Netflix/vmaf">VMAF</a> is Netflix’s open video quality score: it compares each video with the original and predicts how people would rate it, 0 to 100. Above 70 looks good on a phone. <a href="/quality">Why VMAF alone isn’t enough, and how to check our numbers.</a> nu.media sends a half-size base layer; the receiving iPhone’s Neural Engine restores the rest.</p>
+      </figure>
+
+      <figure class="card wide" data-scene="reveal">
+        <figcaption><b>Quality for every bitrate</b><span>Higher and further left is better. nu.media in colour, everything else in grey. Solid lines are benchmarks; dashed lines are published estimates, not measured.</span></figcaption>
+        <div class="rds">
+          {charts.map((c, ci) => (
+            <div class="rdw">
+              <p class="rdt"><b>{c.title}</b> <small>{c.sub}</small></p>
+              <svg class="rd" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Rate-quality curves, ${c.title}`}>
+                {c.gy.map((g) => (
+                  <g class="gy">
+                    <line x1={L} x2={R} y1={g.y} y2={g.y} />
+                    <text x={L - 8} y={g.y + 4}>{g.v.toFixed(0)}</text>
+                  </g>
+                ))}
+                {c.gx.map((g) => (
+                  <g class="gx">
+                    <line x1={g.x} x2={g.x} y1={T} y2={B} />
+                    <text x={g.x} y={B + 18}>{g.label}</text>
+                  </g>
+                ))}
+                <defs>
+                  <linearGradient id={`nug${ci}`} gradientUnits="userSpaceOnUse" x1={L} y1="0" x2={R} y2="0">
+                    <stop offset="0" stop-color="#8b7bff" /><stop offset="1" stop-color="#4fd1c5" />
+                  </linearGradient>
+                </defs>
+                <clipPath id={`rdc${ci}`}><rect x={L} y={T - 4} width={R - L} height={B - T + 8} /></clipPath>
+                <g clip-path={`url(#rdc${ci})`}>
+                  <g class="plot">
+                    {c.lines.map((l) => (
+                      <g class:list={['line', l.cls, { est: l.est }]} style={l.cls.startsWith('cnu') ? `--c:url(#nug${ci})` : undefined}>
+                        <path d={l.d} />
+                        {l.dots.map((d) => <circle cx={d.cx} cy={d.cy} r="3.2" />)}
+                      </g>
+                    ))}
+                  </g>
+                </g>
+                <text class="axis" x={(L + R) / 2} y={B + 36}>bits per second</text>
+              </svg>
+            </div>
+          ))}
+        </div>
+        <ul class="key" role="list">
+          {key.map((l) => (
+            <li class:list={[l.cls, { est: l.est }]}><i />{l.name}</li>
+          ))}
+        </ul>
+      </figure>
+
+      </>)}
+
+      {full ? (
+      <figure class="card wide" data-scene="reveal">
+        <figcaption><b>Bits for a good picture</b><span>Bitrate each codec needs to reach VMAF 80 on the 720p clip, and whether an iPhone can do it live</span></figcaption>
+        <ul class="need" role="list">
+          {need.map((r, i) => (
+            <li class:list={[{ ours: r.ours, est: r.est }]} style={`--w:${(r.kbps / needMax) * 100};--i:${i}`}>
+              <span class="label"><b>{r.name}</b> <small>{r.note}</small></span>
+              <span class="track"><span class="fill" /></span>
+              <span class="value">{r.over ? <b>Not reached</b> : <><b>{r.kbps.toLocaleString('en-US')}</b> <small>kbit/s</small></>}</span>
+              <span class="rt">{r.rt}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="note">Measured on iPhone Air. Apple’s hardware HEVC matches real-time AV1 software at a fraction of the power, so it carries nu.media’s base layer. Apple’s super resolution runs at 459 fps on the Neural Engine, but adds texture the original doesn’t have, so it scores below a plain upscale and never reaches VMAF 80 up to 1.4 Mbit/s. nu.media’s own network is trained to restore the original instead.</p>
+      </figure>
+      ) : (
+        <a class="card wide more" href="https://media.khensu.nu">
+          <b>How ñü.media video measures</b>
+          <span>Quality scores against H.264, HEVC and AV1, what each layer does, and how we test.</span>
+          <span class="go">See the measurements →</span>
+        </a>
+      )}
+
+      <figure class="card wide" data-scene="reveal">
+        <figcaption><b>Runs on every iPhone with iOS 26</b><span>Neural Engine cores, A13 Bionic to A20 Pro</span></figcaption>
+        <ul class="chips" role="list">
+          {chips.map((c, i) => (
+            <li class:list={[{ ours: c.ours }]} style={`--h:${c.cores / 32};--i:${i}`}>
+              <span class="col"><span class="bar" /></span>
+              <b>{c.name}</b>
+              <small>{c.cores === 32 ? '2 × 16' : c.cores}</small>
+            </li>
+          ))}
+        </ul>
+        <p class="note">Tuned for A20 Pro’s dual 16-core Neural Engine: highest resolution and frame rate. Earlier chips run the same format, with less enhancement. Also on Apple silicon iPad and Mac.</p>
+      </figure>
+    </div>
+
+    <p class="footnote">
+      All video figures are benchmarks: <a href="https://github.com/Netflix/vmaf">VMAF</a> (4K model for 4K) on 6-second clips.
+      <a href="https://www.itu.int/rec/T-REC-H.264">H.264</a> and <a href="https://www.itu.int/rec/T-REC-H.265">HEVC</a> from an
+      iPhone Air’s hardware encoder (iOS 26.6.1) at live-call settings; AV1 from <a href="https://gitlab.com/AOMediaCodec/SVT-AV1">SVT-AV1</a>
+      real time on an M1 Pro, as iPhone has no AV1 encoder; nu.media as its half-size base layer, and end to end on iPhone with Apple’s
+      <a href="https://developer.apple.com/documentation/videotoolbox/vtsuperresolutionscaler">super resolution</a>. Only the dashed
+      lines aren’t measured: <a href="https://aomedia.org/">AV2</a> (about 30% under AV1, per AOMedia) and
+      <a href="https://github.com/microsoft/DCVC">DCVC-RT</a> (its authors’ gain over H.266) are scaled from our AV1 curve.
+      Photo results aren’t shown here. Results: <a href="/khensu/codec/results-reel.json">720p</a>,
+      <a href="/khensu/codec/results-nasa4k.json">4K</a>.
+    </p>
+  </div>
+</section>
+
+<script>
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-parallax]')];
+  if (groups.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const tiles = groups.flatMap((g) => [...g.querySelectorAll<HTMLElement>('[data-speed]')]);
+    let queued = false;
+    const frame = () => {
+      queued = false;
+      const mid = innerHeight / 2;
+      for (const t of tiles) {
+        const r = t.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > innerHeight + 200) continue;
+        const d = r.top + r.height / 2 - mid;
+        t.style.transform = `translate3d(0, ${(d * Number(t.dataset.speed)).toFixed(1)}px, 0)`;
+      }
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue);
+    frame();
+  }
+</script>
+
+<style>
+  .charts {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 960px) {
+    .charts {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .charts :global(.card) {
+    margin: 0;
+    padding: 1.6rem;
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 1.1rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+  }
+  .charts :global(.card.wide) {
+    grid-column: 1 / -1;
+  }
+  .saves { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; margin: 2.2rem 0 2.6rem; }
+  .sv {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    min-height: 13rem;
+    padding: 2rem 1.6rem;
+    border-radius: 24px;
+    background:
+      radial-gradient(120% 90% at 20% 0%, rgba(139, 123, 255, 0.28), rgba(139, 123, 255, 0) 60%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 20px 50px rgba(0, 0, 0, 0.35);
+    will-change: transform;
+  }
+  .sv b {
+    font-size: clamp(3.2rem, 6.5vw, 5.6rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sv span { font-size: 1.05rem; color: rgba(255, 255, 255, 0.72); }
+  .saves .target { grid-column: 1 / -1; margin: 0 0 -0.4rem; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: lowercase; color: rgba(255, 255, 255, 0.5); }
+  .more { display: grid; gap: 0.4rem; text-decoration: none; color: inherit; }
+  .more b { font-size: 1.2rem; font-weight: 500; }
+  .more span { color: var(--text-dim); }
+  .more .go { color: #c9c0ff; }
+  .saves-note { margin: 0.8rem 0 0; font-size: 0.72rem; color: var(--muted, rgba(255, 255, 255, 0.5)); }
+  .sub-cap {
+    margin-top: 0.6rem;
+  }
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  figcaption b {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  figcaption span,
+  .note,
+  small {
+    color: var(--text-dim);
+  }
+  .note {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+  small {
+    font-size: 0.8rem;
+  }
+
+  /* Bars: each grows in turn as the section scrolls in. */
+  .bars,
+  .q500,
+  .need {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .bars li {
+    display: grid;
+    grid-template-columns: 11rem 1fr 9rem;
+    align-items: center;
+    gap: 1rem;
+  }
+  .q500 li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem 0.8rem;
+    align-items: center;
+  }
+  .q500 .track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .need li {
+    display: grid;
+    grid-template-columns: 14rem 1fr 7.5rem 11rem;
+    align-items: center;
+    gap: 1rem;
+  }
+  .need .label small {
+    display: block;
+  }
+  .rt {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .est .fill {
+    background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0 6px, rgba(255, 255, 255, 0.08) 6px 12px);
+  }
+  .ours.est .fill {
+    background: repeating-linear-gradient(135deg, rgba(139, 123, 255, 0.85) 0 6px, rgba(79, 209, 197, 0.25) 6px 12px);
+  }
+  .track {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .fill {
+    display: block;
+    height: 100%;
+    width: calc(var(--w) * 1%);
+    min-width: 6px;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.35);
+    transform-origin: left;
+    transform: scaleX(clamp(0, calc((var(--e, 1) - var(--i) * 0.12) / 0.6), 1));
+  }
+  .ours .fill,
+  .ours .bar {
+    background: linear-gradient(90deg, #8b7bff, #4fd1c5);
+  }
+  .value {
+    text-align: right;
+  }
+  .ours b {
+    color: #b9b0ff;
+  }
+
+  /* Ticks: squares light up one per tick; nu-media finishes in 7 while HEIC needs 52. */
+  .ticks-row {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ticks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ticks i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.55);
+    opacity: clamp(0.1, calc(var(--e, 1) * 52 - var(--i)), 1);
+  }
+  .ticks-row.ours .ticks i {
+    background: linear-gradient(135deg, #8b7bff, #4fd1c5);
+  }
+
+  /* Progressive: the photo sharpens in steps, like slots arriving. */
+  .scene {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  /* One clock drives both: --tick counts 2-second ticks 0 to 7, then holds the sharp photo for a tick. */
+  @property --tick {
+    syntax: '<integer>';
+    inherits: true;
+    initial-value: 7;
+  }
+  .prog {
+    position: relative;
+    animation: tick 16s infinite;
+  }
+  @keyframes tick {
+    0% { --tick: 0; animation-timing-function: steps(7, end); }
+    87.5%, 100% { --tick: 7; }
+  }
+  .sharpen {
+    filter: blur(calc((7 - var(--tick)) * 1.3px));
+    transition: filter 0.4s ease-out;
+  }
+  .timer {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    z-index: 1;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    counter-reset: secs calc(var(--tick) * 2) slot calc(min(20, 1 + var(--tick) * 3));
+  }
+  .timer::after {
+    content: counter(secs) ' s · slot ' counter(slot) ' of 20';
+  }
+  /* The outline empties clockwise once per 2-second tick, in step with --tick. */
+  @property --gone {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+  .timer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(transparent var(--gone), #c9c0ff 0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: clock 2s linear infinite;
+  }
+  @keyframes clock {
+    to { --gone: 360deg; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timer::before { animation: none; }
+  }
+
+  /* Rate-quality chart: lines draw left to right as the card scrolls in. */
+  .rd {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .rd text {
+    fill: var(--text-dim);
+    font-size: 11px;
+  }
+  .gy line,
+  .gx line {
+    stroke: rgba(255, 255, 255, 0.07);
+  }
+  .gy text {
+    text-anchor: end;
+  }
+  .gx text,
+  .rd .axis {
+    text-anchor: middle;
+  }
+  .rds {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: 1.5rem;
+  }
+  .rdt {
+    margin: 0 0 0.4rem;
+  }
+  .rdt b {
+    font-weight: 500;
+  }
+  .plot {
+    clip-path: inset(0 calc((1 - var(--e, 1)) * 100%) 0 0);
+  }
+  .line path {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+  }
+  .line circle {
+    fill: var(--c);
+  }
+  .line.est path {
+    stroke-dasharray: 6 5;
+    stroke-width: 1.8;
+  }
+  .line.cnu path {
+    stroke-width: 3.6;
+  }
+  .c264 { --c: rgba(255, 255, 255, 0.22); }
+  .c265 { --c: rgba(255, 255, 255, 0.55); }
+  .cav1rt { --c: rgba(255, 255, 255, 0.38); }
+  .cav1 { --c: rgba(255, 255, 255, 0.3); }
+  .cnu { --c: #8b7bff; }
+  .cnub { --c: #6f66b8; }
+  .cav2 { --c: rgba(255, 255, 255, 0.45); }
+  .cml { --c: rgba(255, 255, 255, 0.3); }
+  .line.cnub path { stroke-width: 3; opacity: 0.75; }
+  .line.cnu path, .line.cnub path { filter: drop-shadow(0 0 6px rgba(139, 123, 255, 0.45)); }
+  .key li.cnu, .key li.cnub { color: #c9c0ff; font-weight: 600; }
+  .key li.cnu i, .key li.cnub i { height: 3px; border-top: 0; background: linear-gradient(90deg, #8b7bff, #4fd1c5); }
+  .key li.cnu i { -webkit-mask: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 8px); mask: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 8px); }
+  .key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    font-size: 0.88rem;
+  }
+  .key li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .key i {
+    width: 22px;
+    height: 0;
+    border-top: 3px solid var(--c);
+  }
+  .key .est i {
+    border-top-style: dashed;
+  }
+  .key .cnu {
+    color: #b9b0ff;
+  }
+
+  /* Comparison video with a label in each tile. */
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 2.2rem;
+    margin: 0 0 1.1rem;
+    padding: 0;
+    list-style: none;
+  }
+  .stats li { display: flex; flex-direction: column; }
+  .stats b { font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.15; color: #b9b0ff; }
+  .stats small { opacity: 0.7; }
+  .cmp {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+  }
+  .cmp video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .tiles {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+    pointer-events: none;
+  }
+  .tiles li {
+    align-self: end;
+    justify-self: start;
+    margin: 0.45rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+  .tiles small {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .tiles.many li {
+    font-size: 0.7rem;
+    margin: 0.3rem;
+    padding: 0.15rem 0.4rem;
+  }
+  .tiles.many small {
+    display: block;
+    font-size: 0.64rem;
+  }
+  .tiles .ours b {
+    color: #b9b0ff;
+  }
+
+  /* Chips: Neural Engine cores as columns. */
+  .chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.6rem;
+    align-items: end;
+  }
+  .chips li {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+  }
+  .col {
+    width: 100%;
+    max-width: 44px;
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bar {
+    width: 100%;
+    height: calc(var(--h) * 100%);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    transform-origin: bottom;
+    transform: scaleY(clamp(0, calc((var(--e, 1) - var(--i) * 0.05) / 0.6), 1));
+  }
+  .chips b {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  @media (max-width: 860px) {
+    .need li {
+      grid-template-columns: 1fr auto;
+      gap: 0.35rem 0.8rem;
+    }
+    .need .track,
+    .need .rt {
+      grid-column: 1 / -1;
+    }
+    .tiles li {
+      margin: 0.3rem;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.7rem;
+    }
+    .tiles small {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .cmp.has-m video {
+      aspect-ratio: 720 / 900;
+      object-fit: cover;
+    }
+    .cmp.has-m .tiles {
+      --cols: 2 !important;
+      --rows: 2 !important;
+    }
+    .cmp.has-m .tiles li {
+      font-size: 0.72rem;
+    }
+    .cmp.has-m .tiles small {
+      display: block;
+      font-size: 0.62rem;
+    }
+    .stats {
+      gap: 0.4rem 1.4rem;
+    }
+    .stats b {
+      font-size: 1.4rem;
+    }
+    .bars li {
+      grid-template-columns: 1fr auto;
+    }
+    .bars .track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    .chips {
+      gap: 0.3rem;
+    }
+    .chips b {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prog {
+      animation: none;
+    }
+  }
+</style>

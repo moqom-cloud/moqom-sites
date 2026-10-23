@@ -1,0 +1,129 @@
+---
+import Base from '../layouts/Base.astro';
+import { KALOPSIA } from '../data/kalopsia';
+---
+
+<Base
+  title="About Kalopsia"
+  description="Kalopsia: whole real spaces you explore instead of scroll. Walk through, look around, teleport to the next. VR, AR, visionOS, mobile and web. Coming this month or this quarter (October or Q4 2026)."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">About Kalopsia · in the lab since {KALOPSIA.since}</p>
+      <h1>{KALOPSIA.name}</h1>
+      <p class="lede">{KALOPSIA.tagline}</p>
+      <p class="status mono">{KALOPSIA.status}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">What it is</p>
+        <h2>Places, not posts.</h2>
+      </div>
+      <div class="prose">
+        <p>{KALOPSIA.summary}</p>
+        <p>{KALOPSIA.story}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">How you explore</p>
+      <h2>No feed to swipe.</h2>
+      <ol class="steps">
+        {KALOPSIA.explore.map((step, i) => (
+          <li class="card">
+            <span class="mono num">0{i + 1}</span>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Where</p>
+        <h2>Wherever you are.</h2>
+      </div>
+      <div class="prose">
+        <ul class="chips">
+          {KALOPSIA.where.map((w) => <li>{w}</li>)}
+        </ul>
+        <p>{KALOPSIA.soon}</p>
+        <div class="btn-row">
+          <a class="btn primary" href="/contact">Get in touch</a>
+          <a class="btn" href="/work">See the other work</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head h1 {
+    font-size: clamp(3.5rem, 10vw, 8rem);
+  }
+  .status {
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+  .two {
+    display: grid;
+    gap: 1.5rem 4rem;
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1.3fr;
+    }
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 0;
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 900px) {
+    .steps {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .steps li {
+    padding: 1.75rem;
+  }
+  .steps .num {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+  .steps h3 {
+    margin-top: 0.75rem;
+  }
+  .steps p {
+    color: var(--text-dim);
+    margin: 0;
+  }
+  .chips {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .chips li {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+</style>

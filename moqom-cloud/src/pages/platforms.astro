@@ -1,0 +1,269 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import CodeWindow from "../components/CodeWindow.astro";
+import { LISTED_CLIENTS, BACKENDS, STATUS_LABEL, STATUS_PILL, STATUS_NOTE } from "../data/platforms";
+import { SITE } from "../data/site";
+
+const spm = `
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/moqom-cloud/moqom-swift", from: "0.1.0"),
+]
+`;
+
+const goSnippet = `
+go get github.com/moqom-cloud/moqom-go
+`;
+---
+
+<Base
+  title="Platforms"
+  description="MOQOM SDKs: Swift for iOS and macOS today, post-quantum end-to-end encrypted in every room; Android, Desktop and an OBS plugin in progress; Go and Rust for your backend."
+>
+  <PageHero
+    eyebrow="Platforms"
+    title="One relay network, one room model, every client."
+    lede="Every client SDK speaks the same wire protocol to the same relays, with the same tokens, rooms and roles. MOQOM launches on Apple platforms, and as each SDK ships, an Android viewer, an iPhone host and an OBS stream can share one room."
+  />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Client SDKs</span>
+        <h2>Apple platforms ship first</h2>
+      </div>
+      <div class="grid grid-2">
+        {
+          LISTED_CLIENTS.map((p) => (
+            <article class={`glass card reveal plat ${p.status}`}>
+              <div class="plat-head">
+                <h3>{p.name}</h3>
+                <span class={STATUS_PILL[p.status]}>{STATUS_LABEL[p.status]}</span>
+              </div>
+              <p class="mono small faint">
+                {p.pkg} · {p.license}
+              </p>
+              <p class="muted">{p.summary}</p>
+              <ul class="check-list small">
+                {p.details.map((d) => (
+                  <li>{d}</li>
+                ))}
+              </ul>
+              <p class="status small">{STATUS_NOTE[p.status]}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container two">
+      <div>
+        <span class="eyebrow">Swift</span>
+        <h2>Add MoqomKit with Swift Package Manager</h2>
+        <p class="muted">
+          Swift 6 language mode with complete strict concurrency. The deployment floor is 26 on every Apple platform.
+          The SDK is open source under Apache-2.0, and it ships with a signed binary core for playback.
+        </p>
+        <a class="btn" href={SITE.docs} rel="noopener">Swift quickstart ↗</a>
+      </div>
+      <CodeWindow code={spm} lang="swift" filename="Package.swift" />
+    </div>
+  </section>
+
+  <section class="section" id="backend">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Backend SDKs</span>
+        <h2>Control rooms from your own servers</h2>
+        <p class="lede">
+          The backend SDKs talk to the MOQOM control plane over gRPC. Neither one carries media, so your backend never
+          has to link a QUIC stack just to change somebody's permissions.
+        </p>
+      </div>
+      <div class="grid grid-2">
+        {
+          BACKENDS.map((b) => (
+            <article class="glass card reveal plat">
+              <div class="plat-head">
+                <h3>{b.name}</h3>
+                <span class="pill pill-ok">Available</span>
+              </div>
+              <p class="mono small faint">
+                {b.pkg} · {b.floor} · Apache-2.0
+              </p>
+              <p class="muted">{b.summary}</p>
+            </article>
+          ))
+        }
+      </div>
+      <div class="two backend-row">
+        <ul class="check-list">
+          <li>Mint client tokens for a tenant, a room and a set of capabilities</li>
+          <li>Create rooms and set their policy</li>
+          <li>Moderate: kicks and bans close the participant's live connection</li>
+          <li>Subscribe to a per-room event stream</li>
+        </ul>
+        <CodeWindow code={goSnippet} lang="sh" filename="terminal" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="self-hosted">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Self-hosted</span>
+        <h2>Run the relays in your own cloud</h2>
+        <p class="lede">
+          With a BYOC licence, the media plane runs on your machines, so your users’ media flows only through relays you operate.
+          MOQOM’s control plane keeps handling rooms, tokens, moderation and billing, and you pay only a per-GiB
+          platform fee.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        <div class="glass card reveal">
+          <h3>Rust media plane</h3>
+          <p class="small muted">
+            The same relay binary MOQOM runs. It holds no durable state, so every instance is interchangeable and you
+            scale by adding more behind a UDP load balancer.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>Autoscales with load</h3>
+          <p class="small muted">
+            Any autoscaler works: managed instance groups, Kubernetes or EC2 Auto Scaling. On scale-in a relay stops
+            taking new sessions and drains the ones it has, so a deploy doesn’t drop calls.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>Go control plane, run by us</h3>
+          <p class="small muted">
+            Rooms, policy, tokens and moderation stay on MOQOM’s Go control plane. Your relays report usage with a key
+            that can do nothing else.
+          </p>
+        </div>
+      </div>
+      <p class="small muted">
+        Rather not run them yourself? MOQOM hosts dedicated relays that carry only your tenant’s traffic, in the regions
+        you choose, with static IPs and optional private connectivity. See
+        <a href="https://moqom.dev/guides/private-networks/">private relay networks</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="cloudflare">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Cloudflare</span>
+        <h2>Also runs on Cloudflare’s MoQ relays</h2>
+        <p class="lede">
+          Point the MOQOM SDK at Cloudflare’s MoQ relays, in over 330 cities, and your app code stays the same. Only the
+          endpoint and the token change.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        <div class="glass card reveal">
+          <h3>One SDK, either network</h3>
+          <p class="small muted">
+            Cloudflare provides relays, not a client SDK. MOQOM’s SDK brings capture, encoding, rooms and reconnects, and
+            speaks each relay’s draft automatically.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>Still end-to-end encrypted</h3>
+          <p class="small muted">
+            Media is encrypted on the device with post-quantum MLS room keys from MOQOM, so Cloudflare forwards frames it
+            can’t read, just like our relays do.
+          </p>
+        </div>
+        <div class="glass card reveal">
+          <h3>An older draft, fewer features</h3>
+          <p class="small muted">
+            Cloudflare’s relays speak draft-16, a subset of it, in beta. Catch-up from cache, token renewal mid-session,
+            graceful migration, moderation, recording and point-to-point calls need moqom.cloud or a self-hosted relay.
+          </p>
+        </div>
+      </div>
+      <div class="narrow cf-note reveal">
+        <p class="muted">
+          Cloudflare runs <a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-16" rel="noopener"><code>draft-ietf-moq-transport-16</code></a>, published 13 January 2026. moqom.cloud and
+          self-hosted relays run <code>draft-22</code>, published 1 October 2026, six revisions later, and still accept
+          <code>draft-19</code> from older clients. We’ve proposed improvements to the IETF MoQ specification for wider
+          adoption: an <code>EXPIRED_AUTH_TOKEN</code> code so a subscription can renew its token instead of ending
+          (<a href="https://github.com/moq-wg/moq-transport/pull/1970" rel="noopener">pull request #1970</a>), a
+          <a href="https://moqom.dev/specs/relay-hops-proposal/">hop limit</a> that stops subscriptions looping between
+          relays, and <a href="https://moqom.dev/architecture/draft-23-proposals/">more for draft-23</a>.
+        </p>
+        <p class="muted">
+          What MOQOM builds on top of the standard, from post-quantum end-to-end encryption and device-bound tokens to
+          point-to-point calls and relay-side adaptation, is patent pending. Until the standard and other platforms
+          catch up, MOQOM is the first and only platform that ships all of it.
+          <a href="https://moqom.dev/guides/cloudflare/">Use MOQOM with Cloudflare →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="narrow">
+      <h2>Standards first</h2>
+      <p class="muted">
+        MOQOM implements IETF <a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-22" rel="noopener"><code>draft-ietf-moq-transport-22</code></a>, the current draft, from the draft itself, and
+        still accepts <code>draft-19</code> from older clients. It isn't a fork, and it
+        covers all 18 control messages and the full data plane: object datagrams, subgroup streams and fetch. Raw QUIC
+        and WebTransport (HTTP/3) are served on one UDP port. That is how browsers and native apps share a relay.
+      </p>
+      <p class="muted">
+        We contribute back: an <code>EXPIRED_AUTH_TOKEN</code> change filed with the working group, a
+        <a href="https://moqom.dev/specs/relay-hops-proposal/">hop limit</a> that stops subscriptions looping between
+        relays, and <a href="https://moqom.dev/architecture/draft-23-proposals/">proposals for draft-23</a>.
+      </p>
+      <p class="faint small">
+        Release dates for planned platforms are targets, not commitments. Each release will come with its own
+        published benchmarks.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cf-note {
+    margin-top: var(--space-6);
+  }
+  .plat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .plat-head h3 {
+    margin: 0;
+  }
+  .plat .mono {
+    margin: var(--space-2) 0 var(--space-3);
+  }
+  .plat.available {
+    border-color: rgb(52 211 153 / 0.35);
+  }
+  .status {
+    margin-top: var(--space-3);
+    color: var(--accent-2);
+    font-weight: 560;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-7);
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .backend-row {
+    margin-top: var(--space-6);
+  }
+</style>

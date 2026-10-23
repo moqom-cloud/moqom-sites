@@ -1,0 +1,16 @@
+---
+import { BENCH_FOOTNOTE } from "../data/site";
+---
+
+<p class="bench-footnote small"><span class="star">*</span>{BENCH_FOOTNOTE.slice(1)}</p>
+
+<style>
+  .bench-footnote {
+    color: var(--text-faint);
+    max-width: 90ch;
+    margin-top: var(--space-4);
+  }
+  .star {
+    color: var(--warn);
+  }
+</style>

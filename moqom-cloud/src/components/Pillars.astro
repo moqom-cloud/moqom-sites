@@ -1,0 +1,105 @@
+---
+import Linked from "./Linked.astro";
+const seen = new Set<string>();
+/* Speed, security and keys: the three things MOQOM leads with. Outcomes only. */
+const pillars = [
+  {
+    eyebrow: "Speed",
+    title: "56–57 ms, camera to screen.*",
+    points: [
+      "Median glass-to-glass at 720p30, 1.25 Mbit/s, two iPhone 15 Pros through a cloud relay, both directions at once. p95 70 ms.",
+      "6,000 viewers on one 4-vCPU relay with zero loss.* The last viewer gets the same stream as the first.",
+      "QUIC streams, so one lost packet doesn't stall everything behind it.",
+    ],
+  },
+  {
+    eyebrow: "Security",
+    title: "Encrypted on every hop, and end to end in every room.",
+    points: [
+      "TLS 1.3 on every connection. QUIC doesn't offer a plaintext mode, so neither do we.",
+      "Per-frame end-to-end encryption (SFrame, RFC 9605, AES-256-GCM) is required in every room, with keys agreed using post-quantum ML-KEM-1024 and ML-DSA-87. Nobody can turn it off, us included. The relay forwards ciphertext it can't read or reorder.",
+      "Relays can't mint tokens, and they talk to the control plane over mutual TLS. Bans close live sessions, not just the next join.",
+    ],
+  },
+  {
+    eyebrow: "Keys",
+    title: "Built to stop man-in-the-middle and injection attacks.",
+    points: [
+      "Every hop is TLS 1.3 with certificate checks, so nobody on the network can read or alter traffic in transit, and there's no plaintext mode to downgrade to.",
+      "An intercepted token is useless: each one is bound to the device it was issued to, in the Secure Enclave on Apple devices, lasts 15 minutes at most and is signed with post-quantum ML-DSA-87.",
+      "Every frame is authenticated on the device, so a forged, altered or replayed frame is rejected, even one sent by a relay.",
+      "API keys are shown once, stored only as hashes, compared in constant time and revocable instantly.",
+    ],
+  },
+];
+---
+
+<section class="section pillars" aria-labelledby="pillars-title">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Speed · Security · Keys</span>
+      <h2 id="pillars-title">Fast enough to talk. Locked down enough to trust.</h2>
+      <p class="muted">
+        Nothing is unhackable, and anyone who says so is selling something. What we can do is make every credential
+        short-lived, scoped and tied to a device, and keep media encrypted the whole way.
+      </p>
+    </div>
+    <ul class="grid grid-3 pillar-grid" role="list">
+      {
+        pillars.map((p) => (
+          <li class="glass card glass--interactive reveal">
+            <span class="eyebrow">{p.eyebrow}</span>
+            <h3>{p.title}</h3>
+            <ul class="pillar-points" role="list">
+              {p.points.map((pt) => (
+                <li><Linked text={pt} seen={seen} /></li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="small faint pillar-links">
+      <a href="/security">How MOQOM handles security →</a>
+      <a href="/benchmarks">Full benchmark results →</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .pillar-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pillar-points {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .pillar-points li {
+    padding-left: 1rem;
+    position: relative;
+    color: var(--text-muted, #a8b0bb);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .pillar-points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--cyan, #38d6f5);
+  }
+  .pillar-links {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+</style>

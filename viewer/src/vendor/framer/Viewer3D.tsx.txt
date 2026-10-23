@@ -1,0 +1,174 @@
+// Required Notice: Copyright (c) 2026 Elliott Wave LLC (https://elliottwave.studio)
+// Elliott Wave Plugin Licence: use needs a paid licence per domain (https://viewer.elliottwave.studio/pricing/).
+// 3D Viewer: Framer code component. `pnpm --filter @elliottwave/viewer-framer build` writes the
+// paste-ready copy to dist/Viewer3D.tsx with the script's SRI hash filled in. In Framer: Assets →
+// Code → New Code File, paste, save. Docs: https://viewer.elliottwave.studio/platforms/framer/
+
+import { addPropertyControls, ControlType, RenderTarget } from 'framer';
+import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
+
+/** Product identity and the pinned script. Renaming the product starts here; see RENAMING.md. */
+export const CONFIG = {
+  displayName: '3D Viewer',
+  tagName: 'ew-viewer',
+  version: '0.1.0',
+  scriptUrl: 'https://cdn.jsdelivr.net/npm/@elliottwave/viewer@0.1.0/dist/ew-viewer.min.js',
+  integrity: 'sha384-KWnwxLSOxp4XkIskC2b2xU5Jd8yZLgF1NQfAoSPc8Bj7C664zdKhqjKb3rZED6y5',
+  docsUrl: 'https://viewer.elliottwave.studio',
+} as const;
+
+export interface Viewer3DProps {
+  model?: string;
+  modelUrl?: string;
+  alt?: string;
+  iosModel?: string;
+  iosModelUrl?: string;
+  poster?: string;
+  ar?: boolean;
+  arLabel?: string;
+  cameraControls?: boolean;
+  autoRotate?: boolean;
+  rotationSpeed?: number;
+  shadowIntensity?: number;
+  exposure?: number;
+  transparent?: boolean;
+  background?: string;
+  loading?: 'lazy' | 'auto' | 'eager';
+  tapToLoad?: boolean;
+  /** Licence key for the published site's domain. */
+  licenseKey?: string;
+  style?: CSSProperties;
+}
+
+const HEX = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+const RGB = /^rgba?\(\s*[0-9.%\s,/]{1,60}\)$/i;
+
+/**
+ * Attribute list for <ew-viewer>. Boolean attributes are "" when on and absent when off.
+ * `plugin` and `license-key` make <ew-viewer> check the licence against the published site's
+ * hostname; on Framer's canvas there is no badge.
+ */
+export function viewerAttributes(p: Viewer3DProps, onCanvas = false): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const src = (p.modelUrl || p.model || '').trim();
+  const ios = (p.iosModelUrl || p.iosModel || '').trim();
+  if (src) attrs.src = src;
+  if (ios) attrs['ios-src'] = ios;
+  if (p.poster) attrs.poster = p.poster;
+  if (p.alt?.trim()) attrs.alt = p.alt.trim();
+  if (p.ar ?? true) attrs.ar = '';
+  if (p.arLabel?.trim()) attrs['ar-label'] = p.arLabel.trim().slice(0, 60);
+  if (p.cameraControls ?? true) attrs['camera-controls'] = '';
+  if (p.autoRotate) {
+    attrs['auto-rotate'] = '';
+    if (typeof p.rotationSpeed === 'number' && Number.isFinite(p.rotationSpeed)) attrs['rotation-per-second'] = `${Math.round(p.rotationSpeed)}deg`;
+  }
+  if (typeof p.shadowIntensity === 'number') attrs['shadow-intensity'] = String(p.shadowIntensity);
+  if (typeof p.exposure === 'number') attrs.exposure = String(p.exposure);
+  if (p.transparent ?? true) attrs.background = 'transparent';
+  else if (p.background && (HEX.test(p.background) || RGB.test(p.background))) attrs.background = p.background;
+  attrs.height = '100%';
+  attrs.loading = p.loading ?? 'lazy';
+  if (p.tapToLoad) attrs.reveal = 'interaction';
+  attrs.plugin = 'framer';
+  const licenseKey = p.licenseKey?.trim();
+  if (onCanvas) attrs['license-state'] = 'editor';
+  else if (licenseKey) attrs['license-key'] = licenseKey;
+  return attrs;
+}
+
+let loader: Promise<void> | null = null;
+
+/** Adds the pinned, SRI-checked module script once per page. */
+export function loadViewerScript(doc: Document = document): Promise<void> {
+  if (customElements.get(CONFIG.tagName)) return Promise.resolve();
+  if (loader) return loader;
+  loader = new Promise<void>((resolve, reject) => {
+    const script = doc.createElement('script');
+    script.type = 'module';
+    script.setAttribute('integrity', CONFIG.integrity);
+    script.setAttribute('crossorigin', 'anonymous');
+    script.src = CONFIG.scriptUrl;
+    script.onload = () => customElements.whenDefined(CONFIG.tagName).then(() => resolve(), reject);
+    script.onerror = () => {
+      loader = null;
+      reject(new Error(`${CONFIG.displayName}: could not load ${CONFIG.scriptUrl}`));
+    };
+    doc.head.append(script);
+  });
+  return loader;
+}
+
+const box: CSSProperties = { width: '100%', height: '100%', position: 'relative' };
+const notice: CSSProperties = {
+  ...box,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 16,
+  textAlign: 'center',
+  font: '13px/1.4 system-ui, sans-serif',
+  color: '#666',
+  background: 'rgba(0, 0, 0, 0.04)',
+  borderRadius: 8,
+};
+
+/**
+ * @framerSupportedLayoutWidth any
+ * @framerSupportedLayoutHeight any
+ * @framerIntrinsicWidth 480
+ * @framerIntrinsicHeight 480
+ */
+export default function Viewer3D(props: Viewer3DProps) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const attrs = viewerAttributes(props, RenderTarget.current() === RenderTarget.canvas);
+  const key = JSON.stringify(attrs);
+
+  useEffect(() => {
+    loadViewerScript().catch((e: Error) => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    for (const name of el.getAttributeNames()) if (!(name in attrs)) el.removeAttribute(name);
+    for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
+    // `key` captures every attribute value.
+  }, [key]);
+
+  if (!attrs.src) return <div style={{ ...notice, ...props.style }}>Add a model: upload a .glb file or paste an https:// URL.</div>;
+  if (!attrs.alt) return <div style={{ ...notice, ...props.style }}>Add alt text that describes the model. It is required for screen-reader users.</div>;
+  if (error) return <div style={{ ...notice, ...props.style }}>{error}</div>;
+
+  // React passes unknown elements through; attributes are set in the effect above.
+  const Tag = CONFIG.tagName as unknown as 'div';
+  return (
+    <div style={{ ...box, ...props.style }}>
+      <Tag ref={ref as Ref<HTMLDivElement>} style={box} />
+    </div>
+  );
+}
+
+Viewer3D.displayName = CONFIG.displayName;
+
+addPropertyControls(Viewer3D, {
+  model: { type: ControlType.File, title: 'Model', allowedFileTypes: ['glb', 'gltf'] },
+  modelUrl: { type: ControlType.String, title: 'Model URL', placeholder: 'https://…/model.glb', description: 'Overrides the uploaded file.' },
+  alt: { type: ControlType.String, title: 'Alt text', placeholder: 'Describe the model', displayTextArea: true, description: 'Required. Read by screen readers.' },
+  poster: { type: ControlType.File, title: 'Poster', allowedFileTypes: ['png', 'jpg', 'jpeg', 'webp', 'avif'] },
+  ar: { type: ControlType.Boolean, title: 'AR button', defaultValue: true },
+  arLabel: { type: ControlType.String, title: 'AR label', placeholder: 'View in your space', hidden: (p: Viewer3DProps) => p.ar === false },
+  iosModel: { type: ControlType.File, title: 'USDZ (iOS)', allowedFileTypes: ['usdz'], hidden: (p: Viewer3DProps) => p.ar === false },
+  iosModelUrl: { type: ControlType.String, title: 'USDZ URL', placeholder: 'https://…/model.usdz', hidden: (p: Viewer3DProps) => p.ar === false },
+  cameraControls: { type: ControlType.Boolean, title: 'Orbit & zoom', defaultValue: true },
+  autoRotate: { type: ControlType.Boolean, title: 'Auto-rotate', defaultValue: false, description: 'Off for visitors who prefer reduced motion.' },
+  rotationSpeed: { type: ControlType.Number, title: 'Speed', defaultValue: 30, min: 5, max: 180, step: 5, unit: '°/s', hidden: (p: Viewer3DProps) => !p.autoRotate },
+  shadowIntensity: { type: ControlType.Number, title: 'Shadow', defaultValue: 1, min: 0, max: 2, step: 0.1 },
+  exposure: { type: ControlType.Number, title: 'Exposure', defaultValue: 1, min: 0, max: 4, step: 0.1 },
+  transparent: { type: ControlType.Boolean, title: 'Transparent', defaultValue: true },
+  background: { type: ControlType.Color, title: 'Background', defaultValue: '#FFFFFF', hidden: (p: Viewer3DProps) => p.transparent !== false },
+  loading: { type: ControlType.Enum, title: 'Loading', options: ['lazy', 'auto', 'eager'], optionTitles: ['Lazy', 'Auto', 'Eager'], defaultValue: 'lazy' },
+  tapToLoad: { type: ControlType.Boolean, title: 'Tap to load', defaultValue: false, description: 'Waits for a tap before downloading.' },
+  licenseKey: { type: ControlType.String, title: 'Licence key', placeholder: 'EWV-…', description: 'For your published domain. Without it the published site shows a small "Unlicensed" link. viewer.elliottwave.studio/pricing' },
+});

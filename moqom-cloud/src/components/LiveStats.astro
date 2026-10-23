@@ -1,0 +1,225 @@
+---
+/**
+ * Copied from sites/_shared/stats/LiveStats.astro — the canonical copy lives in sites/_shared.
+ * Edit there, then re-copy (this copy only changes the import path to src/lib/github).
+ *
+ * GitHub stats (fetched at build time) and MOQOM signups (fetched in the
+ * browser). Without JavaScript, or if the stats endpoint fails, the signup
+ * figure stays hidden and the GitHub figures still render. A repository that
+ * cannot be read is left out, and if nothing can be shown the component renders
+ * nothing at all.
+ *
+ * The signup count is shown as the endpoint returns it. `threshold` only adds
+ * `belowThresholdNote` beside a small number; it never changes the number.
+ *
+ * Theme with CSS variables on any ancestor: --stats-bg, --stats-line,
+ * --stats-text, --stats-dim, --stats-accent, --stats-radius, --stats-mono.
+ */
+import { fetchRepoStats, type RepoStats } from '../lib/github';
+
+interface Props {
+  /** `owner/name` for each repository to show. */
+  repos?: string[];
+  /**
+   * GET endpoint returning {"signups", "active_tenants", "updated_at"}.
+   * Must be served from an origin in the control plane's
+   * MOQOM_BILLING_CORS_ORIGINS. Null or empty hides the signup figure.
+   */
+  statsUrl?: string | null;
+  showSignups?: boolean;
+  showActiveTenants?: boolean;
+  threshold?: number;
+  belowThresholdNote?: string;
+  signupsLabel?: string;
+  heading?: string;
+  class?: string;
+}
+
+const {
+  repos = [],
+  statsUrl = import.meta.env.PUBLIC_MOQOM_STATS_URL ?? 'https://moqom.cloud/v1/public/stats',
+  showSignups = true,
+  showActiveTenants = false,
+  threshold = 0,
+  belowThresholdNote = 'Early access. This is the real count, refreshed every minute.',
+  signupsLabel = 'Developer signups',
+  heading,
+  class: className,
+} = Astro.props;
+
+const stats = (await fetchRepoStats(repos)).filter((s): s is RepoStats => s !== null);
+const signups = showSignups && !!statsUrl;
+const render = stats.length > 0 || signups;
+const format = new Intl.NumberFormat('en-US');
+
+const figures = (s: RepoStats) =>
+  [
+    { label: 'Stars', value: format.format(s.stars) },
+    { label: 'Forks', value: format.format(s.forks) },
+    s.contributors === null ? null : { label: 'Contributors', value: format.format(s.contributors) },
+    { label: 'Open issues + PRs', value: format.format(s.openIssuesAndPulls) },
+  ].filter((f): f is { label: string; value: string } => f !== null);
+---
+
+{render && (
+  <section
+    class:list={['live-stats', className]}
+    aria-label={heading ?? 'Project stats'}
+    hidden={stats.length === 0 ? true : undefined}
+    data-live-stats
+  >
+    {heading && <h2 class="ls-heading">{heading}</h2>}
+    <div class="ls-grid">
+      {signups && (
+        <div
+          class="ls-card ls-signups"
+          hidden
+          data-signups
+          data-url={statsUrl}
+          data-threshold={threshold}
+          data-show-active={showActiveTenants ? '1' : undefined}
+        >
+          <p class="ls-label">{signupsLabel}</p>
+          <p class="ls-value" data-signups-value aria-live="polite"></p>
+          {showActiveTenants && <p class="ls-sub" data-active-value hidden></p>}
+          <p class="ls-note" data-below-note hidden>{belowThresholdNote}</p>
+        </div>
+      )}
+      {stats.map((s) => (
+        <div class="ls-card">
+          <p class="ls-label">
+            <a href={s.url} rel="noopener">{s.repo}</a>
+          </p>
+          <dl class="ls-figures">
+            {figures(s).map((f) => (
+              <div>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {s.latestRelease && (
+            <p class="ls-sub">
+              Latest release{' '}
+              {s.latestReleaseUrl ? <a href={s.latestReleaseUrl} rel="noopener">{s.latestRelease}</a> : s.latestRelease}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
+<script>
+  const format = new Intl.NumberFormat('en-US');
+  const count = (value: unknown) => (Number.isSafeInteger(value) && (value as number) >= 0 ? (value as number) : null);
+
+  async function load(card: HTMLElement) {
+    const url = card.dataset.url;
+    if (!url) return;
+    try {
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit', signal: AbortSignal.timeout(8000) });
+      if (!response.ok) return;
+      const body = await response.json();
+      const signups = count(body?.signups);
+      if (signups === null) return;
+
+      card.querySelector<HTMLElement>('[data-signups-value]')!.textContent = format.format(signups);
+      const active = count(body?.active_tenants);
+      const activeEl = card.querySelector<HTMLElement>('[data-active-value]');
+      if (activeEl && active !== null) {
+        activeEl.textContent = `${format.format(active)} active`;
+        activeEl.hidden = false;
+      }
+      if (signups < Number(card.dataset.threshold ?? 0)) {
+        card.querySelector<HTMLElement>('[data-below-note]')!.hidden = false;
+      }
+      if (typeof body?.updated_at === 'string') card.title = `Updated ${body.updated_at}`;
+      card.hidden = false;
+      card.closest<HTMLElement>('[data-live-stats]')!.hidden = false;
+    } catch {
+      // Stays hidden: a missing number is better than a wrong one.
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-signups]').forEach(load);
+</script>
+
+<style>
+  .live-stats {
+    --_bg: var(--stats-bg, var(--bg-raised, #111317));
+    --_line: var(--stats-line, var(--line, #1f2228));
+    --_text: var(--stats-text, var(--text, #e8eaed));
+    --_dim: var(--stats-dim, var(--text-dim, #9aa0a9));
+    --_accent: var(--stats-accent, var(--accent, #22d3ee));
+    --_radius: var(--stats-radius, var(--radius, 14px));
+    --_mono: var(--stats-mono, var(--font-mono, ui-monospace, 'SF Mono', Menlo, monospace));
+    color: var(--_text);
+  }
+  .live-stats[hidden],
+  .ls-card[hidden],
+  .live-stats [hidden] {
+    display: none;
+  }
+  .ls-heading {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    margin: 0 0 1rem;
+  }
+  .ls-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+  .ls-card {
+    background: var(--_bg);
+    border: 1px solid var(--_line);
+    border-radius: var(--_radius);
+    padding: 1.25rem 1.4rem;
+  }
+  .ls-label {
+    font-family: var(--_mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--_dim);
+    margin: 0 0 0.6rem;
+  }
+  .ls-label a {
+    color: inherit;
+  }
+  .ls-label a:hover {
+    color: var(--_accent);
+  }
+  .ls-value {
+    font-size: 2.2rem;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--_accent);
+    margin: 0;
+  }
+  .ls-sub,
+  .ls-note {
+    font-size: 0.82rem;
+    color: var(--_dim);
+    margin: 0.6rem 0 0;
+  }
+  .ls-sub a {
+    font-family: var(--_mono);
+    color: var(--_text);
+  }
+  .ls-figures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem 1rem;
+    margin: 0;
+  }
+  .ls-figures dt {
+    font-size: 0.72rem;
+    color: var(--_dim);
+  }
+  .ls-figures dd {
+    margin: 0;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+</style>

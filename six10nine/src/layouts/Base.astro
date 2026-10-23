@@ -1,0 +1,332 @@
+---
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '../styles/global.css';
+import { DOCS, LINKS, RELEASED, AT_RELEASE } from '../data/six10nine';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+  /** Renders the docs sidebar beside the page. */
+  docs?: boolean;
+}
+
+const SITE_NAME = 'six10nine';
+const DEFAULT_DESC =
+  'six10nine gives every Mac app the same ⌘ chords: a menu item per app, with on-device AI that finds the matching menu item in the next app. Free and source-available, from elliottwave.studio lab.';
+
+const { title, description = DEFAULT_DESC, noindex = false, docs = false } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · The same ⌘ chords in every Mac app`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const nav = [
+  { href: '/getting-started', label: 'Get started' },
+  { href: '/chords', label: 'Docs' },
+  { href: '/mcp', label: 'MCP' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+// "Docs" covers every docs page the other items don't name.
+const current = (href: string) =>
+  path === href || (href === '/chords' && DOCS.some((d) => d.href === path) && !nav.some((n) => n.href === path));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0A0B0D" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'six10nine',
+        alternateName: '6(78)9',
+        operatingSystem: 'macOS 14 or later',
+        applicationCategory: 'UtilitiesApplication',
+        url: 'https://six10nine.elliottwave.studio',
+        publisher: { '@type': 'Organization', name: 'Elliott Wave LLC', url: LINKS.studio },
+      })}
+    />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a href="/" class="brand" aria-label="six10nine, home">
+          <span class="mark mono">6(78)9</span>
+          <span>six10nine</span>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            {nav.map((n) => (
+              <li>
+                <a href={n.href} aria-current={current(n.href) ? 'page' : undefined}>
+                  {n.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              {RELEASED ? <a href={LINKS.repo}>GitHub</a> : <span class="soon" title={`${LINKS.repo}: ${AT_RELEASE.toLowerCase()}`}>GitHub · at release</span>}
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      {
+        docs ? (
+          <div class="wrap docs">
+            <aside class="side" aria-label="Documentation">
+              <ul>
+                {DOCS.map((d) => (
+                  <li>
+                    <a href={d.href} aria-current={path === d.href ? 'page' : undefined}>
+                      {d.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+            <article class="doc prose">
+              <slot />
+            </article>
+          </div>
+        ) : (
+          <slot />
+        )
+      }
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <div>
+          <p class="foot-brand">six10nine <span class="mono">6(78)9</span></p>
+          <p class="foot-tag">
+            An <a href={LINKS.studio}>elliottwave.studio</a> lab project. <a href={LINKS.work}>More from the lab</a>.
+          </p>
+        </div>
+        <ul class="foot-links">
+          {DOCS.map((d) => (
+            <li>
+              <a href={d.href}>{d.label}</a>
+            </li>
+          ))}
+          <li>
+            {RELEASED ? <a href={LINKS.repo}>GitHub</a> : <span class="soon">GitHub · at release</span>}
+          </li>
+        </ul>
+      </div>
+      <div class="wrap legal">
+        <p>© 2026 Elliott Wave LLC. six10nine and 6(78)9 are trademarks of Elliott Wave LLC.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 10;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    gap: 1rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  .brand:hover {
+    color: var(--text);
+  }
+  .mark {
+    color: var(--accent);
+    font-size: 0.95rem;
+    letter-spacing: 0;
+  }
+  nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.9rem, 2.5vw, 2rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a,
+  nav .soon {
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--text-dim);
+  }
+  nav .soon,
+  .foot-links .soon {
+    color: var(--text-faint);
+  }
+  nav a[aria-current='page'] {
+    color: var(--text);
+  }
+  nav a[aria-current='page']::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: var(--accent);
+    margin-top: 2px;
+  }
+  .docs {
+    display: grid;
+    gap: 3rem;
+    padding-top: clamp(2.5rem, 6vw, 4.5rem);
+    padding-bottom: clamp(3rem, 8vw, 6rem);
+  }
+  @media (min-width: 900px) {
+    .docs {
+      grid-template-columns: 13rem minmax(0, 1fr);
+    }
+    .side {
+      position: sticky;
+      top: 96px;
+      align-self: start;
+    }
+  }
+  .side ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+  }
+  @media (min-width: 900px) {
+    .side ul {
+      flex-direction: column;
+      border-left: 1px solid var(--line);
+    }
+    .side a {
+      display: block;
+      padding: 0.3rem 0 0.3rem 1rem;
+      margin-left: -1px;
+      border-left: 1px solid transparent;
+    }
+    .side a[aria-current='page'] {
+      border-left-color: var(--accent);
+    }
+  }
+  .side a {
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--text-dim);
+  }
+  .side a[aria-current='page'] {
+    color: var(--text);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding: 3.5rem 0 2.5rem;
+    margin-top: 2rem;
+    background: var(--bg-sunk);
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .foot-brand {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.25rem;
+  }
+  .foot-brand .mono {
+    color: var(--accent);
+    font-size: 0.9rem;
+    letter-spacing: 0;
+  }
+  .foot-tag {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .foot-links {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 0.5rem 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .foot-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .legal p {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    max-width: none;
+    margin: 0;
+  }
+  @media (max-width: 560px) {
+    .brand span:not(.mark) {
+      display: none;
+    }
+    .foot-links {
+      grid-template-columns: repeat(2, auto);
+    }
+  }
+</style>

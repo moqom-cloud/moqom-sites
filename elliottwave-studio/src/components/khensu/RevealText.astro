@@ -1,0 +1,36 @@
+---
+// A paragraph that lights up word by word as it scrolls through the viewport, Apple-style: emphasised phrases end
+// white, the rest end grey. Words are split at build time; reduced motion and no-JS show the final state.
+interface Props { parts: [string, boolean?][] }
+const { parts } = Astro.props;
+const words = parts.flatMap(([text, strong]) => text.split(/(\s+)/).filter(Boolean).map((w) => ({ w, strong: !!strong })));
+let i = 0;
+const n = words.filter((x) => x.w.trim()).length;
+---
+
+<p class="reveal-text" style={`--n:${n}`}>
+  {words.map((x) => (x.w.trim() ? <span class:list={{ s: x.strong }} style={`--i:${i++}`}>{x.w}</span> : x.w))}
+</p>
+
+<script>
+  const els = [...document.querySelectorAll<HTMLElement>('.reveal-text')];
+  if (els.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.classList.add('reveal-js');
+    const update = () => {
+      for (const el of els) {
+        const r = el.getBoundingClientRect();
+        const p = Math.min(1, Math.max(0, (innerHeight * 0.85 - r.top) / (innerHeight * 0.55)));
+        el.style.setProperty('--p', p.toFixed(3));
+      }
+    };
+    let t = false;
+    addEventListener('scroll', () => { if (!t) { t = true; requestAnimationFrame(() => { update(); t = false; }); } }, { passive: true });
+    update();
+  }
+</script>
+
+<style>
+  .reveal-text { --p: 1; max-width: 52rem; margin: 0 auto; text-align: center; font-size: clamp(1.25rem, 2.3vw, 1.75rem); font-weight: 600; line-height: 1.35; letter-spacing: -0.012em; color: rgba(255, 255, 255, 0.5); }
+  .reveal-text .s { color: #fff; }
+  :global(.reveal-js) .reveal-text span { opacity: clamp(0.16, calc(var(--p) * (var(--n) + 6) - var(--i)), 1); transition: opacity 0.2s linear; }
+</style>

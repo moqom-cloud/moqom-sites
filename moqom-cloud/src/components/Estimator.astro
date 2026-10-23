@@ -1,0 +1,476 @@
+---
+import { TIERS, ASSUMED_KBPS, LADDER } from "../data/pricing";
+
+// Starting grid: four on camera and two on audio, so the mix shows at once.
+const START = ["camera", "camera", "camera", "camera", "audio", "audio", "off", "off", "off"];
+const STATE_LABEL: Record<string, string> = { camera: "Camera", audio: "Audio", off: "Empty" };
+---
+
+<div class="glass card estimator" data-estimator>
+  <form class="inputs" onsubmit="return false">
+    <div class="field">
+      <label for="est-mode">Session</label>
+      <select id="est-mode" name="mode">
+        <option value="grid" selected>Video grid, up to 9 people</option>
+        <option value="custom">Custom: one resolution for everyone</option>
+      </select>
+    </div>
+
+    <div class="field wide" data-grid-only>
+      <span class="label" id="est-people-label">People on stage · tap a box to switch camera, audio or empty</span>
+      <div class="people" role="group" aria-labelledby="est-people-label">
+        {START.map((state, i) => (
+          <button type="button" class="person" data-person={i} data-state={state} aria-label={`Person ${i + 1}: ${STATE_LABEL[state]}`}>
+            <span class="p-state">{STATE_LABEL[state]}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="field" data-grid-only>
+      <label for="est-screen">Viewers watch on</label>
+      <select id="est-screen" name="screen">
+        <option value="1080x1920" selected>Phone, upright</option>
+        <option value="1920x1080">Phone sideways or laptop</option>
+        <option value="3840x2160">4K TV</option>
+      </select>
+    </div>
+    <div class="field" data-grid-only>
+      <label for="est-res">Video per tile</label>
+      <select id="est-res" name="res">
+        <option value="auto" selected>Auto: sized to the box</option>
+        {LADDER.map((r) => <option value={r.label}>{r.label}</option>)}
+      </select>
+    </div>
+
+    <div class="wide preview-wrap" data-grid-only>
+      <span class="label">What a viewer sees</span>
+      <div class="screen" data-preview aria-hidden="true"></div>
+    </div>
+
+    <div class="field" data-custom-only>
+      <label for="est-hosts">Hosts (publishing)</label>
+      <input id="est-hosts" name="hosts" type="number" min="0" step="1" value="2" inputmode="numeric" />
+    </div>
+    <div class="field" data-custom-only>
+      <label for="est-tier">Resolution received</label>
+      <select id="est-tier" name="tier">
+        {TIERS.map((t) => <option value={t.id} selected={t.id === "hd"}>{t.label}</option>)}
+      </select>
+    </div>
+    <div class="field" data-custom-only>
+      <label for="est-kbps">Assumed bitrate per participant (kbps)</label>
+      <input id="est-kbps" name="kbps" type="number" min="0" step="50" value={ASSUMED_KBPS.hd} inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label for="est-viewers">Viewers</label>
+      <input id="est-viewers" name="viewers" type="number" min="0" step="1" value="500" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label for="est-role">Viewer type</label>
+      <select id="est-role" name="role">
+        <option value="broadcast">Broadcast audience (watch only)</option>
+        <option value="interactive">Interactive audience</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="est-minutes">Session length (minutes)</label>
+      <input id="est-minutes" name="minutes" type="number" min="1" step="1" value="60" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label for="est-hosting">Relays</label>
+      <select id="est-hosting" name="hosting">
+        <option value="cloud">MOQOM Cloud</option>
+        <option value="self">Self-hosted (platform fee only)</option>
+      </select>
+    </div>
+  </form>
+
+  <div class="results" aria-live="polite">
+    <div class="result primary">
+      <span class="r-label">MOQOM price for this session</span>
+      <span class="r-value" data-out="estimate">—</span>
+    </div>
+    <div class="result">
+      <span class="r-label">The same session past 1,000,000 minutes a month</span>
+      <span class="r-value" data-out="ceiling">—</span>
+    </div>
+    <div class="result">
+      <span class="r-label">Agora list price, same usage</span>
+      <span class="r-value muted" data-out="agora">—</span>
+    </div>
+    <div class="result">
+      <span class="r-label">Savings vs Agora</span>
+      <span class="r-value saving" data-out="saving">—</span>
+      <span class="small faint" data-out="saving-floor"></span>
+    </div>
+    <p class="small" data-out="layout" hidden></p>
+    <p class="small faint" data-out="detail">Turn on JavaScript to use the estimator.</p>
+    <p class="small faint">
+      <strong>Estimate only, not a quote.</strong> On MOQOM Cloud, the price is the published rate per participant-minute,
+      15% under Agora, and drops automatically with your monthly volume. For self-hosted relays, it is the platform fee
+      at the bitrates assumed here, never more than the hosted price.
+    </p>
+  </div>
+</div>
+
+<script>
+  import { AGORA, PRICING, ASSUMED_KBPS, LADDER, TIERS, VOLUME_BANDS, rateAt, tierForPixels, usd, type Tier, type Role } from "../data/pricing";
+
+  type Rung = (typeof LADDER)[number];
+  type State = "camera" | "audio" | "off";
+  type Received = { kbps: number; tier: Tier; video: Rung[]; audio: number };
+
+  const NEXT: Record<State, State> = { camera: "audio", audio: "off", off: "camera" };
+  const STATE_LABEL: Record<State, string> = { camera: "Camera", audio: "Audio", off: "Empty" };
+
+  const root = document.querySelector<HTMLElement>("[data-estimator]");
+  if (root) {
+    const pick = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const modeEl = pick<HTMLSelectElement>("#est-mode");
+    const screenEl = pick<HTMLSelectElement>("#est-screen");
+    const resEl = pick<HTMLSelectElement>("#est-res");
+    const minutesEl = pick<HTMLInputElement>("#est-minutes");
+    const hostsEl = pick<HTMLInputElement>("#est-hosts");
+    const viewersEl = pick<HTMLInputElement>("#est-viewers");
+    const roleEl = pick<HTMLSelectElement>("#est-role");
+    const tierEl = pick<HTMLSelectElement>("#est-tier");
+    const kbpsEl = pick<HTMLInputElement>("#est-kbps");
+    const hostingEl = pick<HTMLSelectElement>("#est-hosting");
+    const preview = pick<HTMLElement>("[data-preview]");
+    const people = [...root.querySelectorAll<HTMLButtonElement>("[data-person]")];
+    const out = (k: string) => pick<HTMLElement>(`[data-out="${k}"]`);
+    const tierLabel = (t: Tier) => TIERS.find((x) => x.id === t)?.label ?? t;
+    const num = (el: HTMLInputElement) => Math.max(0, Number(el.value) || 0);
+    const GIB = 1024 ** 3;
+
+    // The grid is always square: one person fills the screen, two to four
+    // share a 2×2, five to nine a 3×3. Tiles are square, cut from the short
+    // side of the screen, and each goes out at the smallest rung at least as
+    // tall as its box, never above 4K.
+    const side = (n: number) => (n <= 1 ? 1 : Math.ceil(Math.sqrt(n)));
+    const rungFor = (box: number): Rung => LADDER.find((r) => r.height >= box) ?? LADDER[LADDER.length - 1];
+    const rungNamed = (label: string) => LADDER.find((r) => r.label === label)!;
+
+    // `others` is who this person sees, in stage order; their own tile is
+    // drawn locally and never received.
+    const receive = (others: State[], width: number, height: number): Received => {
+      const shown = others.filter((s) => s !== "off");
+      const n = shown.length;
+      const box = n === 1 ? Math.min(width, height) : Math.min(width, height) / side(n);
+      const res = resEl.value === "auto" ? rungFor(box) : rungNamed(resEl.value);
+      const video = shown.filter((s) => s === "camera").map(() => res);
+      return {
+        video,
+        audio: n,
+        kbps: video.reduce((sum, r) => sum + r.kbps, 0) + n * ASSUMED_KBPS.audio,
+        tier: tierForPixels(video.reduce((sum, r) => sum + r.width * r.height, 0)),
+      };
+    };
+
+    const describe = (who: string, r: Received) => {
+      if (r.audio === 0) return `${who} receive nothing`;
+      const audioOnly = r.audio - r.video.length;
+      const parts = [
+        r.video.length ? `${r.video.length} × ${r.video[0].label} video` : "",
+        audioOnly ? `${audioOnly} audio only` : "",
+      ].filter(Boolean);
+      return `${who} receive ${parts.join(" + ")} · ${(r.kbps / 1000).toFixed(1)} Mbit/s · ${tierLabel(r.tier)} tier`;
+    };
+
+    // Sizes go through CSSOM: the CSP refuses style attributes in markup, not
+    // properties set from a bundled script.
+    const drawPreview = (states: State[], r: Received, width: number, height: number) => {
+      preview.replaceChildren();
+      preview.style.aspectRatio = `${width} / ${height}`;
+      preview.classList.toggle("upright", height > width);
+      const shown = states.filter((s) => s !== "off");
+      const grid = document.createElement("div");
+      grid.className = shown.length <= 1 ? "grid solo" : "grid";
+      grid.style.gridTemplateColumns = `repeat(${side(shown.length)}, 1fr)`;
+      for (const s of shown) {
+        const t = document.createElement("div");
+        t.className = s === "camera" ? "tile" : "tile audio";
+        const label = document.createElement("span");
+        label.textContent = s === "camera" ? r.video[0]?.label ?? "" : "Audio";
+        t.append(label);
+        grid.append(t);
+      }
+      if (shown.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "empty";
+        empty.textContent = "No one on stage";
+        grid.append(empty);
+      }
+      preview.append(grid);
+    };
+
+    // One participant: the rate for their role and tier, at the first band and
+    // the last. Self-hosted is the fee alone, never above the hosted price.
+    const top = VOLUME_BANDS.length - 1;
+    const participant = (seconds: number, kbps: number, role: Role, tier: Tier, self: boolean) => {
+      const gib = (kbps * 1000 * seconds) / 8 / GIB;
+      const at = (band: number) => (rateAt(role, tier, band) * seconds) / 60 / 1000;
+      const fee = gib * PRICING.selfHostedFeePerGiB;
+      return {
+        price: self ? Math.min(fee, at(0)) : at(0),
+        cap: self ? Math.min(fee, at(top)) : at(top),
+        gib,
+      };
+    };
+
+    const compute = () => {
+      const grid = modeEl.value === "grid";
+      root.querySelectorAll<HTMLElement>("[data-custom-only]").forEach((el) => (el.hidden = grid));
+      root.querySelectorAll<HTMLElement>("[data-grid-only]").forEach((el) => (el.hidden = !grid));
+
+      const minutes = num(minutesEl);
+      const viewers = Math.floor(num(viewersEl));
+      const role = roleEl.value as Role;
+      const self = hostingEl.value === "self";
+      const seconds = minutes * 60;
+
+      // Each host is priced on what they receive, which differs per host: an
+      // audio-only host still sees everyone else's video.
+      let hosts: { kbps: number; tier: Tier }[];
+      let viewerIn: { kbps: number; tier: Tier };
+      const layoutOut = out("layout");
+      if (grid) {
+        const states = people.map((b) => b.dataset.state as State);
+        const [w, h] = screenEl.value.split("x").map(Number);
+        const v = receive(states, w, h);
+        viewerIn = v;
+        hosts = states.flatMap((s, i) => (s === "off" ? [] : [receive(states.filter((_, j) => j !== i), w, h)]));
+        drawPreview(states, v, w, h);
+        layoutOut.hidden = false;
+        layoutOut.textContent = `${describe("Viewers", v)}.`;
+      } else {
+        const tier = tierEl.value as Tier;
+        const kbps = num(kbpsEl);
+        viewerIn = { kbps, tier };
+        hosts = Array.from({ length: Math.floor(num(hostsEl)) }, () => ({ kbps, tier }));
+        layoutOut.hidden = true;
+      }
+
+      const hostCosts = hosts.map((x) => participant(seconds, x.kbps, "interactive", x.tier, self));
+      const viewer = participant(seconds, viewerIn.kbps, role, viewerIn.tier, self);
+
+      const sum = (f: (c: (typeof hostCosts)[number]) => number) => hostCosts.reduce((s, c) => s + f(c), 0);
+      const estimate = sum((c) => c.price) + viewers * viewer.price;
+      const ceiling = sum((c) => c.cap) + viewers * viewer.cap;
+      const agora =
+        ((hosts.reduce((s, x) => s + AGORA.interactive[x.tier], 0) + viewers * AGORA[role][viewerIn.tier]) * minutes) / 1000;
+      const participantMinutes = (hosts.length + viewers) * minutes;
+      const gib = sum((c) => c.gib) + viewers * viewer.gib;
+
+      out("ceiling").textContent = usd(ceiling);
+      out("estimate").textContent = usd(estimate);
+      out("agora").textContent = usd(agora);
+      const pct = (moqom: number) => (agora > 0 ? Math.round((1 - moqom / agora) * 100) : 0);
+      out("saving").textContent = agora > 0 ? `${usd(agora - estimate)} · ${pct(estimate)}%` : "—";
+      out("saving-floor").textContent =
+        agora > 0 && !self ? `At least 1¢ under Agora's rate for every 1,000 minutes, at every volume.` : "";
+      out("detail").textContent =
+        `${participantMinutes.toLocaleString("en-US")} participant-minutes · about ` +
+        `${gib.toLocaleString("en-US", { maximumFractionDigits: 1 })} GiB delivered` +
+        (grid
+          ? ", at the default camera ladder's bitrates plus 64 kbps audio per person."
+          : ` at ${num(kbpsEl).toLocaleString("en-US")} kbps.`);
+    };
+
+    people.forEach((b, i) =>
+      b.addEventListener("click", () => {
+        const next = NEXT[b.dataset.state as State];
+        b.dataset.state = next;
+        b.querySelector(".p-state")!.textContent = STATE_LABEL[next];
+        b.setAttribute("aria-label", `Person ${i + 1}: ${STATE_LABEL[next]}`);
+        compute();
+      }),
+    );
+    tierEl.addEventListener("change", () => {
+      kbpsEl.value = String(ASSUMED_KBPS[tierEl.value as Tier]);
+      compute();
+    });
+    root.addEventListener("input", compute);
+    root.addEventListener("change", compute);
+    compute();
+  }
+</script>
+
+<style>
+  .estimator {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+  @media (max-width: 860px) {
+    .estimator {
+      grid-template-columns: 1fr;
+    }
+  }
+  .inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--space-4);
+    align-content: start;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  .label {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  .people {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-width: 360px;
+  }
+  .person {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    border: 1px solid var(--glass-edge);
+    background: rgb(255 255 255 / 0.03);
+    color: var(--text-faint);
+    font: 600 var(--text-sm) / 1.2 var(--font-sans);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    touch-action: manipulation;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .person[data-state="camera"] {
+    background: linear-gradient(135deg, rgb(56 189 248 / 0.35), rgb(129 140 248 / 0.22));
+    border-color: rgb(56 189 248 / 0.6);
+    color: var(--text);
+  }
+  .person[data-state="audio"] {
+    background: rgb(250 204 21 / 0.12);
+    border-color: rgb(250 204 21 / 0.45);
+    color: var(--text);
+  }
+  .person[data-state="off"] {
+    border-style: dashed;
+  }
+
+  .preview-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-wrap .label {
+    align-self: flex-start;
+  }
+  .screen {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    max-width: 520px;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid var(--glass-edge);
+    background: #050608;
+  }
+  .screen.upright {
+    max-width: 210px;
+    border-radius: 26px;
+    padding: 12px 6px;
+  }
+  .grid {
+    display: grid;
+    gap: 4px;
+    aspect-ratio: 1;
+    width: 100%;
+    max-height: 100%;
+  }
+  .screen:not(.upright) .grid {
+    width: auto;
+    height: 100%;
+  }
+  .grid.solo {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+  }
+  .tile {
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgb(56 189 248 / 0.3), rgb(129 140 248 / 0.18));
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+  }
+  .tile.audio {
+    background: rgb(250 204 21 / 0.12);
+  }
+  .tile span,
+  .empty {
+    font: 600 var(--text-xs) / 1 var(--font-mono);
+    color: var(--text);
+  }
+  .empty {
+    color: var(--text-faint);
+    place-self: center;
+  }
+
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: rgb(5 6 8 / 0.55);
+    border: 1px solid var(--glass-edge);
+  }
+  .result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--glass-edge);
+  }
+  .r-label {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .r-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-xl);
+    font-weight: 600;
+  }
+  .primary .r-value {
+    font-size: var(--text-2xl);
+    color: var(--accent);
+  }
+  .saving {
+    color: var(--ok, var(--accent));
+  }
+  .results p {
+    margin: 0;
+  }
+
+  @media (max-width: 560px) {
+    .estimator {
+      padding: var(--space-4);
+      gap: var(--space-4);
+    }
+    .inputs {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .people {
+      max-width: none;
+    }
+  }
+</style>

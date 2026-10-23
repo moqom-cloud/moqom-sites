@@ -1,0 +1,74 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Base title="Blog" description="Engineering notes from elliottwave.studio lab on MOQOM and Media over QUIC.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">blog</p>
+      <h1>Engineering notes</h1>
+      <p class="lede">Writing from the lab on MOQOM, Media over QUIC, and the products we build on it.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      {posts.length === 0 ? (
+        <p class="empty mono">$ ls posts/ <br />No published posts yet. The first one is in review.</p>
+      ) : (
+        <ul class="posts">
+          {posts.map((p) => (
+            <li>
+              <a href={`/blog/${p.id}`}>
+                <span class="date mono">{fmt(p.data.date)}</span>
+                <span class="title">{p.data.title}</span>
+                {p.data.draft && <span class="tag amber">draft</span>}
+              </a>
+              <p>{p.data.description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .empty {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .posts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .posts li {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .posts a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1rem;
+    color: var(--text);
+  }
+  .date {
+    color: var(--text-faint);
+    font-size: 0.8rem;
+  }
+  .title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+  .posts p {
+    color: var(--text-dim);
+    margin: 0.4rem 0 0;
+  }
+</style>

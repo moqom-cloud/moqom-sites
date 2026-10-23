@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS } from '../data/six10nine';
+---
+
+<Base title="Privacy" description="What six10nine sees, what it keeps, and the one optional feature that uses the network." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Privacy</h1>
+  <p class="lede">No accounts, no analytics, no tracking. The AI runs on your Mac.</p>
+
+  <h2>Keys</h2>
+  <p>
+    six10nine sees key presses so it can recognise chords. It doesn’t store or send what you type. Its debug log records
+    only ⌘ presses, never plain typing.
+  </p>
+
+  <h2>AI</h2>
+  <p>
+    Matching chords across apps, the menu bar’s daily wording and the ⌘69 assistant’s replies use Apple’s on-device
+    model. six10nine doesn’t send what you type or say anywhere.
+  </p>
+
+  <h2>Camera, microphone, speech</h2>
+  <p>
+    Used only while the ⌘69 assistant is open, requested on first use, and stopped when it closes. Speech recognition runs
+    on-device whenever your Mac supports it for English. If it doesn’t, macOS’s own speech service handles it, under
+    Apple’s privacy terms.
+  </p>
+
+  <h2>Settings</h2>
+  <p>
+    Everything stays in your Mac’s preferences under <code>studio.elliottwave.six10nine</code>. Uninstalling with
+    <code>--uninstall</code> or <code>brew uninstall --zap</code> removes them.
+  </p>
+
+  <h2 id="idle-computing">Einstein@home idle computing</h2>
+  <p>
+    Optional, chosen in setup (“Find ripples in spacetime?”, with <em>Donate</em> preselected), and off at any time from
+    the menu bar. It’s the only part of six10nine that uses the network, apart from the optional Einstein@home account
+    pages. When it’s on, a bundled copy of the <a href={LINKS.boinc}>BOINC</a> client:
+  </p>
+  <ul>
+    <li>
+      runs <strong>only while your Mac is idle</strong> (3 minutes without input) <strong>and plugged in</strong>, and
+      pauses the moment you’re back or other apps use more than 25% of the CPU;
+    </li>
+    <li>uses half your CPU cores by default (you choose 1 to all) plus the GPU, optionally up to a daily limit;</li>
+    <li>
+      downloads <a href={LINKS.einstein}>Einstein@home</a> tasks and sends back results, under a shared six10nine account
+      with a key that can only attach computers. You give no personal details unless you choose to connect your own
+      Einstein@home account for credit;
+    </li>
+    <li>runs nothing while it’s off; paused tasks use no CPU or memory and wait on disk.</li>
+  </ul>
+  <p>
+    Einstein@home is run by the Max Planck Institute for Gravitational Physics. Its searches look for new pulsars and the
+    first continuous gravitational waves.
+  </p>
+
+  <h2>This website</h2>
+  <p>This site sets no cookies and runs no analytics.</p>
+</Base>

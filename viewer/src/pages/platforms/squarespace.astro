@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { exampleFor } from '../../lib/examples';
+
+allowVisitorModels(Astro);
+const example = exampleFor('squarespace');
+const [footer, block] = example.blocks;
+---
+
+<Base title="Squarespace" description={`Add ${SITE.displayName} to a Squarespace site with Code Injection and a Code block.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Squarespace</h1>
+  <p><PriceBadge /> Free for any site, including commercial use.</p>
+  <div class="note">
+    <p>
+      <strong>Plan:</strong> Squarespace lists Code Injection, and JavaScript in Code blocks, on the Core, Plus and Advanced plans and
+      some legacy plans, not on Basic. Check your plan's feature list in Squarespace before you start.
+    </p>
+  </div>
+  <div class="prose">
+    <ol>
+      <li><a href="/quick-start/">Host your model</a> and check its URL.</li>
+      <li>
+        Open <strong>Code Injection</strong> and paste the script into <strong>Footer</strong>. This is once for the whole site. Search
+        “code injection” in the Squarespace menu to find it; where it sits differs between Squarespace versions.
+      </li>
+      <li>
+        Edit the page, add a <strong>Code</strong> block where the model should appear, and paste the element with your URL and alt
+        text. If the block has a “Display Source” option, leave it off.
+      </li>
+      <li>Save. Open the page in a private window: Squarespace may not run injected scripts while you are logged in.</li>
+    </ol>
+  </div>
+
+  {footer && <Code title="Code Injection → Footer" code={footer.code} />}
+  {block && <Code title="Code block" code={block.code} />}
+
+  <Generator platform="squarespace" fixed />
+</Base>

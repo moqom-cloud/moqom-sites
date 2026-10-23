@@ -1,0 +1,32 @@
+{
+  "title": "Full 720p, the least data, and Ultra in 4K at 240 fps",
+  "caption": "Same 10 seconds, with sound. Point at or tap a video to hear it; sound cross-fades to whichever you choose.",
+  "tiles": [
+    {
+      "id": "original",
+      "name": "Original",
+      "note": "Instagram · 720 × 1280 · 30 fps · 2.44 Mbit/s video, 71 kbit/s sound",
+      "file": "/khensu/codec/pro-reel/original.mp4",
+      "poster": "/khensu/codec/pro-reel/original.jpg",
+      "ours": false
+    },
+    {
+      "id": "low",
+      "name": "ñü.media, least data",
+      "note": "Full 720 × 1280 sent at 10 fps, rebuilt to 30 fps · 73 kbit/s with sound · VMAF 12",
+      "file": "/khensu/codec/pro-reel/low.mp4",
+      "poster": "/khensu/codec/pro-reel/low.jpg",
+      "ours": true
+    },
+    {
+      "id": "ultra",
+      "name": "ñü.media Ultra",
+      "note": "Rebuilt on the host to 2160 × 3840 at 240 fps · 28.4 Mbit/s with sound · VMAF 72 at 720p",
+      "file": "/khensu/codec/pro-reel/ultra-4k240.mp4",
+      "poster": "/khensu/codec/pro-reel/ultra.jpg",
+      "hevc": true,
+      "ours": true
+    }
+  ],
+  "note": "Measured 11 October 2026 on a Mac with M1 Pro. Least data: HEVC at 57 kbit/s plus Opus sound at 16 kbit/s, 73 kbit/s in all; at 30 fps even the coarsest HEVC needs about 96 kbit/s for 720p, so it sends 10 frames a second and the receiving device rebuilds 30. At this rate a full 720p picture breaks into blocks; ñü.media’s low-data mode, which sends a smaller picture, looks softer instead (VMAF 15 at 46 kbit/s). Ultra: the host’s own Mac rebuilt every frame 4× with Apple’s on-device super resolution, then made seven new frames between each pair with Apple’s frame-rate conversion, before sending; nothing ran on a server. The file carries 240 frames a second; your screen shows as many as its refresh rate allows (120 Hz on ProMotion). VMAF compares each with the original at 720p and 30 fps and counts generated detail as error, so Ultra scores 72 though it shows a little more detail. Ultra needs a browser that plays HEVC. Source: @deemsterhotline on Instagram, used with thanks."
+}

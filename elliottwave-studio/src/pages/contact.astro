@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+
+const channels = [
+  { label: 'General', email: 'hello@elliottwave.studio', note: 'Partnerships, customers, and everything else.' },
+  { label: 'Press', email: 'press@elliottwave.studio', note: 'Media enquiries and interview requests.' },
+  {
+    label: 'Security',
+    email: 'security@moqom.cloud',
+    note: 'Vulnerability reports. Every valid report gets public credit in the hall of fame and release notes.',
+  },
+];
+---
+
+<Base title="Contact" description="Contact elliottwave.studio lab: hello@elliottwave.studio. Press: press@elliottwave.studio.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Contact</p>
+      <h1>Say hello.</h1>
+      <p class="lede">Email is the fastest way to reach the studio.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <ul class="channels">
+        {channels.map((c) => (
+          <li>
+            <span class="num">{c.label}</span>
+            <a class="addr" href={`mailto:${c.email}`}>{c.email}</a>
+            <p>
+              {c.note}
+              {c.label === 'Security' && (
+                <>
+                  {' '}
+                  <a href="https://elliottwave.dev/security">Read the policy and bug bounty →</a>
+                </>
+              )}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <p class="footnote">For MOQOM product support and accounts, use <a href="https://moqom.cloud">moqom.cloud</a>.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .channels {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 3rem;
+  }
+  .channels li {
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 0.4rem;
+  }
+  .channels li:first-child {
+    padding-top: 0;
+  }
+  .addr {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+  }
+  .channels p {
+    color: var(--text-dim);
+    margin: 0;
+  }
+</style>

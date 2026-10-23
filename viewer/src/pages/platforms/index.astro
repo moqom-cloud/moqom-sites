@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+import PriceBadge from '../../components/PriceBadge.astro';
+import { GROUPS, PLATFORM_LIST, STATUS_LABEL, hrefOf } from '../../data/platforms';
+import { PRICE_LINE } from '../../data/pricing';
+
+const counts = Object.fromEntries((['built', 'paste-in', 'planned'] as const).map((s) => [s, PLATFORM_LIST.filter((p) => p.status === s).length]));
+---
+
+<Base title="All platforms" description={`Every platform ${SITE.displayName} covers, and whether it has a plugin, a paste-in snippet or a plan.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>All platforms</h1>
+  <div class="prose">
+    <p>Every platform listed here gets the same viewer. What differs is how it reaches the page.</p>
+    <ul>
+      <li><span class="badge built">Built</span> A plugin, module or component is in the repository and tested ({counts.built}).</li>
+      <li>
+        <span class="badge paste-in">Paste-in</span> You paste code that the <a href="/platforms/html/#generator">snippet generator</a> makes for you
+        ({counts['paste-in']}).
+      </li>
+      <li>
+        <span class="badge planned">Planned</span> A plugin is planned but not written, usually because it needs a marketplace account or the
+        platform's own tools. Each page says what works today ({counts.planned}).
+      </li>
+    </ul>
+    <p>
+      <span class="tag ok">Free</span> The element, every paste-in snippet, the iframe embed and the framework snippets are free for any
+      site, including commercial ones. <span class="tag amber">Paid</span> The plugins for WordPress (with Elementor), Shopify, Wix, Framer,
+      HubSpot, React and Vue cost {PRICE_LINE} per plugin per domain; see <a href="/pricing/">pricing</a>. Every paid platform can also use
+      the free HTML snippet instead.
+    </p>
+    <p>
+      Not listed? If your builder lets you add HTML with a <code>&lt;script&gt;</code> tag, use the <a href="/platforms/html/">HTML</a> snippet.
+      If it only allows iframes, use the <a href="/platforms/embed/">iframe embed</a>.
+    </p>
+  </div>
+
+  {
+    GROUPS.map((group) => (
+      <section class="group">
+        <h2>{group}</h2>
+        <ul class="platforms">
+          {PLATFORM_LIST.filter((p) => p.group === group).map((p) => (
+            <li>
+              <a href={hrefOf(p)}>{p.name}</a>
+              <span class:list={['badge', p.status]}>{STATUS_LABEL[p.status]}</span>
+              {p.status !== 'planned' && <PriceBadge plugin={p.plugin} />}
+              <p>{p.summary}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</Base>
+
+<style>
+  .group h2 {
+    margin-top: 2rem;
+  }
+  .platforms {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .platforms li {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    background: var(--bg-raised);
+  }
+  .platforms a {
+    font-weight: 500;
+    margin-right: 0.5rem;
+  }
+  .platforms p {
+    margin: 0.35rem 0 0;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.1em 0.6em;
+    border: 1px solid currentColor;
+    vertical-align: 0.1em;
+  }
+  .built {
+    color: var(--amber);
+  }
+  .paste-in {
+    color: var(--text);
+  }
+  .planned {
+    color: var(--text-dim);
+    border-style: dashed;
+  }
+</style>

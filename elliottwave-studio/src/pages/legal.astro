@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Legal" description="Intellectual property, contributions, trademark and privacy notices for Elliott Wave LLC (elliottwave.studio lab).">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Legal</p>
+      <h1>Legal</h1>
+      <p class="lede">Intellectual property, contributions, trademarks, and privacy.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap prose">
+      <h2 id="ip">Intellectual property</h2>
+      <p>
+        elliottwave.studio lab is the brand of Elliott Wave LLC. Elliott — Founder of elliottwave.studio lab and Elliott
+        Wave LLC — is the sole author of its first-party technology.
+      </p>
+      <p>
+        Elliott Wave LLC, founded and solely owned by Elliott, owns all intellectual property in its projects — the
+        open-source projects included — including MOQOM and six10nine: source code, binaries, designs, documentation, and
+        inventions. An open-source licence lets you use the code; it does not transfer ownership. Patents pending.
+      </p>
+      <p>
+        Certain components are published as open source, and six10nine as source-available software, under the licences
+        stated in their repositories; those licences govern your use of those components. Identified third-party
+        components remain the property of their respective owners and are credited in the relevant <code>NOTICE</code>
+        files. Nothing on this site grants any licence to any patent, trademark, or other right of Elliott Wave LLC except
+        as expressly stated in such a licence.
+      </p>
+      {/* TODO(Elliott): keep the signed IP assignment from Elliott to Elliott Wave LLC on file; this section relies on it. */}
+
+      <h2 id="contributions">Contributions</h2>
+      <p>
+        Outside contributors sign a Copyright Assignment Agreement, which assigns copyright in their contribution to
+        Elliott Wave LLC and grants them a permanent licence back to use their own work for anything. We have contacted
+        legal counsel to review the agreement.
+      </p>
+
+      <h2 id="trademarks">Trademarks</h2>
+      <p>
+        MOQOM™, MOQOM Cloud™, six10nine™, 6(78)9™, Unify™, Kalopsia™, Elliott Wave™ and elliottwave.studio lab™, and the
+        Elliott Wave logo, are trademarks of Elliott Wave LLC. The ™ symbol marks a claimed trademark; none of these marks
+        is registered yet, and ® will be used only once a mark is registered. Other names may be trademarks of their
+        respective owners. Please don’t use our marks in a way that suggests endorsement or affiliation without written
+        permission.
+      </p>
+
+      <h2 id="privacy">Privacy policy <span class="draft-banner">Draft</span></h2>
+      <p>
+        <strong>DRAFT. We have contacted legal counsel to review this.</strong> This website does not use cookies, does not run third-party
+        analytics, and does not ask you for personal information. If you email us, we use your message and address only
+        to reply and keep a record of the correspondence.
+      </p>
+      <p>
+        Our hosting provider may process standard request data, such as IP address and user agent, to deliver and protect
+        the site. MOQOM services at moqom.cloud are governed by their own terms and privacy policy.
+      </p>
+      {/* TODO(Elliott/counsel): finalise privacy policy; name the hosting provider (e.g. Cloudflare) and its data retention; add an effective date; add GDPR/CCPA rights language if required. */}
+
+      <h2 id="contact">Contact</h2>
+      <p>Legal enquiries: <a href="mailto:hello@elliottwave.studio">hello@elliottwave.studio</a>.</p>
+      {/* TODO(Elliott): consider a dedicated legal@ address; LICENSING.md notes the proprietary licence names legal@moqom.cloud, which must exist and belong to Elliott Wave LLC. */}
+
+      <p class="footnote">© 2026 Elliott Wave LLC. All rights reserved. MOQOM™, six10nine™, Unify™, Kalopsia™, Elliott Wave™ and elliottwave.studio lab™ are trademarks of Elliott Wave LLC. Patents pending.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .prose h2:first-child {
+    margin-top: 0;
+  }
+  .prose p {
+    color: var(--text-dim);
+  }
+  .prose strong {
+    color: var(--text);
+  }
+  .draft-banner {
+    vertical-align: middle;
+    margin: 0 0 0 0.5rem;
+  }
+</style>

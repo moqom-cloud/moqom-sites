@@ -1,0 +1,118 @@
+/* MOQOM brand theme for Starlight. Dark-first; the light theme is a courtesy. */
+
+:root {
+	--sl-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+	--moqom-bg: #0a0b0d;
+	--moqom-text: #e8eaed;
+	--moqom-cyan: #22d3ee;
+	--moqom-violet: #8b5cf6;
+
+	/* Dark palette (Starlight's default mode). */
+	--sl-color-accent-low: #0a333c;
+	--sl-color-accent: #22d3ee;
+	--sl-color-accent-high: #a5f3fc;
+	--sl-color-white: #f5f6f7;
+	--sl-color-gray-1: #e8eaed;
+	--sl-color-gray-2: #c9cdd3;
+	--sl-color-gray-3: #9298a2;
+	--sl-color-gray-4: #5b616b;
+	--sl-color-gray-5: #2b2f36;
+	--sl-color-gray-6: #15171b;
+	--sl-color-black: #0a0b0d;
+
+	--sl-color-text: var(--moqom-text);
+	--sl-color-bg-nav: #0d0f12;
+	--sl-color-bg-sidebar: #0a0b0d;
+	--sl-color-hairline-light: #1f232a;
+	--sl-color-hairline: #1a1d23;
+	--sl-color-hairline-shade: #08090b;
+
+	--sl-color-purple-low: #241a40;
+	--sl-color-purple: #8b5cf6;
+	--sl-color-purple-high: #ddd0ff;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #cff7fd;
+	--sl-color-accent: #0e7490;
+	--sl-color-accent-high: #083344;
+	--sl-color-white: #0a0b0d;
+	--sl-color-gray-1: #1b1e23;
+	--sl-color-gray-2: #353a42;
+	--sl-color-gray-3: #59606b;
+	--sl-color-gray-4: #8b929c;
+	--sl-color-gray-5: #c5cad1;
+	--sl-color-gray-6: #eef0f3;
+	--sl-color-gray-7: #f6f7f9;
+	--sl-color-black: #ffffff;
+	--sl-color-text: #1b1e23;
+	--sl-color-bg-nav: #ffffff;
+	--sl-color-bg-sidebar: #ffffff;
+	--sl-color-purple: #6d28d9;
+}
+
+/* Headings get a thin cyan-to-violet rule so long reference pages stay scannable. */
+.sl-markdown-content h2 {
+	padding-bottom: 0.3rem;
+	border-bottom: 1px solid transparent;
+	border-image: linear-gradient(90deg, var(--moqom-cyan), var(--moqom-violet) 40%, transparent 80%) 1;
+}
+
+.sl-markdown-content a:hover {
+	color: var(--sl-color-purple);
+}
+
+.sl-markdown-content code:not(pre code) {
+	color: var(--sl-color-accent-high);
+	background: var(--sl-color-gray-6);
+	border: 1px solid var(--sl-color-hairline-light);
+	border-radius: 0.3rem;
+	padding: 0.05rem 0.3rem;
+}
+
+:root[data-theme='light'] .sl-markdown-content code:not(pre code) {
+	color: var(--sl-color-accent);
+}
+
+.sl-markdown-content table {
+	font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content th {
+	color: var(--sl-color-white);
+	background: var(--sl-color-gray-6);
+}
+
+/* Mermaid: keep diagrams on brand and horizontally scrollable on phones. */
+.sl-markdown-content pre.mermaid,
+.sl-markdown-content .mermaid {
+	background: #0d0f12;
+	border: 1px solid var(--sl-color-hairline-light);
+	border-radius: 0.5rem;
+	padding: 1rem;
+	overflow-x: auto;
+	text-align: center;
+}
+
+:root[data-theme='light'] .sl-markdown-content .mermaid {
+	background: #f6f7f9;
+}
+
+/* Landing hero. */
+.hero .tagline {
+	color: var(--sl-color-gray-2);
+}
+
+[data-has-hero] .hero h1 {
+	background: linear-gradient(90deg, var(--moqom-cyan), var(--moqom-violet));
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+}
+
+.site-title {
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}

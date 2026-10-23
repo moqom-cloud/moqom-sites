@@ -1,0 +1,46 @@
+---
+// The licence-key section on each paid plugin's page. The slot holds the platform's own step
+// (where to paste the key).
+import { LICENSING, PLUGIN_NAMES, PRICE_LINE, type PaidPlugin } from '../data/pricing';
+
+interface Props {
+  plugin: PaidPlugin;
+  /** Where the check runs: on the site's server (WordPress) or in visitors' browsers. */
+  server?: boolean;
+}
+const { plugin, server = false } = Astro.props;
+---
+
+<div class="prose">
+  <h2 id="licence">Licence key</h2>
+  <p>
+    The {PLUGIN_NAMES[plugin]} plugin is paid: {PRICE_LINE}, per domain. One licence covers the domain, its www. form, one staging
+    subdomain, and local development hosts (<code>localhost</code>, <code>*.local</code>, <code>*.test</code>). See
+    <a href={`/pricing/?plugin=${plugin}`}>pricing</a>.
+  </p>
+  <ol>
+    <li><a href={`/buy/?plugin=${plugin}`}>Buy a licence</a> for your domain. The key (<code>EWV-…</code>) is shown after payment and emailed to you.</li>
+    <slot />
+  </ol>
+  <p>
+    Without a valid key the viewer keeps working and shows a small “Unlicensed” link in its corner{server ? ', and administrators see a notice' : ''}.
+    Nothing is blocked, and no cookies are set.
+  </p>
+  {
+    server ? (
+      <p>
+        The plugin checks the key with <code>{new URL(LICENSING.api).host}</code> from your web server when you save it, then about once a
+        week. Visitors’ browsers never contact it. If the licence server can’t be reached, the plugin carries on as licensed for 30 days
+        after the last successful check.
+      </p>
+    ) : (
+      <p>
+        The key is checked in visitors’ browsers: one request per page to <code>{new URL(LICENSING.api).host}</code>, cached, without
+        cookies or the page address. If your site sends a Content Security Policy, add <code>connect-src {LICENSING.api}</code>. If the
+        licence server can’t be reached, no badge is shown. The licence key is visible in your page’s HTML; that is expected, and changes to
+        the licence need the purchase email as well.
+      </p>
+    )
+  }
+  <p>To move the licence to another domain or change the staging subdomain, use <a href="/licence/manage/">Manage a licence</a>.</p>
+</div>

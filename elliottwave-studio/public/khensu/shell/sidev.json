@@ -1,0 +1,29 @@
+{
+  "width": 360,
+  "height": 1800,
+  "px_per_mm": 11.25,
+  "phone_mm": {
+    "height": 149.96,
+    "depth": 8.62,
+    "lens_top": 4.68
+  },
+  "shield_mm": {
+    "thickness": 4.68,
+    "above_lens_tops": 0.0,
+    "total_depth": 13.3
+  },
+  "views": [
+    {
+      "id": "phone",
+      "src": "/khensu/shell/sidev_phone.png",
+      "label": "iphone 18 pro",
+      "alt": "iPhone 18 Pro in Burgundy standing upright, seen exactly from the side: only its thin aluminium edge and the camera lenses standing proud of the back."
+    },
+    {
+      "id": "shield",
+      "src": "/khensu/shell/sidev_shield.png",
+      "label": "with suñůlink.shield",
+      "alt": "The same iPhone 18 Pro with suñůlink.shield attached, seen exactly from the side at the same scale: the shield covers the back below the camera, its face flush with the lens tops, so it adds no bump above the camera."
+    }
+  ]
+}

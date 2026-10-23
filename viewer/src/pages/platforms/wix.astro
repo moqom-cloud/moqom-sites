@@ -1,0 +1,59 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import veloFile from '../../vendor/wix/ew-viewer-wix.js.txt?raw';
+import pageCode from '../../vendor/wix/page-code.js.txt?raw';
+
+allowVisitorModels(Astro);
+---
+
+<Base title="Wix" description={`Add ${SITE.displayName} to a Wix site as a custom element.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Wix</h1>
+  <p><PriceBadge plugin="wix" /> for the Velo file (option A). Option B is free.</p>
+  <div class="note">
+    <p>
+      <strong>Plan:</strong> Wix shows custom elements on the live site only on a Premium plan with a connected domain and no Wix ads.
+      Elsewhere they appear as a placeholder.
+    </p>
+  </div>
+
+  <div class="prose">
+    <h2>Option A: Velo file (paid plugin)</h2>
+    <p>The Velo file is the paid Wix plugin; it needs a <a href="#licence">licence key</a>. It loads the viewer script with an integrity hash, so a changed file on the CDN would be refused.</p>
+    <ol>
+      <li>In the Wix Editor, turn on <strong>Dev Mode</strong>.</li>
+      <li>In the Code panel, under <strong>Public</strong>, add a folder <code>custom-elements</code> and a file <code>ew-viewer-wix.js</code>. Paste the file below.</li>
+      <li>
+        Add Elements → Embed Code → <strong>Custom Element</strong>. Choose Source → <strong>Velo file</strong> → <code>ew-viewer-wix.js</code>.
+        Tag Name: <code>ew-viewer-wix</code>.
+      </li>
+      <li>Resize the element on the page. The viewer fills it.</li>
+      <li>Open the page's code and paste the page code below. Replace <code>#customElement1</code> with your element's ID, and the URLs and alt text with yours.</li>
+      <li>Publish and check the live site.</li>
+    </ol>
+  </div>
+
+  <Code title="public/custom-elements/ew-viewer-wix.js" code={veloFile} />
+  <Code title="Page code" code={pageCode} />
+
+  <div class="prose">
+    <h2>Option B: Server URL (free)</h2>
+    <p>
+      <span class="tag ok">Free</span> This uses the free element directly, with no licence key.
+      Custom Element → Choose Source → <strong>Server URL</strong> takes the script URL directly, with Tag Name <code>{SITE.tagName}</code>.
+      Wix's field has no place for an integrity hash, so this option is not pinned. The generator below makes the URL and page code.
+    </p>
+  </div>
+
+  <Generator platform="wix" fixed />
+
+  <LicenceKey plugin="wix">
+    <li>In your page code, set the key on the element: <code>$w('#customElement1').setAttribute('license-key', 'EWV-…')</code>. The page code above has a line for it. One licence covers your connected domain and your wixsite.com address if you enter it at checkout (verify Wix’s address formats).</li>
+  </LicenceKey>
+</Base>

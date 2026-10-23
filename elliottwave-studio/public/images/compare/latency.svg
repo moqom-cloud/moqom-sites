@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-labelledby="t d" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif">
+  <title id="t">Latency: MOQOM measured versus documented figures</title>
+  <desc id="d">MOQOM measured 56 to 57 milliseconds median glass-to-glass at 720p30. Agora advertises under 200 milliseconds. AWS IVS Real-Time documents under 300 milliseconds. Agora Interactive Live Streaming documents 400 to 800 milliseconds host to audience. Agora Broadcast Streaming documents 1,500 to 2,000 milliseconds.</desc>
+  <rect width="960" height="400" rx="22" fill="#0b1220"/>
+  <text x="40" y="50" fill="#e6edf7" font-size="20" font-weight="600">Latency, shorter is better</text>
+  <text x="40" y="74" fill="#8a97ab" font-size="14">MOQOM: measured glass-to-glass. Others: as each vendor documents it. Scale: 0–2,000 ms.</text>
+  <g font-size="14">
+    <!-- 1 ms = 0.3 px; bars start at x=300, max 600 px -->
+    <text x="40" y="124" fill="#e6edf7">MOQOM, 720p30 median*</text>
+    <rect x="300" y="108" width="17" height="24" rx="5" fill="#38d6f5"/>
+    <text x="328" y="126" fill="#38d6f5" font-weight="600">56–57 ms</text>
+
+    <text x="40" y="174" fill="#c4cedc">Agora, advertised</text>
+    <rect x="300" y="158" width="60" height="24" rx="5" fill="#46536a"/>
+    <text x="370" y="176" fill="#c4cedc">&lt;200 ms</text>
+
+    <text x="40" y="224" fill="#c4cedc">AWS IVS Real-Time</text>
+    <rect x="300" y="208" width="90" height="24" rx="5" fill="#46536a"/>
+    <text x="400" y="226" fill="#c4cedc">&lt;300 ms</text>
+
+    <text x="40" y="274" fill="#c4cedc">Agora, host to audience</text>
+    <rect x="300" y="258" width="120" height="24" rx="5" fill="#46536a"/>
+    <rect x="420" y="258" width="120" height="24" rx="5" fill="#46536a" opacity="0.5"/>
+    <text x="550" y="276" fill="#c4cedc">400–800 ms</text>
+
+    <text x="40" y="324" fill="#c4cedc">Agora, broadcast</text>
+    <rect x="300" y="308" width="450" height="24" rx="5" fill="#46536a"/>
+    <rect x="750" y="308" width="150" height="24" rx="5" fill="#46536a" opacity="0.5"/>
+    <text x="900" y="300" fill="#c4cedc" text-anchor="end">1,500–2,000 ms</text>
+  </g>
+  <text x="40" y="372" fill="#8a97ab" font-size="12">* Two iPhone 15 Pros, 1.25 Mbit/s HEVC, relay in Los Angeles, both directions at once. Sources on moqom.dev/getting-started/compare.</text>
+</svg>

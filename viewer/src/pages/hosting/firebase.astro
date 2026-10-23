@@ -1,0 +1,123 @@
+---
+import Base from '../../layouts/Base.astro';
+import Code from '../../components/Code.astro';
+import { SITE } from '../../data/site';
+
+const pkg = SITE.hostingPackageName;
+const install = `npm install --global ${pkg}
+# or, without installing: npx -p ${pkg} viewer-upload …`;
+const hostingCmd = `npm install --global firebase-tools
+firebase login
+
+viewer-upload hosting chair.glb chair.usdz --project your-project --site yourname-models --dry-run
+viewer-upload hosting chair.glb chair.usdz --project your-project --site yourname-models`;
+const storageCmd = `gcloud auth login
+
+viewer-upload storage chair.glb chair.usdz \\
+  --bucket your-project.firebasestorage.app \\
+  --origin https://www.your-site.com --dry-run`;
+const check = `viewer-check https://yourname-models.web.app/models/chair.glb --origin https://www.your-site.com`;
+---
+
+<Base title="Firebase hosting" description="Host your 3D models in your own Firebase project, with the viewer-upload CLI.">
+  <p class="eyebrow">Hosting</p>
+  <h1>Firebase</h1>
+  <div class="note">
+    <p>
+      <strong>We do not host your models.</strong> These steps put them in a Firebase project that you own and pay for (often nothing, within
+      Firebase's no-cost limits). We never see your files or your login.
+    </p>
+  </div>
+
+  <div class="prose">
+    <h2>Which Firebase product</h2>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Product</th><th>Plan</th><th>Good for</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Firebase Hosting</td>
+          <td>Spark (no cost) or Blaze</td>
+          <td>A fixed set of models. URLs like <code>https://yourname-models.web.app/models/chair.glb</code>.</td>
+        </tr>
+        <tr>
+          <td>Cloud Storage for Firebase</td>
+          <td>Blaze only</td>
+          <td>Many models, or adding them often. Since 3 February 2026, Storage needs the pay-as-you-go Blaze plan, which has a no-cost quota.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>
+      On Blaze, set a budget alert in Google Cloud Billing. Firebase's pricing page has the current limits:
+      <a href="https://firebase.google.com/pricing">firebase.google.com/pricing</a>.
+    </p>
+
+    <h2>Install the helper</h2>
+    <p>
+      <code>viewer-upload</code> runs the Firebase CLI or the Google Cloud CLI on your computer, signed in as you. It never reads, stores or
+      sends credentials itself. Every command accepts <code>--dry-run</code>, which prints what it would run and changes nothing. Node
+      20.11 or later.
+    </p>
+  </div>
+  <Code title="Terminal" code={install} />
+
+  <div class="prose">
+    <h2>Route 1: Firebase Hosting (Spark plan)</h2>
+    <ol>
+      <li>Create a project at <a href="https://console.firebase.google.com">console.firebase.google.com</a>.</li>
+      <li>
+        In <strong>Hosting</strong>, add a site just for models (Add another site), for example <code>yourname-models</code>. If you already
+        host a website in this project, use the separate site: each deploy replaces everything on the site it deploys to.
+      </li>
+      <li>Install the Firebase CLI and sign in, then upload:</li>
+    </ol>
+  </div>
+  <Code title="Terminal" code={hostingCmd} />
+  <div class="prose">
+    <p>
+      The tool copies the files into <code>.viewer-hosting/public/models/</code>, writes a <code>firebase.json</code> that sets the
+      Content-Type, CORS and Cache-Control headers, and runs <code>firebase deploy --only hosting</code>. Keep the
+      <code>.viewer-hosting</code> folder and run later uploads from the same place, or files from earlier uploads will be removed from
+      the site.
+    </p>
+    <p>
+      CORS defaults to any site (<code>*</code>). To allow only your site, add <code>--origin https://www.your-site.com</code>, once per
+      address.
+    </p>
+
+    <h2>Route 2: Cloud Storage (Blaze plan)</h2>
+    <ol>
+      <li>Upgrade the project to Blaze, open <strong>Storage</strong> in the Firebase console, and create the default bucket.</li>
+      <li>Install the <a href="https://cloud.google.com/sdk/docs/install">Google Cloud CLI</a> and sign in, then upload:</li>
+    </ol>
+  </div>
+  <Code title="Terminal" code={storageCmd} />
+  <div class="prose">
+    <p>Remove <code>--dry-run</code> to run it. The tool:</p>
+    <ul>
+      <li>sets the bucket's CORS rules to allow GET and HEAD from your site (skip with <code>--skip-cors</code>);</li>
+      <li>uploads each file with the right Content-Type and Cache-Control;</li>
+      <li>adds a Firebase download token, so the printed URL works without changing your Storage security rules.</li>
+    </ul>
+    <p>
+      Anyone who has a download URL can download that file. That is true of every model on a public website, because the visitor's browser
+      has to download it to show it.
+    </p>
+
+    <h2>Check the URL</h2>
+  </div>
+  <Code title="Terminal" code={check} />
+  <div class="prose">
+    <p>Or use the <a href="/hosting/own-server/#checker">browser checker</a>. Then paste the URL into your platform's snippet.</p>
+
+    <h2>Setting it up by hand</h2>
+    <p>
+      The package's <code>templates/</code> folder has a <code>cors.json</code> for
+      <code>gcloud storage buckets update gs://BUCKET --cors-file=cors.json</code> and a <code>firebase.json</code> with the Hosting
+      headers. The fixes on the <a href="/hosting/own-server/#fixes">own server</a> page include both.
+    </p>
+  </div>
+</Base>

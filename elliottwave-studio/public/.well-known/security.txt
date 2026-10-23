@@ -1,0 +1,7 @@
+Contact: mailto:security@moqom.cloud
+Contact: mailto:security@elliottwave.studio
+Expires: 2027-10-06T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://elliottwave.studio/.well-known/security.txt
+Policy: https://elliottwave.dev/security
+Acknowledgments: https://elliottwave.dev/security#hall-of-fame

@@ -1,0 +1,30 @@
+[
+  {
+    "file": "original-excerpt.mp4",
+    "what": "The original: first 10 s of Instagram’s file, cut without re-encoding (H.264 720 × 1280, 30 fps, AAC)",
+    "bytes": 2942163,
+    "sha256": "62c463ea865f6765b70f15958d4be744c41f479288cc3fd30d4fe4f9b5a878d6",
+    "url": "/khensu/codec/pro-reel/original-excerpt.mp4"
+  },
+  {
+    "file": "low-sent.mp4",
+    "what": "ñü.media lowest data: the exact bits sent (HEVC 720 × 1280 at 10 fps, 57 kbit/s, plus Opus 16 kbit/s)",
+    "bytes": 99302,
+    "sha256": "2711028c680c90abfbf731b6ed9fce33bdc25c26951f693338e73b0cd3405b75",
+    "url": "/khensu/codec/pro-reel/low-sent.mp4"
+  },
+  {
+    "file": "low.mp4",
+    "what": "ñü.media lowest data as shown: rebuilt to 30 fps, re-encoded near-losslessly for the web (H.264 CRF 16)",
+    "bytes": 4052289,
+    "sha256": "d8ac20301ff920ed7b7fbd601f14ed9eddacbc213ffb0262bbf63ef12f7a7c65",
+    "url": "/khensu/codec/pro-reel/low.mp4"
+  },
+  {
+    "file": "ultra-4k240.mp4",
+    "what": "ñü.media Ultra: the exact bits sent and shown (HEVC Main 10, 2160 × 3840 at 240 fps, 28.2 Mbit/s, plus AAC 192 kbit/s)",
+    "bytes": 35527866,
+    "sha256": "a885f00f7d744afe421da0637c122c8957a85543b3d2ac5ab904e8576dd2abfd",
+    "url": "/khensu/codec/pro-reel/ultra-4k240.mp4"
+  }
+]

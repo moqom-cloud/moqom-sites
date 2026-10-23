@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Getting started" description="Install six10nine, grant Accessibility, and record your first ⌘ chord." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Getting started</h1>
+  <p class="lede">Five minutes from install to your first chord.</p>
+
+  <h2>1. Install</h2>
+  <p>Use Homebrew, the one-line installer or the disk image: see <a href="/#install">Install</a>. Downloads are available at release.</p>
+
+  <h2>2. First launch</h2>
+  <p>6(78)9 appears in the menu bar and runs a short setup:</p>
+  <ol>
+    <li>
+      <strong>Accessibility access</strong>, so it can see ⌘ chords and click menu items. Keys it doesn’t use pass
+      through to your apps.
+    </li>
+    <li><strong>Open at login</strong>, on by default.</li>
+    <li>
+      <strong>“Find ripples in spacetime?”</strong> Whether to lend idle computing to Einstein@home. <em>Donate</em> is
+      preselected; you can turn it off at any time from the menu bar. See <a href="/privacy#idle-computing">Privacy</a>.
+    </li>
+  </ol>
+  <p>Run it again later from the menu bar: <strong>Run Setup Again…</strong></p>
+
+  <h2>3. Record a chord</h2>
+  <ol>
+    <li>In the app you want, hold <kbd>⌘6</kbd> and <kbd>⌘7</kbd> together for a second. The recording overlay opens.</li>
+    <li>Play the chord, for example <kbd>⌘8</kbd>, and press <kbd>↩</kbd>.</li>
+    <li>Pick the menu item it should click: press the shortcut the item shows, or type to search the app’s menus and choose with <kbd>↑</kbd> <kbd>↓</kbd>.</li>
+    <li>Press <kbd>↩</kbd> to save. <kbd>Esc</kbd> cancels at any step.</li>
+  </ol>
+  <p>Now play <kbd>⌘8</kbd> in that app.</p>
+
+  <h2>4. Play it somewhere else</h2>
+  <p>
+    Switch to another app and play the same chord. On macOS 26 with Apple Intelligence, six10nine suggests the menu item
+    there that does the same job. <kbd>↩</kbd> uses it, <kbd>Esc</kbd> says no thanks. See
+    <a href="/ai">AI menu matching</a>.
+  </p>
+
+  <h2>Turning chords off</h2>
+  <p>
+    The menu bar menu has <strong>Enabled</strong> and <strong>Disabled</strong>. With <strong>If disabled, re-enable on
+    ⌘67 longpress</strong> checked (the default), holding <kbd>⌘67</kbd> turns chords back on.
+  </p>
+
+  <h2>Editors get Quick Open from day one</h2>
+  <p>
+    In Cursor, VS Code, Windsurf and Zed, ⌘ plus the key left of 1, <kbd>⌘6</kbd>, <kbd>⌘7</kbd> and <kbd>⌘9</kbd>
+    open Quick Open. Record over them to change that. Outside those editors the keys behave as usual.
+  </p>
+
+  <h2>Build from source</h2>
+  <p>
+    The source is published at release. You’ll need Xcode 26 (Swift 6.2) and an Apple Development certificate, because
+    macOS ties the Accessibility permission to a stable signature.
+  </p>
+  <pre><code>scripts/install-app.sh                     # build, sign, install, launch
+cd Packages/Six10NineKit &amp;&amp; swift test     # run the tests</code></pre>
+</Base>

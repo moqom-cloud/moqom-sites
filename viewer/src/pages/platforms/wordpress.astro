@@ -1,0 +1,113 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { exampleShortcode } from '../../lib/examples';
+
+allowVisitorModels(Astro);
+const attributes = [
+  ['src', 'Model URL (GLB or glTF). Required.'],
+  ['alt', 'Describes the model. Required.'],
+  ['ios_src', 'USDZ for iPhone and iPad AR.'],
+  ['poster', 'Image shown while loading.'],
+  ['ar', '"true" or "false". Default from settings.'],
+  ['ar_label', 'Button text. Default “View in your space”.'],
+  ['camera_controls', '"true" or "false".'],
+  ['auto_rotate', '"true" or "false". Ignored for visitors who prefer reduced motion.'],
+  ['rotation_per_second', 'e.g. "30deg".'],
+  ['shadow_intensity', '0 to 2.'],
+  ['exposure', '0 to 4.'],
+  ['background', 'A colour, or "transparent".'],
+  ['height', 'e.g. "480px" or "60vh".'],
+  ['loading', '"lazy", "eager" or "auto".'],
+  ['reveal', '"interaction" waits for a tap before downloading.'],
+  ['camera_orbit', 'e.g. "45deg 75deg 2m".'],
+];
+---
+
+<Base title="WordPress" description={`The ${SITE.displayName} WordPress plugin: a block, a shortcode, an Elementor widget and a settings page.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>WordPress</h1>
+  <p><PriceBadge plugin="wordpress" /></p>
+  <div class="prose">
+    <p>
+      A plugin with a block for the block editor, a <code>[{SITE.shortcode}]</code> shortcode for the classic editor and widgets, an
+      <a href="#elementor">Elementor widget</a>, and a settings page. The viewer script is inside the plugin; nothing loads from a CDN.
+    </p>
+    <p>
+      Requires WordPress 6.5 or later and PHP 7.4 or later; tested in WordPress Playground on WordPress 6.5, 6.8 and 7.1. On
+      WordPress.com, it needs a plan that allows plugins.
+    </p>
+
+    <h2>Install</h2>
+    <ol>
+      <li>Download <code>{SITE.wordpressSlug}-{SITE.release.version}.zip</code> from <a href={SITE.releasesUrl}>GitHub releases</a>.</li>
+      <li>In WordPress: <strong>Plugins → Add New → Upload Plugin</strong>, choose the zip, install and activate.</li>
+      <li>Optional: <strong>Settings → {SITE.displayName}</strong> sets defaults for the AR button text, auto-rotate and shadow.</li>
+    </ol>
+    <p>
+      The plugin is not in the WordPress.org directory: its guidelines require GPL-compatible licences, and this plugin is sold under a
+      commercial licence. Updates are not automatic; download new versions from the releases page. Then add your
+      <a href="#licence">licence key</a>.
+    </p>
+
+    <h2>Block</h2>
+    <p>
+      In the editor, add the <strong>{SITE.displayName}</strong> block, then set the model URL and alt text in the block's sidebar. If
+      you allow model uploads in settings, you can also choose a GLB from the Media Library.
+    </p>
+
+    <h2>Shortcode</h2>
+  </div>
+  <Code title="Shortcode" code={exampleShortcode()} />
+  <p class="prose">
+    If another plugin already uses <code>[{SITE.shortcode}]</code>, this plugin registers <code>[ew_viewer]</code> instead and says so on
+    the Plugins screen.
+  </p>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+      <tbody>{attributes.map(([name, text]) => <tr><td><code>{name}</code></td><td>{text}</td></tr>)}</tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h2 id="elementor">Elementor</h2>
+    <p>
+      With Elementor active, the plugin adds a <strong>{SITE.displayName}</strong> widget to Elementor's General widgets. Its controls
+      match the block's options, and it renders through the same code, so the same URL and escaping rules apply. Without Elementor,
+      nothing Elementor-related loads. Tested with Elementor 4.3 on WordPress 6.8 and 7.1; current Elementor releases need WordPress 6.8
+      or later.
+    </p>
+
+    <h2 id="woocommerce">WooCommerce</h2>
+    <p>
+      Put the shortcode or block in a product's description. WooCommerce runs shortcodes in product descriptions; this has not yet been
+      tested with WooCommerce itself. For product galleries, there is no WooCommerce-specific integration yet.
+    </p>
+
+    <h2>Uploading GLB and USDZ files</h2>
+    <p>
+      WordPress blocks these file types by default. The setting <strong>Allow model uploads</strong> (off by default) allows
+      <code>.glb</code>, <code>.gltf</code> and <code>.usdz</code> for users who can upload files. The plugin checks each file's first bytes,
+      not only its name. Files on the same domain as your site need no CORS setup.
+    </p>
+
+    <h2>Security</h2>
+    <ul>
+      <li>Only <code>https://</code> URLs (or <code>http://</code> on your own site's domain) are used. Others are dropped.</li>
+      <li>Every attribute is escaped. Settings need the <code>manage_options</code> capability and are saved through the Settings API with a nonce.</li>
+      <li>Uninstalling the plugin deletes its settings.</li>
+    </ul>
+  </div>
+
+  <Generator platform="wordpress" fixed />
+
+  <LicenceKey plugin="wordpress" server>
+    <li>In WordPress, open <strong>Settings → {SITE.displayName}</strong>, paste the key into <strong>Licence key</strong> and save. The status under the field says whether it was accepted. On multisite, each site with its own domain needs its own licence.</li>
+  </LicenceKey>
+</Base>

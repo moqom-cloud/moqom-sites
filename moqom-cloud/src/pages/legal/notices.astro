@@ -1,0 +1,87 @@
+---
+import Legal from "../../layouts/Legal.astro";
+
+// 35 U.S.C. § 287(a) virtual marking: list each product with the patents or
+// applications that cover it. Leave empty until an application is on file;
+// marking "patent pending" with nothing pending is false marking (§ 292).
+const patents: { product: string; numbers: string[] }[] = [];
+---
+
+<Legal title="Legal notices" description="Copyright, trademark, patent and licence notices for MOQOM, from Elliott Wave LLC.">
+  <h2 id="copyright">Copyright</h2>
+  <p>
+    © 2026 Elliott Wave LLC. All rights reserved, except as granted by the licences below. This covers the software,
+    documentation, specifications, website content, designs and media published by MOQOM and elliottwave.studio lab.
+  </p>
+
+  <h2 id="licences">Open-source and source-available licences</h2>
+  <p>
+    The client and backend SDKs and the security libraries (moqom-security) are licensed under the Apache License,
+    Version 2.0. Each contributor's patent licence
+    under section 3 of that licence covers only the claims necessarily infringed by their contribution as published,
+    and ends for anyone who brings patent litigation alleging that the work infringes. The relay, control plane and
+    other server components, the player and the congestion controller are proprietary: they are distributed only as
+    binaries, under a written agreement with Elliott Wave LLC, and their source is not published. The licence file in
+    each open-source repository is the complete grant for that repository.
+  </p>
+
+  <h2 id="reservation">Reservation of rights</h2>
+  <p>
+    Except for the licences expressly granted in a repository's licence file or in a signed agreement, Elliott Wave LLC
+    reserves all rights in its intellectual property. No licence to any patent, trademark, copyright or trade secret
+    is granted or implied by publishing code or documentation, by describing a product, by implementing or
+    contributing to a public specification, or by any course of dealing. Use of the hosted MOQOM Cloud service is
+    governed by the <a href="/legal/terms/">Terms of Service</a>.
+  </p>
+
+  <h2 id="patents">Patents</h2>
+  {
+    patents.length === 0 ? (
+      <p>
+        This page lists the patents and patent applications that cover MOQOM products, for the purposes of 35 U.S.C.
+        § 287(a). It is updated as applications are filed and granted.
+      </p>
+    ) : (
+      <>
+        <p>
+          The following products are covered by the patents and applications listed, for the purposes of 35 U.S.C.
+          § 287(a).
+        </p>
+        <ul>
+          {patents.map((p) => (
+            <li>
+              <strong>{p.product}:</strong> {p.numbers.join(", ")}
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  <h2 id="trademarks">Trademarks</h2>
+  <p>
+    MOQOM™, MOQOM Cloud™, six10nine™, 6(78)9™, Unify™, Kalopsia™, Elliott Wave™ and elliottwave.studio lab™, and the
+    MOQOM and Elliott Wave logos, are trademarks of Elliott Wave LLC. The ™ symbol marks a claimed trademark; none of
+    these marks is registered yet, and ® will be used only once a mark is registered. Other
+    names are trademarks of their respective owners, and their mention implies no affiliation or endorsement. The
+    open-source licences do not grant permission to use these marks, except as needed to describe the origin of the
+    work (Apache License 2.0, section 6). Forks must use a different name.
+  </p>
+
+  <h2 id="contributions">Contributions</h2>
+  <p>
+    Contributions to Elliott Wave LLC repositories are accepted under the Contributor Licence Agreement linked from each
+    repository, which assigns or licenses the contribution so the project can be licensed as described above.
+  </p>
+
+  <h2 id="copyright-complaints">Copyright complaints</h2>
+  <p>
+    To report material you believe infringes your copyright, write to <a href="mailto:legal@moqom.cloud">legal@moqom.cloud</a>
+    with the information required by 17 U.S.C. § 512(c)(3): your signature, the work, the material and where it is, your
+    contact details, a statement of good-faith belief, and a statement under penalty of perjury that the notice is
+    accurate and that you are authorised to act.
+  </p>
+
+  <h2 id="contact">Contact</h2>
+  <p>Elliott Wave LLC · <a href="mailto:legal@moqom.cloud">legal@moqom.cloud</a></p>
+</Legal>

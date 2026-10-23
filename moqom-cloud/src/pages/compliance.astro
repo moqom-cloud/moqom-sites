@@ -1,0 +1,315 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import { SITE } from "../data/site";
+
+type Status = "in-place" | "aligning" | "planned";
+const label: Record<Status, string> = { "in-place": "In place", aligning: "Aligning · audit planned", planned: "Planned" };
+const pillClass: Record<Status, string> = { "in-place": "pill pill-ok", aligning: "pill pill-accent", planned: "pill pill-planned" };
+
+const frameworks: { id: string; title: string; status: Status; points: string[] }[] = [
+  {
+    id: "soc2",
+    title: "SOC 2",
+    status: "aligning",
+    points: [
+      "Controls are mapped to the Trust Services Criteria for security, availability, confidentiality and processing integrity.",
+      "A Type I audit comes first, then Type II. No audit has happened yet, so we don't hold a report.",
+    ],
+  },
+  {
+    id: "iso27001",
+    title: "ISO/IEC 27001:2022",
+    status: "aligning",
+    points: [
+      "Every Annex A control has an owner, a status and a named source of evidence, with a Statement of Applicability.",
+      "Certification follows the SOC 2 audit.",
+    ],
+  },
+  {
+    id: "gdpr",
+    title: "GDPR and UK GDPR",
+    status: "in-place",
+    points: [
+      "Records of processing are kept, and a personal-data breach is reported to the supervisory authority within 72 hours.",
+      "Media is relayed, not stored. Personal data past its retention period is deleted or anonymised.",
+      "A data processing agreement with Standard Contractual Clauses is in legal review. Ask us for the draft.",
+    ],
+  },
+  {
+    id: "ccpa",
+    title: "CCPA / CPRA",
+    status: "in-place",
+    points: [
+      "We don't sell or share personal information.",
+      "Requests to access or delete data are answered within 45 days.",
+    ],
+  },
+  {
+    id: "pci",
+    title: "PCI DSS",
+    status: "in-place",
+    points: [
+      "Card details are entered on Stripe's hosted checkout and never reach MOQOM's servers, logs or database. Stripe is a PCI DSS Level 1 service provider.",
+      "That puts MOQOM in Self-Assessment Questionnaire A scope. The annual SAQ A and attestation are being prepared.",
+    ],
+  },
+  {
+    id: "safety",
+    title: "Child safety, takedowns and accessibility",
+    status: "planned",
+    points: [
+      "COPPA, DMCA notice and takedown, the EU Digital Services Act and accessibility each have a written plan.",
+      "Moderation actions are audit-logged. Actions a model took name the model, so appeals have a record.",
+    ],
+  },
+];
+
+const controls = [
+  ["Encryption in transit", "TLS 1.3 on every QUIC connection, mutual TLS between relays and the control plane, encrypted-only database connections"],
+  ["Encryption at rest", "AES-256 on all stored data, with SFrame end-to-end encryption required for all media and data"],
+  ["Media retention", "Relayed, never recorded unless you attach a recorder, and every recorder is disclosed to the room"],
+  ["Network", "Private cluster nodes and a database on a private IP only, with no public address"],
+  ["Credentials", "No downloadable service account keys. API keys are stored hashed, shown once and revocable"],
+  ["Tenant isolation", "A key reads only its own tenant's data, and every token is checked against every namespace it touches"],
+  ["Audit trail", "Google Cloud admin activity logs, kept for 400 days and locked against tampering"],
+  ["Billing records", "An append-only ledger, kept for 7 years and never edited"],
+  ["Infrastructure", "Every environment is defined in Terraform and can be rebuilt from it. Deployed images are pinned by digest"],
+];
+
+const subprocessors = [
+  ["Google Cloud", "Hosting: compute, database, storage, logging", "United States (us-west1, us-west2)"],
+  ["Stripe", "Payments, checkout and invoices", "United States"],
+  ["GitHub", "Source code and CI. No customer personal data", "United States"],
+  ["Hover (Tucows)", "Company email, domains and DNS", "Canada and United States"],
+];
+---
+
+<Base
+  title="Compliance"
+  description="How MOQOM aligns with SOC 2, ISO 27001, GDPR, CCPA and PCI DSS: what is in place today, what is planned, and who processes your data."
+>
+  <PageHero
+    eyebrow="Compliance"
+    title="Built to pass an audit. Honest that it hasn't had one yet."
+    lede="MOQOM's controls are designed to align with SOC 2 and ISO 27001, and machines enforce and evidence as many of them as possible. Nothing is certified today, and we won't say otherwise until an independent auditor has."
+  />
+
+  <section class="section">
+    <div class="container">
+      <nav class="toc" aria-label="On this page">
+        {frameworks.map((f) => <a href={`#${f.id}`}>{f.title}</a>)}
+        <a href="#isolation">Tenant isolation</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#controls">Controls</a>
+        <a href="#subprocessors">Subprocessors</a>
+      </nav>
+      <div class="frameworks">
+        {
+          frameworks.map((f) => (
+            <article class="glass card framework reveal" id={f.id}>
+              <div class="framework-head">
+                <h2>{f.title}</h2>
+                <span class={pillClass[f.status]}>{label[f.status]}</span>
+              </div>
+              <ul class="check-list">
+                {f.points.map((pt) => (
+                  <li class="muted">{pt}</li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="isolation">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Your account</span>
+        <h2>Turnkey to set up. Walled off from everyone else.</h2>
+        <p class="lede">
+          Sign up, add credit through Stripe’s hosted checkout, and get an API key for your account. From then on, every
+          request is checked against your tenant.
+        </p>
+      </div>
+      <ul class="grid grid-3 iso">
+        <li class="glass card reveal">
+          <h3>Keys scoped to you</h3>
+          <p class="small muted">Your API key reads and changes only your tenant. It’s shown once, stored only as a hash and revocable instantly.</p>
+        </li>
+        <li class="glass card reveal">
+          <h3>Every request checked</h3>
+          <p class="small muted">Every token names your tenant, and relays check it against every namespace a request touches. Another tenant’s rooms simply return “not found”.</p>
+        </li>
+        <li class="glass card reveal">
+          <h3>Cards never touch us</h3>
+          <p class="small muted">Payment details go straight to Stripe. MOQOM keeps only Stripe’s reference IDs and your prepaid balance.</p>
+        </li>
+      </ul>
+      <p class="small faint">
+        By default, isolation is enforced in software on shared infrastructure. For relays that carry only your
+        traffic, run your tenant on a <a href="https://moqom.dev/guides/private-networks/">private relay network</a>:
+        dedicated relays MOQOM hosts, your own relays, or private connectivity with no public address.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="privacy">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Privacy</span>
+        <h2>Your users are managed by you, not tracked by us.</h2>
+      </div>
+      <ul class="grid grid-3 iso">
+        <li class="glass card reveal">
+          <h3>Analytics that don’t follow people</h3>
+          <p class="small muted">
+            Site analytics are anonymous visit counts: no Google signals, no ad storage, no sign-in IDs, and opt-in first in
+            the EU, UK and Switzerland. Usage is metered as role, quality tier, seconds and bytes, never as a profile of a person.
+            The SDKs contain no advertising IDs or ad keys. They’re banned from MOQOM’s code, and if your app uses
+            them, that’s your choice to add.
+          </p>
+        </li>
+        <li class="glass card reveal">
+          <h3>Addresses fade</h3>
+          <p class="small muted">
+            Participant IP addresses are blanked 30 days after they’re last seen. Media is never stored, and safety signals
+            are pseudonymised, with no addresses or media in them.
+          </p>
+        </li>
+        <li class="glass card reveal">
+          <h3>Users and live logs, built in</h3>
+          <p class="small muted">
+            The Go and Rust SDKs manage participants, roles, grants, bans and mutes, and stream every join, leave and
+            moderation action live. The Swift SDK has structured logging built in.
+          </p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="controls">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Controls</span>
+        <h2>In place today</h2>
+        <p class="lede">
+          Each of these operates in production or in shipped code now. A nightly automated check of the cloud project,
+          which writes a dated report to locked storage, is being switched on next.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <tbody>
+            {
+              controls.map(([c, d]) => (
+                <tr>
+                  <th scope="row">{c}</th>
+                  <td class="muted">{d}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="subprocessors">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Subprocessors</span>
+        <h2>Who processes your data</h2>
+        <p class="lede">Customers get 30 days’ notice before a new subprocessor handles their data.</p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr><th>Company</th><th>Purpose</th><th>Location</th></tr>
+          </thead>
+          <tbody>
+            {
+              subprocessors.map(([n, p, l]) => (
+                <tr>
+                  <th scope="row">{n}</th>
+                  <td class="muted">{p}</td>
+                  <td class="muted">{l}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="narrow">
+      <div class="glass card reveal">
+        <h2>Questionnaires, DPAs and data requests</h2>
+        <p class="muted">
+          For a security questionnaire, the draft DPA, or a request to access or delete your data, email{" "}
+          <a href={`mailto:${SITE.contact}`}>{SITE.contact}</a>. Security issues go to{" "}
+          <a href={`mailto:${SITE.security}`}>{SITE.security}</a>. See also <a href="/security/">Security</a> and the{" "}
+          <a href="/legal/privacy/">privacy notice</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+  .toc a {
+    font-size: var(--text-xs);
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.05);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    color: var(--text-muted);
+  }
+  .toc a:hover {
+    color: var(--text);
+    text-decoration: none;
+    border-color: var(--border-strong);
+  }
+  .frameworks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: var(--space-5);
+  }
+  .framework {
+    scroll-margin-top: 90px;
+  }
+  .framework-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .framework-head h2 {
+    font-size: var(--text-lg);
+    margin: 0;
+  }
+  .framework .check-list li {
+    font-size: var(--text-sm);
+  }
+  .iso {
+    list-style: none;
+    padding: 0;
+  }
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

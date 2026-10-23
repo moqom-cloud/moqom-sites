@@ -1,0 +1,56 @@
+{
+  "source": "ladder full.mov: NASA aurora, 3840 x 2160, 29.97 fps, 6 s, ProRes 422 from YouTube's VP9 stream",
+  "vmaf_model": "vmaf_4k_v0.6.1",
+  "encoder": "ffmpeg on an Apple M1 Pro",
+  "formats": {
+    "prores-proxy": {
+      "label": "Apple ProRes 422 Proxy",
+      "kbps": 114312.9,
+      "gb_per_hour": 51.4,
+      "vmaf": 99.03,
+      "size": "3840x2160"
+    },
+    "prores-lt": {
+      "label": "Apple ProRes 422 LT",
+      "kbps": 284095.6,
+      "gb_per_hour": 127.8,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    },
+    "prores-422": {
+      "label": "Apple ProRes 422",
+      "kbps": 381029.1,
+      "gb_per_hour": 171.5,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    },
+    "prores-hq": {
+      "label": "Apple ProRes 422 HQ",
+      "kbps": 449578.5,
+      "gb_per_hour": 202.3,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    },
+    "prores-4444": {
+      "label": "Apple ProRes 4444",
+      "kbps": 530770.9,
+      "gb_per_hour": 238.8,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    },
+    "dnxhr-lb": {
+      "label": "Avid DNxHR LB",
+      "kbps": 179898.4,
+      "gb_per_hour": 81.0,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    },
+    "dnxhr-sq": {
+      "label": "Avid DNxHR SQ",
+      "kbps": 578029.6,
+      "gb_per_hour": 260.1,
+      "vmaf": 100.0,
+      "size": "3840x2160"
+    }
+  }
+}

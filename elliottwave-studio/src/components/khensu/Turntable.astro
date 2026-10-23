@@ -1,0 +1,92 @@
+---
+// Scroll-scrubbed hero: a Cycles turntable (tools/shield/render.py) drawn to a sticky canvas as the page scrolls.
+// Without JavaScript, or with reduced motion, the straight-on frame shows as a still.
+interface Props { frames: number; base: string; alt: string; name: string }
+const { frames, base, alt, name } = Astro.props;
+const still = `${base}${String(Math.floor(frames / 2)).padStart(3, '0')}.webp`;
+---
+
+<section class="tt" data-hero data-frames={frames} data-base={base}>
+  <div class="tt-stick">
+    <div class="tt-stage">
+      <img class="tt-still" src={still} alt={alt} width="1200" height="1500" fetchpriority="high" decoding="async" />
+      <canvas class="tt-canvas" width="1200" height="1500" aria-hidden="true"></canvas>
+    </div>
+    <div class="tt-copy wrap">
+      <p class="tt-name">{name}</p>
+      <h1 class="tt-head"><slot /></h1>
+    </div>
+  </div>
+</section>
+
+<script>
+  const section = document.querySelector<HTMLElement>('.tt');
+  const still = section?.querySelector<HTMLImageElement>('.tt-still');
+  const canvas = section?.querySelector<HTMLCanvasElement>('.tt-canvas');
+  if (section && still && canvas && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const n = Number(section.dataset.frames);
+    const base = section.dataset.base!;
+    const g = canvas.getContext('2d')!;
+    const imgs: HTMLImageElement[] = [];
+    let shown = -1;
+    const draw = (i: number) => {
+      const img = imgs[i];
+      if (i === shown || !img?.complete || !img.naturalWidth) return;
+      g.clearRect(0, 0, canvas.width, canvas.height);
+      g.drawImage(img, 0, 0, canvas.width, canvas.height);
+      shown = i;
+    };
+    const progress = () => {
+      const r = section.getBoundingClientRect();
+      const run = section.offsetHeight - innerHeight;
+      return Math.min(1, Math.max(0, -r.top / Math.max(1, run)));
+    };
+    const update = () => {
+      const p = progress();
+      section.style.setProperty('--p', p.toFixed(3));
+      draw(Math.round(p * (n - 1)));
+    };
+    const load = () => {
+      for (let i = 0; i < n; i++) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = `${base}${String(i).padStart(3, '0')}.webp`;
+        img.onload = () => { if (i === Math.round(progress() * (n - 1))) { shown = -1; update(); section.classList.add('live'); } };
+        imgs.push(img);
+      }
+    };
+    requestIdleCallback ? requestIdleCallback(load) : setTimeout(load, 200);
+    let ticking = false;
+    addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }, { passive: true });
+  }
+</script>
+
+<style>
+  .tt { position: relative; height: 240vh; background: #000; --p: 0; }
+  .tt-stick { position: sticky; top: 64px; height: calc(100svh - 64px); overflow: hidden; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
+  .tt-stage { grid-area: 1 / 1; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; height: 100%; min-height: 0; padding: 2vh 0 clamp(9rem, 26vh, 15rem); }
+  .tt-still, .tt-canvas { grid-area: 1 / 1; height: 100%; max-height: 900px; width: auto; max-width: 100%; aspect-ratio: 1200 / 1500; object-fit: contain; }
+  .tt-canvas { opacity: 0; }
+  .tt.live .tt-canvas { opacity: 1; }
+  .tt.live .tt-still { opacity: 0; }
+  .tt-copy {
+    grid-area: 1 / 1;
+    align-self: end;
+    padding-bottom: clamp(2rem, 7vh, 4.5rem);
+    opacity: calc(1 - var(--p) * 2.2);
+    translate: 0 calc(var(--p) * -60px);
+    pointer-events: none;
+  }
+  .tt-name { margin: 0 0 0.4rem; font-size: clamp(1.1rem, 2vw, 1.6rem); font-weight: 500; }
+  .tt-head { margin: 0; font-size: clamp(2.8rem, 7.5vw, 6.2rem); font-weight: 600; letter-spacing: -0.035em; line-height: 1.15; }
+  .tt-head :global(em) { font-style: normal; color: var(--accent, #7ee0c8); }
+  @media (prefers-reduced-motion: reduce) {
+    .tt { height: auto; }
+    .tt-stick { position: relative; height: calc(100svh - 64px); }
+    .tt-copy { opacity: 1; translate: none; }
+  }
+</style>

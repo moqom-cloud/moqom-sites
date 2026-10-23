@@ -1,0 +1,596 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHero from "../components/PageHero.astro";
+import BenchBadge from "../components/BenchBadge.astro";
+import BenchFootnote from "../components/BenchFootnote.astro";
+import { SITE } from "../data/site";
+import Linked from "../components/Linked.astro";
+const seen = new Set<string>();
+
+type Status = "shipped" | "planned";
+const label: Record<Status, string> = { shipped: "Shipped", planned: "Planned" };
+const pillClass: Record<Status, string> = { shipped: "pill pill-ok", planned: "pill pill-planned" };
+
+const pillars: { id: string; title: string; status: Status; points: string[] }[] = [
+  {
+    id: "transport",
+    title: "TLS 1.3 on every media connection",
+    status: "shipped",
+    points: [
+      "QUIC and WebTransport carry TLS 1.3 as part of the protocol, so no media connection is ever in plaintext.",
+      "Raw QUIC and WebTransport share one UDP port, so there's only one surface to harden and monitor.",
+    ],
+  },
+  {
+    id: "e2ee",
+    title: "Media payload encryption with SFrame",
+    status: "shipped",
+    points: [
+      "Tracks are encrypted on the device with SFrame (RFC 9605). AES-256-GCM is the default and AES-128-GCM is supported. This is the approach the IETF MoQ working group is standardising in draft-ietf-moq-secure-objects.",
+      "Only the payload is encrypted, so the relay can still cache, deduplicate and prioritise what it can't read.",
+      "Encrypting a 1080p keyframe on an iPhone takes about 54 µs*, against a 33 ms frame budget.",
+      "Required in every room. There is no setting that turns it off, for you or for us, and the SDK drops a frame rather than send it unencrypted.",
+      "Keys are managed end to end with MLS (RFC 9420). Everyone who may publish is a member of the room's group, every member sees every other, and a device that leaves can't read what comes next.",
+      "Large audiences use sender keys: viewers aren't added to the group. Each viewer's device makes its own ML-KEM-1024 key pair, the group seals every epoch's key to it with HPKE over ML-KEM-1024, and the epoch rotates every five minutes, so a viewer who leaves stops being able to read.",
+      "Catalogs are sealed by their publisher too. The relay is given only what it needs to route: each track's name, kind and size.",
+    ],
+  },
+  {
+    id: "post-quantum",
+    title: "Post-quantum, end to end",
+    status: "shipped",
+    points: [
+      "An attacker who records encrypted calls today and gets a quantum computer later still can't open them. Every layer that agrees a key does it with post-quantum cryptography.",
+      "Authentication is post-quantum too, not just secrecy. Every identity key, device credential, key package, commit and message signature is ML-DSA-87, so a quantum computer can't be used to impersonate anyone either.",
+      "End-to-end keys: every room's MLS group uses ML-KEM-1024 for key agreement and ML-DSA-87 for signatures, NIST's post-quantum standards (FIPS 203 and 204), with AES-256-GCM and SHA-512. That is MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87, the category-5 suite from the IETF's draft-ietf-mls-pq-ciphersuites: every part of it is in NIST's highest security category. It's the only suite, so there's nothing to negotiate and nothing to turn on.",
+      "Media: SFrame with AES-256-GCM. A 256-bit symmetric key keeps about 128 bits of security against a quantum computer, so media encryption didn't have to change, and neither did its 54 µs cost.",
+      "Transport: every device connection uses ML-KEM-1024 key exchange in TLS 1.3 and nothing else: media to relays, sign-in and token renewal, and room key delivery. The Swift SDK connects through our own QUIC and TLS library (rustls with AWS-LC), so the SDK chooses the key exchange, not the operating system. Links between our own servers are ML-KEM-1024 only too. Classical-only key exchange is refused everywhere.",
+      "api.moqom.cloud, which serves billing, the console and the Go SDK, runs on our own TLS terminator: ML-KEM-1024 preferred, the Go SDK requires the P-384 hybrid SecP384r1MLKEM1024, and browsers get hybrid X25519MLKEM768, the strongest any browser offers.",
+      "Standard algorithms only. We didn't invent any cryptography: on devices every algorithm comes from Apple's CryptoKit, the control plane uses Go's standard library, and relays use AWS-LC.",
+      "Tokens: join tokens are signed with ML-DSA-87 and sealed with AES-256-GCM, and the room's control log is signed with ML-DSA-87 too, the record of who is on stage and what is attached. Devices ignore any entry that doesn't verify.",
+      "Devices: the key that ties a token to its phone is an ML-DSA-87 key held in the Secure Enclave, and every proof the phone makes with it is post-quantum.",
+      "Still classical, stated plainly: certificate signatures in TLS. Relay certificates and our Let's Encrypt certificates are ECDSA or RSA, because the WebPKI has no post-quantum certificates yet. Phones accept only the exact relay certificate they were given, and media is end-to-end encrypted regardless, so forging one would need a working quantum computer during the call, not a recording of it.",
+    ],
+  },
+  {
+    id: "one-to-one",
+    title: "1:1 calls: point to point, the most private thing we run",
+    status: "shipped",
+    points: [
+      "Exactly two devices can decrypt a 1:1 call. A broadcast shares its keys with every viewer it lets in, and nobody else.",
+      "Both people can compare the call's epoch authenticator on screen. If it matches, nobody else is in the group.",
+      "MOQOM's servers can't record what they can't read: anything stored on our side is ciphertext and stays that way. A stolen token is useless without the phone's Secure Enclave key.",
+      "1:1 calls are point to point: media goes phone to phone and never reaches a MOQOM server, so there's nothing on our side to breach or log. Where a network blocks a direct path, the call carries on through a relay, still end-to-end encrypted.",
+      "Point to point means the two phones learn each other's IP address. The app says so before the call, and an app can keep any call on the relay instead.",
+    ],
+  },
+  {
+    id: "tokens",
+    title: "Tokens bound to the device's hardware key",
+    status: "shipped",
+    points: [
+      "Client tokens are ML-DSA-87-signed, short-lived and scoped to a tenant, a room and an explicit set of grants.",
+      "Every token is then sealed with AES-256-GCM under a key only our control plane and relays hold. To your app, your backend and anything that logs it, a token is opaque bytes: it says nothing about who holds it or what it grants.",
+      "Stronger than DPoP (RFC 9449), which it builds on. Every token is bound to an ML-DSA-87 key that never leaves the device's Secure Enclave. The control plane won't issue a token that isn't, and relays refuse any session that can't prove it holds that key. A token lifted from logs or from memory doesn't work from anywhere else.",
+      "Each proof is single-use and tied to the exact relay or phone it's sent to, by that connection's TLS certificate. A proof captured on the way can't be replayed, and can't be passed through a machine in the middle. See how it compares with DPoP below.",
+      "Tokens refresh automatically: the SDK fetches the next one from your backend two minutes before expiry and hands it to the relay mid-session, without reconnecting or dropping the call.",
+      "Every publish, subscribe and fetch is checked against the session's token, whether it carries audio, video, screen share or data. A token that lapses without renewal closes the session.",
+    ],
+  },
+  {
+    id: "domains",
+    title: "Domains that resist registry hijacks",
+    status: "shipped",
+    points: [
+      "Phones accept only the exact certificates they were given for relays and the token service, and never ask a certificate authority. A certificate obtained by hijacking DNS, or issued by mistake, can't intercept a call or collect a token.",
+      "CAA records allow only two certificate authorities to issue for our domains, and no one to issue a wildcard.",
+      "Our domains are DNSSEC-signed and locked against transfer and update at the registrar.",
+      "Certificate Transparency is checked every night. Any certificate for our names that our own load balancers don't hold raises a critical alert.",
+    ],
+  },
+  {
+    id: "open-source",
+    title: "Open-source security libraries",
+    status: "shipped",
+    points: [
+      "The code that keeps MOQOM private is public: moqom-token, moqom-proof, moqom-sframe and moqom-mls, each in Swift, Go and Rust, under Apache-2.0.",
+      "It's the code our apps, relays and control plane run, not a separate copy. Every language passes one shared set of test vectors, including the RFC 9605 vectors.",
+      "Each library composes its platform's audited primitives (CryptoKit, Go's standard library, AWS-LC) and implements none of its own.",
+      "Source, documentation and vectors: github.com/moqom-cloud/moqom-security.",
+    ],
+  },
+  {
+    id: "revocation",
+    title: "Bans take effect mid-session",
+    status: "shipped",
+    points: [
+      "Kick or ban someone through the admin API and their open connection closes. You don't have to wait for their token to expire.",
+      "Unbanning someone and closing a room take effect the same way. An end-to-end test covers this: a real control plane, a real relay and a real client.",
+    ],
+  },
+  {
+    id: "mtls",
+    title: "Mutual TLS between relays and the control plane",
+    status: "shipped",
+    points: [
+      "Relays and the control plane authenticate each other over TLS 1.3 with client certificates. Certificates are required, not just requested.",
+      "Each relay also presents its own credential, so a stolen credential alone is not enough to pose as a relay.",
+    ],
+  },
+  {
+    id: "isolation",
+    title: "Tenant isolation and quotas",
+    status: "shipped",
+    points: [
+      "Every request is checked against the tenant, room and grants in its token, for every namespace it names.",
+      "Per-device and per-user quotas apply to sessions, subscriptions, announcements, watches and fetches.",
+      "Twenty-one capabilities, such as publishing, moderating or bringing someone on stage, are granted one by one and verified across both backend SDKs and the server.",
+    ],
+  },
+  {
+    id: "agents",
+    title: "Recorders and classifiers that everyone can see",
+    status: "planned",
+    points: [
+      "Encryption never has to be turned off for recording or moderation. A recorder or classifier you run joins the room's group as a member, on your side, and decrypts there. MOQOM's servers still see only ciphertext.",
+      "It can't join unannounced. Every member sees every other, and each device holds back its own media while the group contains an agent that the room's signed control log hasn't disclosed.",
+      "Built and tested in the Swift SDK and the control plane. Planned for hosted rooms until the control plane publishes the signed log there.",
+    ],
+  },
+  {
+    id: "p2p",
+    title: "Point to point for 1:1 calls and small private rooms",
+    status: "shipped",
+    points: [
+      "1:1 calls go point to point by default, and private rooms of up to about four people can too. Media goes directly between devices, and the relay carries none of it.",
+      "Rooms of three or four go direct only when every participant agrees, and the interface tells them that peers will see each other's IP address. Never while a recorder or classifier is in the room.",
+      "Never offered to an audience or for public broadcasts. It falls back to the relay when a direct path isn't available.",
+      "The handshake: each phone seals its addresses and a one-call certificate fingerprint under the room's MLS key, so the relay can't read or forge them. The phones hole-punch, pin each other's certificate, then each presents a direct ticket, signed by the relay and renewed about once a minute, plus a single-use ML-DSA-87 Secure Enclave signature bound to that ticket and to the other phone's certificate. Phones never see each other's tokens. Each side checks the other exactly as a relay would: right tenant and room, allowed to publish, the person whose offer was accepted. Either side can refuse before any media moves.",
+    ],
+  },
+  {
+    id: "hygiene",
+    title: "Engineering hygiene",
+    status: "shipped",
+    points: [
+      "Our own implementation of the MoQ transport draft, with coverage-guided fuzzing of every decoder on every change.",
+      "The QUIC stack is vendored unmodified, and a script verifies it against upstream.",
+      "The relay's admin and metrics port is off by default and bound separately from media.",
+    ],
+  },
+];
+
+const pqAuthCompare = [
+  ["Recorded messages stay secret against a future quantum computer", "Yes: ML-KEM-1024 in MLS, AES-256 for media", "Yes: PQXDH and the SPQR post-quantum ratchet"],
+  ["Long-term identity key", "ML-DSA-87, made in the Secure Enclave", "Curve25519, classical"],
+  ["Prekeys and key packages signed with", "ML-DSA-87", "XEdDSA, classical"],
+  ["Group changes and messages signed with", "ML-DSA-87, by the member who made them", "Not signed per message; sessions are authenticated by the classical identity keys"],
+  ["Impersonating a contact with a future quantum computer", "Resisted: the signing key can't be derived from the public key", "Possible in new sessions, and the safety number still matches, because the public key is the real one"],
+];
+
+const dpopCompare = [
+  ["Binding", "Required. No token is issued without a device key, and relays accept no bearer tokens", "Optional. A server can still accept plain bearer tokens"],
+  ["Where the key lives", "The Secure Enclave, where it can't be exported", "Left to the client; often software or browser storage"],
+  ["What a proof is tied to", "The token and the TLS certificate of the exact relay or phone receiving it", "The HTTP method and URL. Not the connection, so a proof works through a machine in the middle"],
+  ["Replay", "Each proof is accepted once", "Reusable within the server's time window unless it tracks every proof it has seen"],
+  ["Signature", "ML-DSA-87, post-quantum", "Whatever JWS algorithm the client picks; classical in practice"],
+  ["Long sessions", "Renewed inside the open session, without reconnecting", "A fresh proof with every HTTP request"],
+  ["Peer to peer", "Phones check each other with the relay's own rules", "Client to server only"],
+];
+
+const sframeSpeed = [
+  {
+    title: "Hardware AES, in native code",
+    body: "AES-256-GCM runs on the chip's AES instructions through Apple's CryptoKit, in native code, on the same device that captures and encodes the frame.",
+  },
+  {
+    title: "One cipher call per frame",
+    body: "Each sender's key and salt are derived once per key change, and nonces come from a counter. Per frame, all that's left is a single AES-GCM operation: no key derivation and no random numbers.",
+  },
+  {
+    title: "A fixed 19 bytes",
+    body: "Header and tag together add 19 bytes per object, whatever its size: 0.9% of a 2 KB video object.",
+  },
+  {
+    title: "Relays can't decrypt",
+    body: "Relays are blind to the encryption: they're never given the keys, so they can't decrypt a frame, however many a frame crosses. Only the payload is sealed, so they still cache, prioritise and fan out the ciphertext as is.",
+  },
+  {
+    title: "Tamper-proofing for free",
+    body: "Each object's group, position, priority and capture time are bound into the authentication tag. That costs a few bytes of hashing and stops a relay reordering, relabelling or replaying frames.",
+  },
+  {
+    title: "Post-quantum keys, agreed off the frame path",
+    body: "The keys come from MLS with ML-KEM and ML-DSA. That work happens when someone joins or leaves, never per frame, so each frame costs one AES-GCM operation whatever the key exchange.",
+  },
+];
+
+const sframeCost = [
+  ["60-byte message or Opus packet", "3.2 µs", "3.2 µs"],
+  ["2 KB video delta", "4.0 µs", "3.8 µs"],
+  ["40 KB 720p keyframe", "15.1 µs", "12.0 µs"],
+  ["200 KB 1080p keyframe", "46.9 µs", "43.6 µs"],
+];
+
+const sframeCompare = [
+  ["MOQOM", "Always on; can't be turned off", "Native, hardware AES", "Ciphertext only; frame position and priority authenticated"],
+  ["Agora", "Built-in media encryption opt-in; E2EE in beta (web, by request)", "Not stated", "Not stated"],
+  ["Tencent RTC", "Private payload encryption opt-in", "Not stated", "Not available with cloud recording or CDN relay"],
+];
+
+const interception = [
+  {
+    title: "No one in the middle",
+    points: [
+      "QUIC has no unencrypted mode and no way to negotiate TLS down, so every connection is TLS 1.3 from the first packet.",
+      "Phones accept a relay only if its certificate is the exact one they were given. A valid certificate from any authority isn't enough.",
+      "Relays and the control plane authenticate each other with mutual TLS, so an impostor can't pose as either one.",
+      "A stolen token is bound to the device it was issued to, and is useless anywhere else.",
+    ],
+  },
+  {
+    title: "No one listening in",
+    points: [
+      "TLS 1.3 uses fresh keys for every connection (forward secrecy), so recorded traffic stays unreadable even if a server key leaks later. The key exchange is ML-KEM-1024 on every device connection and every link between our own servers, and classical-only key exchange is refused.",
+      "Media, data and catalogs are sealed on the device with SFrame in every room, and nothing turns that off. Relays, MOQOM and the cloud underneath see only ciphertext.",
+      "Tampering with an encrypted object's position, priority or properties makes it fail authentication, so it is dropped rather than played.",
+    ],
+  },
+  {
+    title: "Why we pin certificates",
+    points: [
+      "A certificate authority issues to whoever controls a domain's DNS, and DNS is only as safe as the registry above it. Pinning takes registries and authorities out of the question of who a relay is.",
+      "Pins are delivered with the address, in the link that sets up a phone, so a certificate change is a new link, not an app update.",
+      "Self-hosted deployments choose in the Swift SDK: exact pinning, which takes several hashes so rotation has no gap, or system trust for relays with a public certificate.",
+    ],
+  },
+];
+
+const compare = [
+  ["Transport encryption", "TLS 1.3 on every connection", "Required, because MoQ runs over QUIC or WebTransport"],
+  ["Authorization", "Signed, scoped, short-lived tokens checked on every request", "Defines how a token is carried. What it contains and how it's checked are left to the deployment"],
+  ["Media payload encryption", "SFrame, AES-256-GCM, required in every room", "Specified separately and optional: draft-ietf-moq-secure-objects"],
+  ["Post-quantum protection", "ML-KEM-1024 and ML-DSA-87 for end-to-end keys, ML-DSA-87 tokens and device proofs, ML-KEM-1024 key exchange on every device connection and server link, AES-256 media", "Not specified"],
+  ["Token bound to the device", "Every token, to an ML-DSA-87 key in the Secure Enclave, enforced by every relay", "Not specified"],
+  ["Revoking a live session", "A ban closes the open connection", "Not specified. Left to the application"],
+  ["Relay ↔ control-plane auth", "Mutual TLS 1.3, plus a per-relay credential", "Out of scope"],
+  ["Multi-tenant isolation", "Tenant, room and grants checked for every namespace", "Out of scope"],
+];
+---
+
+<Base
+  title="Security"
+  description="Post-quantum end-to-end encryption in every room, with no way to turn it off (SFrame, with keys agreed by MLS using ML-KEM and ML-DSA), TLS 1.3 everywhere, hardware-bound tokens, in-session revocation, mutual TLS between relays and the control plane, and tenant isolation."
+>
+  <PageHero
+    eyebrow="Security"
+    title="End-to-end encrypted, always. Precise about what that means."
+    lede="MOQOM builds in security work that would otherwise fall to your application. Every item below is labelled shipped or planned, so you know exactly what you're getting today."
+  />
+
+  <section class="section">
+    <div class="container">
+      <nav class="toc" aria-label="On this page">
+        {pillars.map((p) => <a href={`#${p.id}`}>{p.title}</a>)}
+        <a href="#dpop">Tokens vs DPoP</a>
+        <a href="#sframe">Why SFrame is fast</a>
+        <a href="#interception">Interception</a>
+        <a href="#compare">Comparison</a>
+      </nav>
+      <div class="pillars">
+        {
+          pillars.map((p) => (
+            <article class="glass card pillar reveal" id={p.id}>
+              <div class="pillar-head">
+                <h2>{p.title}</h2>
+                <span class={pillClass[p.status]}>{label[p.status]}</span>
+              </div>
+              <ul class="check-list">
+                {p.points.map((pt) => (
+                  <li class="muted"><Linked text={pt} seen={seen} /></li>
+                ))}
+              </ul>
+              {p.id === "e2ee" && <BenchBadge />}
+              {p.id === "e2ee" && <BenchFootnote />}
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pq-authentication">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Post-quantum authentication</span>
+        <h2>Quantum-safe against impersonation, not just eavesdropping</h2>
+        <p class="lede">
+          A quantum computer that breaks elliptic curves can work out a private key from its public key. Post-quantum
+          encryption stops it reading what was recorded. It doesn't stop it signing as you. Signal's identity keys and
+          signatures are Curve25519 and XEdDSA, which are classical: a future quantum computer couldn't read recorded
+          Signal messages, but it could impersonate a contact or forge identity keys. In MOQOM every identity key, device
+          credential, key package, commit and message signature is ML-DSA-87 (FIPS 204), so impersonation is
+          quantum-resistant too.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr><th>Concern</th><th>MOQOM</th><th>Signal</th></tr>
+          </thead>
+          <tbody>
+            {
+              pqAuthCompare.map(([c, m, d]) => (
+                <tr>
+                  <th scope="row">{c}</th>
+                  <td class="col-moqom"><Linked text={m} seen={seen} /></td>
+                  <td class="muted"><Linked text={d} seen={seen} /></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Still classical, stated plainly: certificate signatures in TLS (the WebPKI has no post-quantum certificates yet), and Apple's signatures on Sign in with
+        Apple and App Attest. Forging Apple's could at most enroll a new device, which joins the room as a new ML-DSA-87 key
+        every member sees; it can't sign as an existing one. Signal column: our reading of Signal's published
+        <a href="https://signal.org/docs/specifications/pqxdh/" rel="noopener">PQXDH specification</a>, which says its
+        authentication relies on classical assumptions, as of October 2026.
+        <a href="https://moqom.dev/security/post-quantum/">How it works →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="dpop">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Device-bound tokens</span>
+        <h2>Why MOQOM tokens are stronger than DPoP</h2>
+        <p class="lede">
+          DPoP (<a href="https://www.rfc-editor.org/rfc/rfc9449" rel="noopener">RFC 9449</a>) showed how to tie a token to a key. MOQOM keeps its shape and closes what it leaves open: the
+          binding is mandatory, the key is in hardware, each proof is used once and tied to the connection it's sent on,
+          and the signature is post-quantum.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr><th>Concern</th><th>MOQOM tokens</th><th>DPoP (RFC 9449)</th></tr>
+          </thead>
+          <tbody>
+            {
+              dpopCompare.map(([c, m, d]) => (
+                <tr>
+                  <th scope="row">{c}</th>
+                  <td class="col-moqom"><Linked text={m} seen={seen} /></td>
+                  <td class="muted"><Linked text={d} seen={seen} /></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        DPoP column: our reading of <a href="https://www.rfc-editor.org/rfc/rfc9449" rel="noopener">RFC 9449</a> as published. It describes the standard, not any product that uses it.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="sframe">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">SFrame</span>
+        <h2>Why end-to-end encryption costs almost nothing here</h2>
+        <p class="lede">
+          Sealing a 1080p keyframe takes about 54 µs on an iPhone*, 0.16% of a 33 ms frame. That's cheap enough to
+          require in every room, which is why it can't be turned off. This is where the speed comes from.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        {
+          sframeSpeed.map((s) => (
+            <div class="glass card reveal">
+              <h3>{s.title}</h3>
+              <p class="small muted"><Linked text={s.body} seen={seen} /></p>
+            </div>
+          ))
+        }
+      </div>
+      <div class="glass glass--strong table-wrap sframe-table">
+        <table>
+          <thead>
+            <tr><th>Object</th><th>Seal</th><th>Open</th></tr>
+          </thead>
+          <tbody>
+            {
+              sframeCost.map(([o, s, op]) => (
+                <tr>
+                  <th scope="row">{o}</th>
+                  <td class="col-moqom">{s}</td>
+                  <td>{op}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Seal and open times measured in a release build on an Apple M1 Pro MacBook Pro, AES-256-GCM, 19 bytes of
+        overhead at every size. * The iPhone figure is the on-device measurement on our benchmarks page.
+      </p>
+      <div class="glass glass--strong table-wrap sframe-table">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>End-to-end encryption</th><th>Where frames are encrypted</th><th>What the server sees</th></tr>
+          </thead>
+          <tbody>
+            {
+              sframeCompare.map(([p, e, w, s]) => (
+                <tr>
+                  <th scope="row">{p}</th>
+                  <td class={p === "MOQOM" ? "col-moqom" : "muted"}><Linked text={e} seen={seen} /></td>
+                  <td class={p === "MOQOM" ? "col-moqom" : "muted"}><Linked text={w} seen={seen} /></td>
+                  <td class={p === "MOQOM" ? "col-moqom" : "muted"}><Linked text={s} seen={seen} /></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Agora and Tencent RTC rows are from their own documentation as cited on our <a href="/compare/">comparison
+        page</a>, October 2026. "Not stated" means we found no statement, not that the feature is absent.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="interception">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Interception</span>
+        <h2>Nothing to intercept, and no one to impersonate</h2>
+        <p class="lede">
+          On the network, a man-in-the-middle or an eavesdropper gets nothing usable from MOQOM. What remains is
+          stated plainly: relays can see track names, sizes, timing and each keyframe's codec parameters. They never
+          see media, because there is no unencrypted room.
+        </p>
+      </div>
+      <div class="pillars">
+        {
+          interception.map((p) => (
+            <article class="glass card pillar reveal">
+              <div class="pillar-head">
+                <h2>{p.title}</h2>
+              </div>
+              <ul class="check-list">
+                {p.points.map((pt) => (
+                  <li class="muted"><Linked text={pt} seen={seen} /></li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="compare">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Comparison</span>
+        <h2>What MOQOM ships, and what the standard leaves open</h2>
+        <p class="lede">
+          The IETF MoQ transport draft deliberately leaves policy to the people who deploy it. These are the parts
+          MOQOM fills in for you.
+        </p>
+      </div>
+      <div class="glass glass--strong table-wrap">
+        <table>
+          <thead>
+            <tr><th>Concern</th><th>MOQOM ships</th><th>IETF draft-ietf-moq-transport</th></tr>
+          </thead>
+          <tbody>
+            {
+              compare.map(([c, m, d]) => (
+                <tr>
+                  <th scope="row">{c}</th>
+                  <td class="col-moqom"><Linked text={m} seen={seen} /></td>
+                  <td class="muted"><Linked text={d} seen={seen} /></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="small faint note">
+        Open-source MoQ relays such as moq-rs, Cloudflare's MoQ relay and Meta's moxygen implement versions of the same
+        transport drafts. How each handles authorization, payload encryption and revocation is set out in its own
+        documentation, and we encourage you to compare it with the list above. This table describes the standard, not
+        any other product. It reflects our reading of <a href="https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-19" rel="noopener">draft-ietf-moq-transport-19</a> as of October 2026.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="narrow">
+      <div class="glass card reveal" id="disclosure">
+        <h2>Reporting a vulnerability</h2>
+        <p class="muted">
+          Please report security issues privately to <a href={`mailto:${SITE.security}`}>{SITE.security}</a>, with
+          enough detail for us to reproduce them.
+        </p>
+        <h3>Bug bounty</h3>
+        <p class="muted">
+          Our HackerOne program launches as a vulnerability disclosure program. Cash bounties are funded by donations to
+          the open-source projects until paying customers adopt MOQOM. Until then, every valid report gets public credit
+          and our thanks — in the hall of fame and release notes — and we'll send you something: swag in the mail or a
+          tip to your crypto wallet.
+        </p>
+        <!-- TODO: link SITE.hackerone (https://hackerone.com/elliottwave) once the program is live. -->
+        <p class="small faint">
+          The HackerOne program isn't open yet. Until it is, email <a href={`mailto:${SITE.security}`}>{SITE.security}</a>.
+          You can support the open-source projects through <a href={SITE.donate} rel="noopener">donations ↗</a>.
+        </p>
+        <p class="small faint">For SOC 2, ISO 27001, GDPR and PCI status, and our subprocessors, see <a href="/compliance/">Compliance</a>.</p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+  .toc a {
+    font-size: var(--text-xs);
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.05);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    color: var(--text-muted);
+  }
+  .toc a:hover {
+    color: var(--text);
+    text-decoration: none;
+    border-color: var(--border-strong);
+  }
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+    gap: var(--space-5);
+  }
+  .pillar {
+    scroll-margin-top: 90px;
+  }
+  .pillar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .pillar-head h2 {
+    font-size: var(--text-lg);
+    margin: 0;
+  }
+  .pillar .check-list li {
+    font-size: var(--text-sm);
+  }
+  tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .note {
+    margin-top: var(--space-4);
+    max-width: 90ch;
+  }
+  .sframe-table {
+    margin-top: var(--space-6);
+  }
+</style>

@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS, EMAIL } from '../data/six10nine';
+---
+
+<Base title="Licence" description="six10nine is free and source-available under the PolyForm Noncommercial License 1.0.0. Commercial licences are available." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Licence</h1>
+  <p class="lede">
+    Free and source-available, under the <a href={LINKS.licence}>PolyForm Noncommercial License 1.0.0</a>. It’s not
+    “open source” in the OSI sense.
+  </p>
+
+  <h2>In plain words</h2>
+  <p>The licence text is what counts. This is a summary.</p>
+  <ul>
+    <li>
+      <strong>Free for personal and other noncommercial use.</strong> Use it, read the code, change it, and share it,
+      including your changes, for noncommercial purposes. Charities, schools, public research and government bodies can
+      use it too.
+    </li>
+    <li>
+      <strong>It can’t be sold or used commercially.</strong> You can’t sell it, bundle it into a paid product, or use it
+      for commercial purposes without a commercial licence.
+    </li>
+    <li>
+      <strong>Keep the notice.</strong> Keep the <code>Required Notice</code> line and the licence, or its URL, with any
+      copy you share.
+    </li>
+  </ul>
+  <pre><code>Required Notice: Copyright (c) 2026 Elliott Wave LLC (https://elliottwave.studio)</code></pre>
+
+  <h2>Commercial licences</h2>
+  <p>
+    Available from Elliott Wave LLC: <a href={`mailto:${EMAIL.licensing}`}>{EMAIL.licensing}</a>.
+  </p>
+
+  <h2>Names</h2>
+  <p>
+    six10nine and 6(78)9 are trademarks of Elliott Wave LLC. The licence doesn’t grant any right to use these names or
+    marks, except to describe the software truthfully.
+  </p>
+
+  <h2>Third-party components</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Licence</th></tr></thead>
+      <tbody>
+        <tr><td><a href={LINKS.boinc}>BOINC client</a> 8.2.11, bundled unmodified with its own signature</td><td>LGPL-3.0-or-later</td></tr>
+        <tr><td>“Cri Wilhelm”, Joseph Sardin, La Sonothèque</td><td>CC0 1.0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The app itself, including the MCP server, has no third-party dependencies beyond Apple’s system frameworks.</p>
+</Base>

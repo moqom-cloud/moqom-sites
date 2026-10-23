@@ -1,0 +1,785 @@
+---
+// The four on-device algorithms behind /memory, each with an animated chart: recall (four searches fused by
+// reciprocal rank), feed scoring, interest decay and prefetch inside the 2 s ticks. Sources: khensu-specs PLAN.md
+// (Local search and memory, Public square, Stealth), WEBE.md 5 and 8, PROTOCOL.md 8.8 and 9. All numbers on the
+// charts are computed here from the formulas the copy states.
+
+// 1. Recall: four ranked lists, fused with RRF (k = 60), then cut to the model's token budget.
+const docs: Record<string, { t: string; hue: number; tokens: number }> = {
+  A: { t: 'Sam · “Charter confirmed: Naxos on 19 May”', hue: 252, tokens: 420 },
+  B: { t: 'Ana · voice note about Ios', hue: 330, tokens: 1310 },
+  C: { t: 'Charter PDF · 12–19 May', hue: 174, tokens: 1480 },
+  D: { t: 'Skipper · weather window, leave at 7:00', hue: 40, tokens: 610 },
+  E: { t: 'Ana · ferry from Naxos back to Athens', hue: 205, tokens: 380 },
+  F: { t: 'Photo · Naxos harbour at dusk', hue: 290, tokens: 260 },
+};
+const lanes = [
+  { name: 'Words', note: 'Full-text index, BM25', order: ['A', 'E', 'F', 'C'] },
+  { name: 'Meaning', note: 'On-device embeddings', order: ['A', 'D', 'C', 'B'] },
+  { name: 'Connections', note: 'Naxos and Sam, two hops', order: ['A', 'C', 'E', 'D'] },
+  { name: 'Time', note: '“In May”', order: ['C', 'A', 'D', 'B'] },
+];
+const K = 60;
+const BUDGET = 3000;
+const scores: Record<string, number> = {};
+for (const l of lanes) l.order.forEach((d, i) => (scores[d] = (scores[d] ?? 0) + 1 / (K + i + 1)));
+let used = 0;
+const fused = Object.entries(scores)
+  .sort((a, b) => b[1] - a[1])
+  .map(([id, s]) => {
+    const fits = used + docs[id].tokens <= BUDGET;
+    if (fits) used += docs[id].tokens;
+    return { id, s, fits, ...docs[id] };
+  });
+const top = fused[0].s;
+
+// 2. Feed scoring: weighted blend of four signals, then your rules and label lists.
+const W = { interest: 0.45, affinity: 0.25, fresh: 0.15, tallies: 0.15 };
+const raw = [
+  { t: 'Night sail from Paros to Naxos', by: 'ada.khensu.nu · video', v: [0.9, 0.95, 0.6, 0.4] },
+  { t: 'Hercules Caves, Tangier', by: '360° live stream', v: [0.85, 0.2, 1, 0.55] },
+  { t: 'Late set at the jazz cellar', by: 'Live stream', v: [0.7, 0.3, 0.9, 0.3] },
+  { t: 'Aurora over the Pacific, from the ISS', by: 'Trending video', v: [0.2, 0.1, 0.7, 1] },
+  { t: 'The Ibiza ferry trick nobody tells you', by: 'Post · labelled misleading', v: [0.8, 0, 0.8, 0.6], label: 0.3 },
+  { t: 'Election debate, live', by: 'Hidden by your rule “no politics on weekdays”', v: [0.4, 0.1, 1, 0.9], rule: true },
+];
+const keys = ['interest', 'affinity', 'fresh', 'tallies'] as const;
+const cands = raw
+  .map((c) => {
+    const parts = keys.map((k, i) => W[k] * c.v[i]);
+    const base = parts.reduce((a, b) => a + b, 0);
+    const final = c.rule ? 0 : base * (c.label ?? 1);
+    return { ...c, parts: parts.map((p) => p * (c.label ?? 1)), base, final };
+  })
+  .sort((a, b) => (a.rule ? 1 : 0) - (b.rule ? 1 : 0) || b.final - a.final);
+
+// 3. Interest decay: w(t) = Σ s · 2^(−(t − tᵢ) / H), H = 14 days, over 8 weeks.
+const H = 14, DAYS = 56, CW = 600, CH = 240, PAD = { l: 34, r: 128, t: 16, b: 30 };
+const series = [
+  { name: 'Sailing', note: 'keeps coming back', hue: 252, ev: Array.from({ length: 15 }, (_, i) => [i * 4, 0.17] as [number, number]) },
+  { name: 'Live jazz', note: 'fading', hue: 330, ev: [[2, 0.3], [4, 0.3], [6, 0.3], [9, 0.3]] as [number, number][] },
+  { name: 'Hercules Caves', note: '3 streams', hue: 174, ev: [[20, 0.35], [27, 0.35], [41, 0.35]] as [number, number][] },
+  { name: 'Ibiza', note: 'this week', hue: 40, ev: [[50, 0.25], [52, 0.25], [53, 0.25], [55, 0.25]] as [number, number][] },
+];
+const wAt = (ev: [number, number][], t: number) => ev.reduce((a, [ti, s]) => (t >= ti ? a + s * 2 ** (-(t - ti) / H) : a), 0);
+const x = (t: number) => PAD.l + (t / DAYS) * (CW - PAD.l - PAD.r);
+const y = (w: number) => CH - PAD.b - Math.min(1.1, w) / 1.1 * (CH - PAD.t - PAD.b);
+const lines = series.map((s) => {
+  const pts: string[] = [];
+  for (let t = 0; t <= DAYS; t += 0.5) pts.push(`${x(t).toFixed(1)},${y(wAt(s.ev, t)).toFixed(1)}`);
+  return { ...s, d: `M${pts.join('L')}`, end: y(wAt(s.ev, DAYS)) };
+});
+// Keep the end labels apart.
+const ends = [...lines].sort((a, b) => a.end - b.end);
+ends.forEach((l, i) => { if (i) l.end = Math.max(l.end, ends[i - 1].end + 30); });
+const weeks = Array.from({ length: 9 }, (_, i) => i * 7);
+
+// 4. Ticks: what fills the 4 upstream slots of each 2 s burst. Slot 1 is always the mailbox fetch.
+const kinds = { m: 'Mailbox fetch', s: 'Your message', p: 'Directory lookup (PIR)', f: 'Feed prefetch', c: 'Cover' } as const;
+const ticks = ['mfcc', 'mpff', 'mscc', 'mffc', 'mccc', 'mfpc', 'msfc', 'mffc', 'mccc', 'mpfc', 'mffs', 'mccc'];
+---
+
+<section class="section alg" id="memory-recall-section" aria-labelledby="recall-title">
+  <div class="wrap">
+    <p class="eyebrow">algorithm 1 · recall</p>
+    <h2 id="recall-title" class="big">Four searches at once.<br /><em>One answer, with its sources.</em></h2>
+    <p class="lede">
+      Ask “When do we sail to Naxos?” and Per-Ankh searches your memory four ways in parallel: by the words, by what
+      they mean, by the people and places connected to them, and by time. Each search ranks what it found. The lists
+      are fused by reciprocal rank, so a message that several searches agree on rises to the top, then cut to what fits
+      in the on-device model’s context. The model reads only that, and answers with links to each source.
+    </p>
+
+    <figure class="recall" data-anim aria-labelledby="recall-cap">
+      <div class="r-lanes">
+        {lanes.map((l, li) => (
+          <div class="r-lane" style={`--l:${li}`}>
+            <p class="r-name"><b>{l.name}</b><small>{l.note}</small></p>
+            <ol>
+              {l.order.map((d, i) => (
+                <li style={`--h:${docs[d].hue};--i:${i}`}><span class="r-dot">{d}</span><span class="r-t">{docs[d].t}</span></li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+      <div class="r-arrow" aria-hidden="true"><span>Reciprocal rank fusion</span><code>score = Σ 1 / (60 + rank)</code></div>
+      <div class="r-fused">
+        <p class="r-name"><b>Fused and cut to the token budget</b><small>{used.toLocaleString('en')} of {BUDGET.toLocaleString('en')} tokens for evidence</small></p>
+        <ol>
+          {fused.map((f, i) => (
+            <li class:list={{ cut: !f.fits }} style={`--h:${f.hue};--i:${i};--w:${((f.s / top) * 100).toFixed(1)}%`}>
+              <span class="r-dot">{f.id}</span>
+              <span class="r-t">{f.t}</span>
+              <span class="r-bar"><i></i></span>
+              <span class="r-s">{(f.s * 1000).toFixed(1)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <figcaption id="recall-cap">
+        Scores are 1,000 × the fused score. The charter message comes first in three searches and second in one, so it
+        leads; the voice note and the photo don’t fit the budget and are left out of what the model reads, but stay one
+        tap away in the results.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section alg alt" id="memory-feed-section" aria-labelledby="feed-title">
+  <div class="wrap">
+    <p class="eyebrow">algorithm 2 · your feed</p>
+    <h2 id="feed-title" class="big">Scored on your phone.<br /><em>By signals that never leave it.</em></h2>
+    <p class="lede">
+      Your device gathers candidates anonymously: new posts from people and forums you follow, live streams starting
+      now, places, and what’s trending by anonymous counts. Then it scores each one against what it has learned about
+      you. Your own rules and the label lists you subscribe to have the last word.
+    </p>
+
+    <figure class="score" data-anim aria-labelledby="score-cap">
+      <ul class="s-legend" role="list">
+        <li class="k0"><b>Interest match</b> {Math.round(W.interest * 100)}%</li>
+        <li class="k1"><b>People you come back to</b> {Math.round(W.affinity * 100)}%</li>
+        <li class="k2"><b>Freshness</b> {Math.round(W.fresh * 100)}%</li>
+        <li class="k3"><b>Anonymous counts</b> {Math.round(W.tallies * 100)}%</li>
+      </ul>
+      <ol class="s-rows">
+        {cands.map((c, i) => (
+          <li class:list={{ ruled: c.rule, labelled: c.label }} style={`--i:${i}`}>
+            <span class="s-rank">{c.rule ? '–' : i + 1}</span>
+            <span class="s-what"><b>{c.t}</b><small>{c.by}</small></span>
+            <span class="s-track">
+              {c.parts.map((p, k) => (
+                <i class={`k${k}`} style={`--w:${(p * 100).toFixed(1)}%;--k:${k}`}></i>
+              ))}
+              {c.label && <i class="s-cut" style={`--w:${((c.base - c.final) * 100).toFixed(1)}%`}></i>}
+            </span>
+            <span class="s-val">{c.rule ? 'hidden' : c.final.toFixed(2)}</span>
+          </li>
+        ))}
+      </ol>
+      <figcaption id="score-cap">
+        score = 0.45 × interest + 0.25 × people + 0.15 × freshness + 0.15 × anonymous counts. Interest match compares
+        the post’s on-device embedding with your interests, weighted by how strong each one is. A label from a list
+        you subscribe to scales the score down (striped part), and your rules can hide a post entirely. Then no more
+        than two posts in a row come from the same person or topic.
+      </figcaption>
+    </figure>
+
+    <ul class="facts" role="list">
+      <li><b>Candidates arrive anonymously</b><span>Follows, topics, live streams and places are fetched through the ticks and two-relay paths, so no node learns what you read.</span></li>
+      <li><b>Trending without tracking</b><span>Likes, reposts and views are anonymous tallies: one rate-limited proof per person per post, counted by nodes, attributable to no one.</span></li>
+      <li><b>Labels you choose</b><span>Communities, newsrooms and fact-checkers publish label lists. A label shows when raters who usually disagree agree, computed the same way on every device.</span></li>
+      <li><b>Chronological by default</b><span>The personal feed is a switch. Off, the Feed is newest first from who you follow.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section alg" id="memory-decay-section" aria-labelledby="decay-title">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">algorithm 3 · interests that fade</p>
+      <h2 id="decay-title" class="big">It forgets on purpose.<br /><em>So yesterday doesn’t run your feed.</em></h2>
+      <p class="lede">
+        Every habit adds a little weight to an interest, and every interest loses half its weight every 14 days unless
+        you come back to it. Saves and follows fade more slowly, losing half over 60 days. Sailing stays strong because you keep
+        watching; the jazz streams from last month fade; Ibiza rises because you’ve opened it on the map four times this
+        week.
+      </p>
+      <p class="body">
+        Remove an interest and its weight goes to zero at once, and it won’t be learned again unless you add it back.
+        Pause learning and every weight freezes where it is.
+      </p>
+      <p class="formula"><code>w(t) = Σ s · 2<sup>−(t − tᵢ) / 14 days</sup></code></p>
+    </div>
+    <figure class="decay" data-anim aria-labelledby="decay-cap">
+      <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label="Interest weight over eight weeks: sailing stays high, live jazz peaks in week two then fades, Hercules Caves rises in steps, Ibiza rises sharply in the last week.">
+        {weeks.map((t) => (
+          <g class="d-grid">
+            <line x1={x(t)} x2={x(t)} y1={PAD.t} y2={CH - PAD.b} />
+            <text x={x(t)} y={CH - 10}>{t === 0 ? 'week 0' : t / 7}</text>
+          </g>
+        ))}
+        {[0, 0.5, 1].map((w) => (
+          <g class="d-grid">
+            <line x1={PAD.l} x2={CW - PAD.r} y1={y(w)} y2={y(w)} />
+            <text x={PAD.l - 8} y={y(w) + 4} class="d-y">{w}</text>
+          </g>
+        ))}
+        {lines.map((l, i) => (
+          <g style={`--h:${l.hue};--i:${i}`} class="d-line">
+            <path d={l.d} pathLength="1" />
+            <text x={CW - PAD.r + 10} y={l.end + 4}><tspan class="d-n">{l.name}</tspan><tspan x={CW - PAD.r + 10} dy="12" class="d-note">{l.note}</tspan></text>
+          </g>
+        ))}
+      </svg>
+      <ul class="d-legend" role="list" aria-hidden="true">
+        {lines.map((l) => <li style={`--h:${l.hue}`}><b>{l.name}</b> {l.note}</li>)}
+      </ul>
+      <figcaption id="decay-cap">Interest weight on your device over eight weeks, from the formula above.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section alg alt" id="memory-ticks-section" aria-labelledby="ticks-title">
+  <div class="wrap">
+    <p class="eyebrow">algorithm 4 · prefetch inside the ticks</p>
+    <h2 id="ticks-title" class="big">Already on your phone when you tap.<br /><em>So tapping tells nobody anything.</em></h2>
+    <p class="lede">
+      Every 2 seconds your phone sends one burst of 4 sealed packets of exactly the same size, and gets 4 back. The first
+      fetches your mailbox; the other three carry whatever is waiting: a message, a directory lookup, or the next feed
+      candidates your device chose to prefetch. Empty slots carry cover. Prefetch follows a steady schedule, not your
+      taps, so the post you open is usually already on your device, and opening it sends nothing.
+    </p>
+
+    <figure class="ticks" data-anim aria-labelledby="ticks-cap">
+      <div class="t-row">
+        <p class="t-lab"><b>Inside your phone</b><small>What each slot carries</small></p>
+        <div class="t-win"><div class="t-strip">
+          {[0, 1].map(() => ticks.map((tk) => (
+            <span class="t-tick">{[...tk].map((k) => <i class={`t-${k}`}></i>)}</span>
+          )))}
+        </div></div>
+      </div>
+      <div class="t-row">
+        <p class="t-lab"><b>On the wire</b><small>What anyone watching sees</small></p>
+        <div class="t-win"><div class="t-strip">
+          {[0, 1].map(() => ticks.map(() => (
+            <span class="t-tick wire"><i></i><i></i><i></i><i></i></span>
+          )))}
+        </div></div>
+      </div>
+      <ul class="t-legend" role="list">
+        {Object.entries(kinds).map(([k, v]) => <li><i class={`t-${k}`}></i>{v}</li>)}
+      </ul>
+      <figcaption id="ticks-cap">
+        One block per 2-second burst, each packet 10,248 bytes, about 20 KB up and 20 KB down per tick. Posts and
+        directory answers up to 8 KiB ride the ticks through the mixnet. Live streams and long videos come through two
+        relays from different operators, padded to standard sizes: the first knows who, not what; the second knows
+        what, not who.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<script>
+  // Charts animate once when they scroll into view. No JS or reduced motion: the final state shows at once.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.classList.add('mem-js');
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }, { rootMargin: '0px 0px -25% 0px' });
+    for (const el of document.querySelectorAll('[data-anim]')) io.observe(el);
+  }
+</script>
+
+<style>
+  .alg {
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .alg.alt {
+    background: #0b0b0d;
+  }
+  .big {
+    font-size: clamp(1.9rem, 4vw, 3.4rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    max-width: none;
+  }
+  .big > br:has(+ :global(.sec-link)) {
+    display: none;
+  }
+  .lede {
+    max-width: 46rem;
+  }
+  .body {
+    color: var(--text-dim);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.15em 0.5em;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+  .split {
+    display: grid;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .split {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+  }
+  figure {
+    margin: 2.6rem 0 0;
+  }
+  figcaption {
+    margin-top: 1.2rem;
+    max-width: 62ch;
+    font-size: 0.86rem;
+    color: var(--text-dim);
+  }
+
+  /* 1. Recall */
+  .recall {
+    display: grid;
+    gap: 1.4rem;
+  }
+  .r-lanes {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+  .r-lane,
+  .r-fused {
+    padding: 1rem;
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .r-name {
+    display: grid;
+    margin: 0 0 0.7rem;
+  }
+  .r-name b {
+    font-weight: 600;
+  }
+  .r-name small {
+    color: var(--text-faint);
+    font-size: 0.78rem;
+  }
+  .recall ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .recall li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .r-dot {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0b0c0e;
+    background: hsl(var(--h) 80% 72%);
+  }
+  .r-lane .r-t {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .r-arrow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .r-arrow::before,
+  .r-arrow::after {
+    content: '';
+    flex: 1 1 2rem;
+    max-width: 10rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
+  }
+  .r-arrow::after {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent);
+  }
+  .r-fused li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(4rem, 30%) 2.6rem;
+    font-size: 0.88rem;
+    color: #fff;
+  }
+  .r-fused li.cut {
+    opacity: 0.4;
+  }
+  .r-fused .r-t {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .r-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .r-bar i {
+    display: block;
+    height: 100%;
+    width: var(--w);
+    border-radius: 4px;
+    background: hsl(var(--h) 80% 72%);
+  }
+  .r-s {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  :global(.mem-js) .recall li {
+    transition: opacity 0.6s var(--ease), translate 0.6s var(--ease);
+  }
+  :global(.mem-js) .recall .r-lane li {
+    transition-delay: calc(var(--l) * 0.12s + var(--i) * 0.08s);
+  }
+  :global(.mem-js) .recall .r-fused li {
+    transition-delay: calc(1.1s + var(--i) * 0.12s);
+  }
+  :global(.mem-js) .recall .r-bar i {
+    transition: width 0.9s var(--ease);
+    transition-delay: calc(1.3s + var(--i) * 0.12s);
+  }
+  :global(.mem-js) .recall:not(.in) li {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  :global(.mem-js) .recall:not(.in) .r-bar i {
+    width: 0;
+  }
+  @media (max-width: 880px) {
+    .r-lanes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 520px) {
+    .r-lanes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .r-fused li {
+      grid-template-columns: auto minmax(0, 1fr) 2.4rem;
+    }
+    .r-fused .r-bar {
+      grid-column: 2 / 4;
+      grid-row: 2;
+    }
+  }
+
+  /* 2. Feed scoring */
+  .score {
+    padding: clamp(1rem, 3vw, 1.8rem);
+    border-radius: 28px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .score .k0 { --c: #b9adff; }
+  .score .k1 { --c: #4fd1c5; }
+  .score .k2 { --c: #f2f1ec; }
+  .score .k3 { --c: #7fb2ff; }
+  .s-legend {
+    list-style: none;
+    margin: 0 0 1.4rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+  .s-legend li::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 0.45rem;
+    border-radius: 3px;
+    background: var(--c);
+  }
+  .s-legend b {
+    font-weight: 500;
+    color: #fff;
+  }
+  .s-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .s-rows li {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1.1fr) minmax(0, 1fr) 3.4rem;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .s-rank {
+    font-family: var(--font-mono);
+    color: var(--text-faint);
+  }
+  .s-what {
+    display: grid;
+    min-width: 0;
+  }
+  .s-what b {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .s-what small {
+    color: var(--text-faint);
+    font-size: 0.78rem;
+  }
+  .s-track {
+    display: flex;
+    height: 14px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+  .s-track i {
+    display: block;
+    width: var(--w);
+    background: var(--c);
+  }
+  .s-track i + i {
+    box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.5);
+  }
+  .s-track .s-cut {
+    background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0 3px, transparent 3px 7px);
+  }
+  .s-val {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .ruled {
+    opacity: 0.45;
+  }
+  .ruled .s-what b {
+    text-decoration: line-through;
+  }
+  .ruled .s-track i {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  :global(.mem-js) .score .s-track i {
+    transition: width 0.8s var(--ease);
+    transition-delay: calc(var(--i) * 0.1s + var(--k, 4) * 0.22s);
+  }
+  :global(.mem-js) .score:not(.in) .s-track i {
+    width: 0;
+  }
+  @media (max-width: 640px) {
+    .s-rows li {
+      grid-template-columns: 1.2rem minmax(0, 1fr) 3rem;
+      row-gap: 0.4rem;
+    }
+    .s-track {
+      grid-column: 2 / 4;
+      grid-row: 2;
+    }
+  }
+  .facts {
+    list-style: none;
+    margin: 2.4rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.4rem 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  }
+  .facts li {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+  }
+  .facts b {
+    font-weight: 500;
+  }
+  .facts span {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+
+  /* 3. Decay */
+  .formula {
+    margin-top: 1.4rem;
+  }
+  .decay svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .d-grid line {
+    stroke: rgba(255, 255, 255, 0.07);
+  }
+  .d-grid text {
+    fill: var(--text-faint);
+    font-size: 11px;
+    text-anchor: middle;
+    font-family: var(--font-mono);
+  }
+  .d-grid text.d-y {
+    text-anchor: end;
+  }
+  .d-line path {
+    fill: none;
+    stroke: hsl(var(--h) 80% 72%);
+    stroke-width: 2.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .d-legend {
+    display: none;
+    list-style: none;
+    margin: 0.8rem 0 0;
+    padding: 0;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    font-size: 0.8rem;
+    color: var(--text-faint);
+  }
+  .d-legend li::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 3px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    border-radius: 2px;
+    background: hsl(var(--h) 80% 72%);
+  }
+  .d-legend b {
+    font-weight: 500;
+    color: hsl(var(--h) 80% 78%);
+  }
+  @media (max-width: 560px) {
+    .d-legend {
+      display: flex;
+    }
+    .decay .d-line text {
+      display: none;
+    }
+    .d-grid text {
+      font-size: 18px;
+    }
+  }
+  .d-line text {
+    fill: hsl(var(--h) 80% 78%);
+    font-size: 13px;
+  }
+  .d-line .d-note {
+    fill: var(--text-faint);
+    font-size: 10.5px;
+  }
+  :global(.mem-js) .decay .d-line path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 2.4s var(--ease);
+    transition-delay: calc(var(--i) * 0.25s);
+  }
+  :global(.mem-js) .decay .d-line text {
+    transition: opacity 0.6s;
+    transition-delay: calc(2s + var(--i) * 0.25s);
+  }
+  :global(.mem-js) .decay:not(.in) .d-line path {
+    stroke-dashoffset: 1;
+  }
+  :global(.mem-js) .decay:not(.in) .d-line text {
+    opacity: 0;
+  }
+
+  /* 4. Ticks */
+  .ticks {
+    display: grid;
+    gap: 1.1rem;
+  }
+  .t-row {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+  }
+  .t-lab {
+    display: grid;
+    margin: 0;
+  }
+  .t-lab b {
+    font-weight: 500;
+  }
+  .t-lab small {
+    color: var(--text-faint);
+    font-size: 0.78rem;
+  }
+  .t-win {
+    overflow: hidden;
+    border-radius: 14px;
+    padding: 0.6rem 0;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .t-strip {
+    display: flex;
+    width: max-content;
+    gap: 14px;
+    padding-left: 14px;
+    animation: t-run 24s linear infinite;
+  }
+  @keyframes t-run {
+    to { transform: translateX(-50%); }
+  }
+  .t-tick {
+    display: grid;
+    grid-template-columns: repeat(4, 14px);
+    gap: 3px;
+  }
+  .t-tick i {
+    height: 30px;
+    border-radius: 3px;
+  }
+  .t-m { background: #f2f1ec; }
+  .t-s { background: #b9adff; }
+  .t-p { background: #4fd1c5; }
+  .t-f { background: #7fb2ff; }
+  .t-c { background: rgba(255, 255, 255, 0.14); }
+  .wire i {
+    background: rgba(200, 204, 212, 0.55);
+  }
+  .t-legend {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+  .t-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 0.45rem;
+    border-radius: 3px;
+    vertical-align: -1px;
+  }
+  @media (max-width: 640px) {
+    .t-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .t-strip {
+      animation: none;
+    }
+  }
+</style>

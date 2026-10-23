@@ -1,0 +1,77 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Code from '../../components/Code.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+import { exampleFor } from '../../lib/examples';
+
+allowVisitorModels(Astro);
+const [iframe, link] = exampleFor('embed').blocks;
+const host = new URL(SITE.url).host;
+---
+
+<Base title="Iframe embed" description={`Embed ${SITE.displayName} with an iframe on builders that block scripts: Notion, Google Sites, Carrd and others.`}>
+  <p class="eyebrow">Platforms · Paste-in</p>
+  <h1>Iframe embed</h1>
+  <p><PriceBadge /> Free for any site, including commercial use.</p>
+  <div class="prose">
+    <p>
+      Some builders don't let you add a <code>&lt;script&gt;</code> tag but do accept an iframe or a link to embed. For those, the viewer
+      runs on a page of this site, <code>{SITE.url}/embed/</code>, and your page shows it in an iframe. Where your builder accepts
+      scripts, use the <a href="/platforms/html/">HTML snippet</a> instead: it loads faster and AR is more reliable.
+    </p>
+
+    <h2>What the embed page does</h2>
+    <ul>
+      <li>It reads the model URL and options from its own address and checks them with the same rules as the snippet generator. Only full <code>https://</code> URLs are accepted.</li>
+      <li>The visitor's browser downloads the model straight from your URL. Nothing goes through our servers, nothing is stored, and the page sets no cookies and has no analytics.</li>
+      <li>
+        Your model server sees requests from the origin <code>https://{host}</code>, so its CORS headers must allow that origin (or any
+        origin). The <a href="/hosting/own-server/#checker">checker</a> tests this.
+      </li>
+      <li>
+        AR from inside an iframe depends on the browser and on the iframe's <code>allow</code> attribute, which some builders remove. Check
+        “View in your space” on an iPhone and an Android phone before relying on it.
+      </li>
+    </ul>
+  </div>
+
+  {iframe && <Code title="Iframe code" code={iframe.code} />}
+  {link && <Code title="Link, for builders that embed by URL" code={link.code} />}
+
+  <Generator platform="embed" fixed />
+
+  <div class="prose">
+    <h2 id="notion">Notion</h2>
+    <p>
+      Type <code>/embed</code>, paste the link (not the iframe code) and choose <strong>Embed link</strong>. Notion decides how to show a
+      link; we have not confirmed that it shows this page as a live embed (verify).
+    </p>
+
+    <h2 id="google-sites">Google Sites</h2>
+    <p>
+      <strong>Insert → Embed → Embed code</strong>, paste the iframe code, then resize the box. Google Sites shows embed code inside its
+      own frame. The <strong>By URL</strong> tab may show a preview card instead of the viewer (verify).
+    </p>
+
+    <h2 id="carrd">Carrd</h2>
+    <p>
+      Add an <strong>Embed</strong> element, set its type to <strong>Code</strong> and paste the iframe code. Carrd's embed element needs
+      a Pro plan (verify which tier).
+    </p>
+
+    <h2 id="others">GoDaddy, Hostinger, Square Online and others</h2>
+    <p>
+      These builders accept the script snippet; see <a href="/platforms/">All platforms</a>. If the model doesn't appear after you
+      publish, paste the iframe code into the same embed box instead.
+    </p>
+
+    <h2>Not supported yet</h2>
+    <p>
+      Canva, Medium and similar sites embed only from providers they have approved, through oEmbed. This site has no oEmbed endpoint; see
+      <a href="/platforms/oembed/">the plan</a>.
+    </p>
+  </div>
+</Base>

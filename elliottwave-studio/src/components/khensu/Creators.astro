@@ -1,0 +1,570 @@
+---
+// Creators: paid directly into their own wallet. Platform shares are each platform's published
+// standard terms (see footnote); khėnsu.ñü's network fee is an estimate.
+
+const keep = [
+  { name: 'khėnsu.ñü', note: 'Tip, network fee only', pct: 99.9, label: '$9.99+', ours: true },
+  { name: 'OnlyFans', note: 'Standard share', pct: 80, label: '$8.00' },
+  { name: 'YouTube', note: 'Super Chat', pct: 70, label: '$7.00' },
+  { name: 'Twitch', note: 'Standard subscription', pct: 50, label: '$5.00' },
+];
+
+const steps = [
+  { title: 'A fan pays', body: 'A view, a tip, a gift or a ticket, from a chat, the Feed, a live room or your site.' },
+  { title: 'Hidden on the way', body: 'Sent through the shielded pool over the mixnet. No public record of who paid whom.' },
+  { title: 'In your wallet', body: 'On your iPhone, in seconds. Nobody else holds it, so nobody can freeze it.' },
+  { title: 'Tap to spend', body: 'Apple Pay at any contactless terminal, converted to USDC and then your currency as you pay.' },
+];
+---
+
+<section class="section creators" aria-labelledby="creators-title">
+  <div class="wrap">
+    <p class="eyebrow">For creators</p>
+    <h2 id="creators-title" class="big">Get paid directly. <em>Keep all of it.</em></h2>
+    <p class="lede">
+      Views, tips, gifts and tickets go straight into your own wallet. No platform cut, no payout schedule, no account
+      someone can freeze. Spend it anywhere with a tap.
+    </p>
+
+    <ol class="money" role="list" data-scene="reveal">
+      {steps.map((s, i) => (
+        <li style={`--i:${i}`}>
+          <span class="dot" aria-hidden="true" />
+          <b>{s.title}</b>
+          <span>{s.body}</span>
+        </li>
+      ))}
+    </ol>
+
+    <figure class="card pay" data-scene="reveal">
+      <div class="pay-scene" aria-hidden="true">
+        <span class="place"><span class="pname">Coffee shop</span></span>
+        <div class="iphone">
+          <span class="side"><i></i><i></i></span>
+          <div class="display">
+            <span class="island"><span class="iring"></span><span class="icheck"></span></span>
+            <div class="lock"><b>9:41</b><small>Double-click to pay</small></div>
+            <div class="wallet">
+              <div class="kcard">
+                <span class="kring"></span>
+                <span class="kname">khėnsu.ñü</span>
+                <span class="kbal"><span class="coin">1,240.00 coin</span><span class="usdc">4.50 USDC</span></span>
+              </div>
+              <span class="prompt p1">Pay with Face ID</span>
+              <span class="prompt p2"><i class="near"></i>Hold Near Reader</span>
+              <span class="prompt p3"><i class="done"></i>Done</span>
+            </div>
+          </div>
+        </div>
+        <div class="terminal">
+          <svg class="contactless" viewBox="0 0 40 40"><path d="M14 10c3 6 3 14 0 20M20 7c4 8 4 18 0 26M26 4c5 10 5 22 0 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <span class="tscreen"><span class="amt">$4.50</span><span class="ok">Approved</span></span>
+        </div>
+      </div>
+      <figcaption>
+        <b class="promise">The promise of crypto, realized.</b>
+        <b>Pay with khėnsu.ñü coin anywhere Apple Pay works</b>
+        <span>Tap your iPhone or Apple Watch at any contactless terminal. Your coin converts to USDC, then to the shop’s currency, in the moment you pay. The shop just sees a card payment.</span>
+        <ol class="pay-steps" role="list">
+          <li><b>1</b> Pick khėnsu.ñü coin in your wallet</li>
+          <li><b>2</b> It converts to USDC automatically</li>
+          <li><b>3</b> Tap to pay with Apple Pay</li>
+        </ol>
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <figure class="card keep-card" data-scene="reveal">
+        <figcaption><b>What you keep from a $10 tip</b><span>Before tax</span></figcaption>
+        <ul class="keep" role="list">
+          {keep.map((r, i) => (
+            <li class:list={[{ ours: r.ours }]} style={`--w:${r.pct};--i:${i}`}>
+              <span class="label"><b>{r.name}</b> <small>{r.note}</small></span>
+              <span class="track"><span class="fill" /></span>
+              <span class="value"><b>{r.label}</b></span>
+            </li>
+          ))}
+        </ul>
+      </figure>
+
+      <ul class="cards" role="list">
+        <li><b>Straight to your wallet</b><span>Payments land on your own phone, not in a platform account. A 42¢ minimum payout, no waiting for the end of the month.</span></li>
+        <li><b>No cut, fees under 1¢</b><span>khėnsu.ñü takes nothing. Sending, receiving and withdrawing each cost a network fee under 1¢, which pays the people running the nodes.</span></li>
+        <li><b>Your suñůlink.shield is a full node</b><span>Its own battery, a guard chip that holds its keys and controls every radio, and a mesh radio that works with no internet; the large-capacity version adds a satellite radio. The network pays for the relay work it does into the same wallet.</span></li>
+        <li><b>Tap to pay anywhere</b><span>Apple Pay over NFC, with your balance converted to USDC and then your local currency the moment you pay.</span></li>
+        <li><b>Private for your fans</b><span>Supporters pay through the shielded pool, so there’s no public list of who backs whom.</span></li>
+        <li><b>Yours if you leave</b><span>Your handle, followers and money are tied to your keys, not to us. Nothing to deplatform.</span></li>
+      </ul>
+    </div>
+
+    <p class="footnote">
+      Payments are offered region by region, following legal review in each. Apple Pay spending runs through a licensed
+      card partner, which by law verifies your identity and sees purchases made with that card; your messages and the rest of your
+      wallet stay private. Paid digital content inside the iPhone app follows Apple’s purchase rules; tips go 100% to the
+      creator. The network fee is an estimate. Shield and node rewards are paid by the protocol for verified work and
+      vary; this is not a promise of earnings. Other platforms’ shares are their published standard terms and differ by
+      programme and region. Apple Pay and Apple Watch are trademarks of Apple Inc.; the animation is our own illustration of Apple’s published in-store steps; the Contactless Indicator is a trademark of EMVCo, LLC; Android and Google Pay are trademarks of Google LLC; USDC is issued by Circle. No affiliation or endorsement.
+    </p>
+  </div>
+</section>
+
+<style>
+  .money {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    position: relative;
+  }
+  .money::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    right: 9px;
+    height: 2px;
+    background: linear-gradient(90deg, #8b7bff, #4fd1c5);
+    transform-origin: left;
+    transform: scaleX(var(--e, 1));
+    opacity: 0.6;
+  }
+  .money li {
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+    opacity: clamp(0.25, calc((var(--e, 1) - var(--i) * 0.22) / 0.2), 1);
+  }
+  .money .dot {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0 3px, #8b7bff 4px 100%);
+    box-shadow: 0 0 0 6px rgba(139, 123, 255, 0.15);
+    margin-bottom: 0.6rem;
+  }
+  .money b {
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  .money span:not(.dot) {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 1rem;
+    margin-top: 2.5rem;
+    align-items: start;
+  }
+  .cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+  .cards li {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding: 1.6rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .cards b {
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .cards span {
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .card {
+    margin: 0;
+    padding: 1.6rem;
+    display: grid;
+    gap: 1.1rem;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+  }
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  figcaption b {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  figcaption span,
+  small {
+    color: var(--text-dim);
+  }
+  small {
+    font-size: 0.8rem;
+  }
+  .keep {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .keep li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem 0.8rem;
+    align-items: center;
+  }
+  .keep .track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .keep .fill {
+    display: block;
+    height: 100%;
+    width: calc(var(--w) * 1%);
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.35);
+    transform-origin: left;
+    transform: scaleX(clamp(0, calc((var(--e, 1) - var(--i) * 0.12) / 0.6), 1));
+  }
+  .keep .ours .fill {
+    background: linear-gradient(90deg, #8b7bff, #4fd1c5);
+  }
+  .keep .ours b {
+    color: #b9b0ff;
+  }
+
+  .pay {
+    margin-top: 2.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 2rem;
+  }
+  .pay figcaption { gap: 0.7rem; }
+  .pay figcaption b { font-size: 1.4rem; }
+  .pay-steps { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+  .pay-steps li { display: flex; gap: 0.7rem; align-items: center; color: var(--text); }
+  .pay-steps li b {
+    font-size: 0.85rem; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(139, 123, 255, 0.18); color: #b9b0ff;
+  }
+  .soon { color: #4fd1c5 !important; font-weight: 500; }
+  .pay {
+    color-scheme: dark;
+  }
+  .pay-scene {
+    position: relative;
+    height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.6rem;
+    border-radius: 18px;
+    background: radial-gradient(120% 90% at 30% 20%, rgba(139, 123, 255, 0.18), transparent 60%), #050507;
+    overflow: hidden;
+  }
+  .iphone {
+    position: relative;
+    width: 150px;
+    height: 306px;
+    border-radius: 34px;
+    padding: 5px;
+    background: linear-gradient(145deg, #4a4a52, #1c1c21 40%, #3a3a42);
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+    animation: ap-move 9s infinite ease-in-out;
+    z-index: 2;
+  }
+  .side {
+    position: absolute;
+    right: -3px;
+    top: 86px;
+    width: 3px;
+    height: 34px;
+    border-radius: 2px;
+    background: #55555d;
+  }
+  .side i {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+    animation: ap-click 9s infinite;
+  }
+  .side i + i { animation-delay: 0.25s; }
+  .display {
+    position: relative;
+    height: 100%;
+    border-radius: 29px;
+    background: #000;
+    overflow: hidden;
+  }
+  .island {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 44px;
+    height: 13px;
+    margin-left: -22px;
+    border-radius: 8px;
+    background: #000;
+    box-shadow: 0 0 0 1px #111;
+    z-index: 3;
+    animation: ap-island 9s infinite cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+  .iring, .icheck { position: absolute; inset: 9px; opacity: 0; }
+  .iring {
+    border-radius: 50%;
+    background: conic-gradient(#30d158 0 70%, transparent 70%);
+    -webkit-mask: radial-gradient(closest-side, transparent 72%, #000 76%);
+    mask: radial-gradient(closest-side, transparent 72%, #000 76%);
+    animation: ap-iring 9s infinite, ap-spin 0.7s linear infinite;
+  }
+  .icheck { animation: ap-icheck 9s infinite; }
+  .icheck::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    width: 11px;
+    height: 5px;
+    border-left: 2.5px solid #30d158;
+    border-bottom: 2.5px solid #30d158;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+  .lock {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    padding-top: 46px;
+    background: radial-gradient(90% 60% at 50% 0%, #2a2350, #000);
+    animation: ap-lock 9s infinite;
+  }
+  .lock b { font-size: 2.6rem; font-weight: 600; letter-spacing: -0.02em; }
+  .lock small { margin-top: 8.5rem; font-size: 0.6rem; color: rgba(255, 255, 255, 0.6); }
+  .wallet {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    padding-top: 30px;
+    background: #000;
+    opacity: 0;
+    animation: ap-wallet 9s infinite;
+  }
+  .kcard {
+    position: relative;
+    width: 132px;
+    height: 84px;
+    border-radius: 10px;
+    padding: 9px 10px;
+    color: #fff;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.12)),
+      linear-gradient(140deg, #2b2357, #0f2a33);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(14px) saturate(160%);
+    animation: ap-card 9s infinite ease-in-out;
+  }
+  .kring {
+    position: absolute;
+    top: 9px;
+    right: 10px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+    box-shadow: inset 3px 0 0 -1.5px #fff;
+  }
+  .kname { font-size: 0.62rem; font-weight: 600; }
+  .kbal { position: absolute; left: 10px; bottom: 8px; font-size: 0.6rem; }
+  .kbal span { position: absolute; left: 0; bottom: 0; white-space: nowrap; }
+  .coin { animation: ap-coin 9s infinite; }
+  .usdc { opacity: 0; color: #9fe7ff; animation: ap-usdc 9s infinite; }
+  .done::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 30%;
+    height: 15%;
+    border-left: 2.5px solid #fff;
+    border-bottom: 2.5px solid #fff;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+  .prompt {
+    position: absolute;
+    top: 206px;
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .p1 { animation: ap-p1 9s infinite; }
+  .p2 { animation: ap-p2 9s infinite; flex-direction: column; gap: 0.5rem; top: 168px; }
+  .near {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #0a84ff;
+    animation: ap-near 1.4s ease-in-out infinite;
+  }
+  .near::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 9px;
+    height: 15px;
+    border: 1.5px solid #0a84ff;
+    border-radius: 3px;
+    transform: translate(-50%, -50%);
+  }
+  .p3 { animation: ap-p3 9s infinite; font-weight: 600; font-size: 0.8rem; }
+  .done { position: relative; display: inline-block; flex: none; width: 18px; height: 18px; border-radius: 50%; background: #0a84ff; }
+  .done::after { width: 8px; height: 4px; border-width: 0 0 2px 2px; }
+  .place {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px) saturate(160%);
+    animation: ap-place 9s infinite;
+  }
+  .promise { font-size: 1.35rem; letter-spacing: -0.01em; }
+  .terminal {
+    position: relative;
+    width: 116px;
+    height: 176px;
+    border-radius: 22px;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 12px;
+    padding-top: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)), #0b0b0e;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 20px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px) saturate(170%);
+  }
+  .tscreen {
+    position: relative;
+    width: 86px;
+    height: 46px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+  }
+  .tscreen span { position: absolute; }
+  .amt { animation: ap-amt 9s infinite; }
+  .ok { color: #30d158; font-size: 0.78rem; opacity: 0; animation: ap-ok 9s infinite; }
+  .contactless { width: 40px; height: 40px; animation: ap-tap 9s infinite; }
+
+  /* 0-12% lock screen, double-click at 10%; 14-40% card, Face ID in the island at 25-37%, coin converts at 26%;
+     42-70% hold near reader; 72-96% Done. */
+  @keyframes ap-click { 0%, 8% { opacity: 0; } 9%, 10% { opacity: 1; } 11.5%, 100% { opacity: 0; } }
+  @keyframes ap-lock { 0%, 12% { opacity: 1; } 15%, 97% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes ap-wallet { 0%, 12% { opacity: 0; } 15%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }
+  @keyframes ap-card { 0%, 14% { transform: translateY(20px) scale(0.92); } 18%, 100% { transform: none; } }
+  @keyframes ap-coin { 0%, 25% { opacity: 1; } 28%, 100% { opacity: 0; } }
+  @keyframes ap-usdc { 0%, 26% { opacity: 0; } 29%, 100% { opacity: 1; } }
+  @keyframes ap-p1 { 0%, 16% { opacity: 0; } 19%, 38% { opacity: 1; } 41%, 100% { opacity: 0; } }
+  @keyframes ap-p2 { 0%, 41% { opacity: 0; } 44%, 70% { opacity: 1; } 73%, 100% { opacity: 0; } }
+  @keyframes ap-p3 { 0%, 72% { opacity: 0; } 75%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }
+  @keyframes ap-move {
+    0%, 42% { transform: translateX(0) rotate(0); }
+    50%, 74% { transform: translateX(40px) translateY(-14px) rotate(-12deg); }
+    82%, 100% { transform: translateX(0) rotate(0); }
+  }
+  @keyframes ap-tap { 0%, 50% { opacity: 0.7; transform: none; } 55%, 70% { opacity: 1; transform: scale(1.12); color: #8b7bff; } 74%, 100% { opacity: 0.7; transform: none; } }
+  @keyframes ap-island {
+    0%, 22% { width: 44px; height: 13px; margin-left: -22px; border-radius: 8px; }
+    25%, 37% { width: 46px; height: 46px; margin-left: -23px; border-radius: 15px; }
+    41%, 100% { width: 44px; height: 13px; margin-left: -22px; border-radius: 8px; }
+  }
+  @keyframes ap-iring { 0%, 25% { opacity: 0; } 26%, 32% { opacity: 1; } 33%, 100% { opacity: 0; } }
+  @keyframes ap-icheck { 0%, 32% { opacity: 0; transform: scale(0.5); } 34%, 37% { opacity: 1; transform: none; } 39%, 100% { opacity: 0; } }
+  @keyframes ap-spin { to { rotate: 1turn; } }
+  @keyframes ap-near { 50% { box-shadow: 0 0 0 6px rgba(10, 132, 255, 0.18); } }
+  @keyframes ap-place { 0%, 2% { opacity: 0; transform: translateY(-6px); } 5%, 95% { opacity: 1; transform: none; } 99%, 100% { opacity: 0; } }
+  @keyframes ap-amt { 0%, 72% { opacity: 1; } 75%, 100% { opacity: 0; } }
+  @keyframes ap-ok { 0%, 72% { opacity: 0; } 75%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .iphone, .side i, .lock, .wallet, .kcard, .coin, .usdc, .island, .iring, .icheck, .near, .prompt, .p1, .p2, .p3, .amt, .ok, .contactless { animation: none; }
+    .lock, .coin, .iring, .icheck, .p1, .p2, .amt { opacity: 0; }
+    .wallet, .usdc, .p3, .ok { opacity: 1; }
+  }
+
+  @media (max-width: 960px) {
+    .pay { grid-template-columns: 1fr; }
+    .grid {
+      grid-template-columns: 1fr;
+    }
+    .money {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 1.6rem;
+    }
+    .money::before {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const places = [
+    ['Coffee shop', '$4.50'],
+    ['Supermarket', '$38.20'],
+    ['Taxi', '$18.00'],
+    ['Train station', '$2.90'],
+    ['Gas station', '$52.10'],
+  ];
+  for (const scene of document.querySelectorAll<HTMLElement>('.pay-scene')) {
+    const phone = scene.querySelector('.iphone');
+    const name = scene.querySelector('.pname');
+    const amt = scene.querySelector('.amt');
+    const usdc = scene.querySelector('.usdc');
+    let i = 0;
+    phone?.addEventListener('animationiteration', (e) => {
+      if ((e as AnimationEvent).animationName !== 'ap-move') return;
+      i = (i + 1) % places.length;
+      const [place, price] = places[i];
+      if (name) name.textContent = place;
+      if (amt) amt.textContent = price;
+      if (usdc) usdc.textContent = `${price.slice(1)} USDC`;
+    });
+  }
+</script>

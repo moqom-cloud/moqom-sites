@@ -1,0 +1,111 @@
+---
+/**
+ * Price comparison cards: a grid on wide screens, a swipeable scroll-snap row on phones.
+ * No client JS. Requires sites/_shared/glass/glass.css and scroll.css to be loaded.
+ */
+import { PRICE_CARDS, KEY_POINTS, PRICE_FOOTNOTE } from './price-cards';
+
+interface Props {
+  heading?: string;
+  showKeyPoints?: boolean;
+}
+const { heading = 'Usually much cheaper. Faster, and end-to-end encrypted in every room.', showKeyPoints = true } = Astro.props;
+---
+
+<section class="pc" aria-labelledby="pc-heading">
+  <h2 id="pc-heading" class="pc-heading reveal">{heading}</h2>
+  <p class="pc-sub reveal">Real scenarios, per hour, against Agora’s list price.</p>
+
+  <ul class="pc-track" role="list" aria-label="Price comparisons; swipe for more">
+    {PRICE_CARDS.map((c) => (
+      <li class:list={['pc-card glass glass--interactive reveal--scale', c.highlight && 'is-highlight']}>
+        <p class="pc-saving">{c.saving}</p>
+        <h3 class="pc-title">{c.title}</h3>
+        <p class="pc-scenario">{c.scenario}</p>
+        <dl class="pc-prices">
+          <div><dt>Agora</dt><dd class="pc-agora">{c.agora}</dd></div>
+          <div><dt>MOQOM</dt><dd class="pc-moqom">{c.moqom}</dd></div>
+        </dl>
+        {c.note && <p class="pc-note">{c.note}</p>}
+      </li>
+    ))}
+  </ul>
+
+  {showKeyPoints && (
+    <ul class="pc-points" role="list">
+      {KEY_POINTS.map((k) => (
+        <li class="glass reveal">
+          <h3>{k.title}</h3>
+          <p>{k.body}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <p class="pc-foot">{PRICE_FOOTNOTE}</p>
+</section>
+
+<style>
+  .pc { --pc-gap: 1rem; padding-block: 3rem; }
+  .pc-heading { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05; margin: 0 0 0.4em; }
+  .pc-sub { color: rgb(255 255 255 / 0.68); margin: 0 0 2rem; }
+
+  .pc-track {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0 1.25rem;
+    display: grid;
+    gap: var(--pc-gap);
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  /* Phones: one swipeable row, cards snap to the start edge. */
+  @media (max-width: 720px) {
+    .pc-track {
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      grid-auto-columns: 82%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 1rem;
+      padding-inline: 1rem;
+      margin-inline: -1rem;
+      scrollbar-width: none;
+    }
+    .pc-track::-webkit-scrollbar { display: none; }
+    .pc-card { scroll-snap-align: start; }
+  }
+
+  .pc-card { padding: 1.4rem 1.4rem 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 15rem; }
+  .pc-card.is-highlight { border-color: rgb(var(--glass-tint) / 0.35); }
+  .pc-saving {
+    margin: 0;
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: rgb(var(--glass-tint));
+  }
+  .pc-title { margin: 0; font-size: 1.05rem; }
+  .pc-scenario { margin: 0; color: rgb(255 255 255 / 0.7); font-size: 0.9rem; flex: 1; }
+  .pc-prices { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.4rem 0 0; }
+  .pc-prices dt { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(255 255 255 / 0.55); }
+  .pc-prices dd { margin: 0; font-variant-numeric: tabular-nums; font-size: 1.15rem; }
+  .pc-agora { color: rgb(255 255 255 / 0.6); text-decoration: line-through; text-decoration-color: rgb(255 255 255 / 0.35); }
+  .pc-moqom { font-weight: 700; }
+  .pc-note { margin: 0.2rem 0 0; font-size: 0.78rem; color: rgb(255 255 255 / 0.6); }
+
+  .pc-points {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--pc-gap);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .pc-points li { padding: 1.2rem 1.3rem; }
+  .pc-points h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+  .pc-points p { margin: 0; color: rgb(255 255 255 / 0.72); font-size: 0.9rem; }
+
+  .pc-foot { margin: 1.5rem 0 0; font-size: 0.75rem; color: rgb(255 255 255 / 0.5); max-width: 70ch; }
+</style>

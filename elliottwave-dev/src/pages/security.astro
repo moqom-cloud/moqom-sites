@@ -1,0 +1,107 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS, SECURITY_EMAIL } from '../data/moqom';
+---
+
+<Base title="Security" description={`Responsible disclosure and bug bounty for elliottwave.studio lab and MOQOM. Report vulnerabilities to ${SECURITY_EMAIL}.`}>
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">security</p>
+      <h1>Responsible disclosure</h1>
+      <p class="lede">
+        If you’ve found a vulnerability in an elliottwave.studio lab product, we want to hear about it, and we’ll work with
+        you to fix it.
+      </p>
+      <div class="btn-row">
+        <a class="btn primary" href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>
+        <a class="btn" href="#bug-bounty">bug bounty</a>
+        <a class="btn" href="/.well-known/security.txt">/.well-known/security.txt</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap prose">
+      <h2>How to report</h2>
+      <p>Email <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a> with:</p>
+      <ul>
+        <li>a description of the issue and its impact;</li>
+        <li>the affected product, component, version or URL;</li>
+        <li>steps to reproduce, or a proof of concept;</li>
+        <li>how you’d like to be credited, if at all.</li>
+      </ul>
+      <p>
+        Please don’t open public GitHub issues for security reports. <code>security@elliottwave.studio</code> reaches the
+        same people.
+      </p>
+      {/* TODO(Elliott): publish a PGP key or alternative encrypted channel, and link it here and in security.txt (Encryption: field). */}
+
+      <h2>What to expect</h2>
+      <ul>
+        <li>We’ll acknowledge your report and keep you updated as we investigate.</li>
+        <li>We’ll agree a disclosure timeline with you, and credit you when the fix ships if you’d like.</li>
+      </ul>
+      {/* TODO(Elliott): commit to concrete response targets (e.g. acknowledge within N business days, triage within N days, default disclosure window). */}
+
+      <h2 id="bug-bounty">Bug bounty</h2>
+      <p>
+        Our HackerOne program launches as a vulnerability disclosure program. Cash bounties are funded by
+        <a href="/donate">donations to the open-source projects</a> until paying customers adopt MOQOM. Until then, every
+        valid report gets public credit and our thanks — in the hall of fame and release notes — and we’ll send you
+        something: swag in the mail or a tip to your crypto wallet.
+      </p>
+      {/* TODO(Elliott): LINKS.hackerone is a placeholder until the HackerOne program is live; drop "not live yet" then. */}
+      <p>
+        HackerOne: <code>{LINKS.hackerone.replace('https://', '')}</code> (not live yet). Until it is, email
+        <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>. Want to fund the bounty? <a href="/donate">Donate →</a>
+      </p>
+
+      <h2 id="hall-of-fame">Hall of fame</h2>
+      <p>No reports yet. Valid reports are credited here and in the release notes, if you’d like to be.</p>
+
+      <h2>In scope</h2>
+      <ul>
+        <li>MOQOM Cloud and its console at <code>moqom.cloud</code></li>
+        <li>MOQOM client and server SDKs published by Elliott Wave LLC</li>
+        <li>Our websites: <code>moqom.dev</code>, <code>elliottwave.studio</code>, <code>elliottwave.dev</code></li>
+      </ul>
+
+      <h2>Out of scope</h2>
+      <ul>
+        <li>Denial-of-service and volumetric or load testing against production services</li>
+        <li>Social engineering, phishing, or physical attacks</li>
+        <li>Accessing, modifying or deleting data that isn’t yours</li>
+        <li>Third-party services and components we don’t control; please report those to their maintainers</li>
+        <li>Findings without a demonstrated security impact, such as missing headers on static pages, or reports from automated scanners alone</li>
+      </ul>
+      <p>
+        Test only against accounts and data you own. If you encounter anyone else’s data, stop, don’t keep or share it, and
+        tell us.
+      </p>
+
+      <h2 id="safe-harbour">Safe harbour <span class="draft-banner">Draft</span></h2>
+      <p>
+        <strong>DRAFT. We have contacted legal counsel to review this; not yet in effect as a binding commitment.</strong>
+      </p>
+      <p>
+        If you make a good-faith effort to follow this policy, Elliott Wave LLC will consider your research authorised, will
+        not pursue or support legal action against you for it, and will not report you to law enforcement for it. If a third
+        party brings action against you for activity that complied with this policy, we will make it known that your actions
+        were authorised by us.
+      </p>
+      <p>
+        Good faith means: you avoid privacy violations, data destruction and service degradation; you only interact with
+        accounts you own or have explicit permission to test; you give us reasonable time to fix an issue before disclosing
+        it; and you don’t use a vulnerability beyond what is needed to demonstrate it.
+      </p>
+      {/* TODO(counsel): review safe harbour wording (DMCA §1201 / CFAA language, interaction with the player EULA and anti-circumvention terms), and decide whether reverse engineering of binary components is in scope. */}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .draft-banner {
+    vertical-align: middle;
+    margin-left: 0.5rem;
+  }
+</style>

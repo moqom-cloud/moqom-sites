@@ -1,0 +1,161 @@
+---
+// The reel three ways, frame-locked: the original, ñü.media's lowest-data version at full 720p, and ñü.media Pro,
+// rebuilt on the host to 4K at 240 fps. Sound follows the tile you point at or tap (see scripts/sound.ts).
+import data from '../../data/pro-reel.json';
+
+type Tile = { id: string; name: string; note: string; file: string; poster: string; hevc?: boolean; ours: boolean };
+const tiles = data.tiles as Tile[];
+---
+
+<figure class="card wide pr" data-scene="reveal">
+  <figcaption><b>{data.title}</b> <span>{data.caption}</span></figcaption>
+  <div class="three">
+    {tiles.map((t, i) => (
+      <button type="button" class:list={['tile', { ours: t.ours }]} data-tile={t.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+        <video muted loop playsinline preload={i === 2 ? 'none' : 'auto'} poster={t.poster} data-sound={`pro-reel:${t.id}`}
+          aria-label={`${t.name}, ${t.note}`}>
+          {t.hevc ? <source src={t.file} type='video/mp4; codecs="hvc1.2.4.L153.B0"' /> : <source src={t.file} type="video/mp4" />}
+        </video>
+        <span class="tag"><b>{t.name}</b> <small>{t.note}</small></span>
+        <span class="ear" aria-hidden="true"></span>
+      </button>
+    ))}
+  </div>
+  <p class="note">{data.note} <a href="/quality">How we measure, and the files to check it yourself.</a></p>
+</figure>
+
+<script>
+  import { claim } from '../../scripts/sound';
+
+  for (const fig of document.querySelectorAll<HTMLElement>('.pr')) {
+    const btns = [...fig.querySelectorAll<HTMLButtonElement>('.tile')];
+    const vids = btns.map((b) => b.querySelector('video')!);
+    const [lead] = vids;
+    const pick = (b: HTMLButtonElement) => {
+      for (const x of btns) x.setAttribute('aria-pressed', String(x === b));
+      claim(fig, b.querySelector('video')!);
+    };
+    for (const b of btns) {
+      b.addEventListener('click', () => pick(b));
+      b.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && pick(b));
+    }
+    claim(fig, lead);
+
+    for (const v of vids) {
+      const src = v.querySelector('source');
+      if (src && !v.canPlayType(src.type)) v.closest('.tile')!.classList.add('no-play');
+    }
+
+    const lock = () => {
+      for (const v of vids.slice(1)) {
+        if (v.readyState >= 2 && !v.paused && Math.abs(v.currentTime - lead.currentTime) > 0.05) v.currentTime = lead.currentTime;
+      }
+      lead.requestVideoFrameCallback ? lead.requestVideoFrameCallback(lock) : requestAnimationFrame(lock);
+    };
+    lock();
+
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        vids.forEach((v) => {
+          if (v.preload === 'none') v.preload = 'auto';
+          v.play().catch(() => {});
+        });
+      } else vids.forEach((v) => v.pause());
+    }, { rootMargin: '200px 0px' }).observe(fig);
+  }
+</script>
+
+<style>
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .three {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  .tile {
+    all: unset;
+    position: relative;
+    aspect-ratio: 9 / 16;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+  }
+  .tile.ours {
+    box-shadow: 0 0 0 1.5px rgba(139, 123, 255, 0.7);
+  }
+  .tile[aria-pressed='true'] {
+    box-shadow: 0 0 0 2px #fff;
+  }
+  .tile:focus-visible {
+    outline: 2px solid #8b7bff;
+    outline-offset: 3px;
+  }
+  video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tag {
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: fit-content;
+    padding: 0.3rem 0.6rem;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+  .tag small {
+    display: block;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .no-play::after {
+    content: 'This browser can’t play HEVC. Try Safari, or Chrome or Edge on a recent Mac or PC.';
+    position: absolute;
+    inset: 35% 0.8rem auto;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.65);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  .ours .tag b {
+    color: #b9b0ff;
+  }
+  /* A small speaker on the tile you're hearing. */
+  .ear {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55) center / 1rem no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z'/%3E%3C/svg%3E");
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .tile[aria-pressed='true'] .ear {
+    opacity: 1;
+  }
+  @media (max-width: 760px) {
+    .three {
+      grid-template-columns: repeat(3, 72%);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+    .tile {
+      scroll-snap-align: center;
+    }
+  }
+</style>

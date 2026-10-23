@@ -1,0 +1,14 @@
+---
+// The khėnsu.ñü name as text in the title face. Elliott's dot on the e is drawn in CSS (.edot in global.css) so it
+interface Props {
+  tld?: boolean; // include .ñü
+  class?: string;
+}
+const { tld = true, class: cls } = Astro.props;
+---
+
+<span class:list={['k-name', cls]}
+  ><span class="sr">khėnsu{tld && '.ñü'}</span><span aria-hidden="true"
+    >kh<i class="edot">e</i>nsu{tld && <span class="tld">.ñü</span>}</span
+  ></span
+>

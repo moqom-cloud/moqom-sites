@@ -1,0 +1,257 @@
+---
+// Working in-browser ñü.mømëntš studio: real media, real looks, real captions,
+// real export (Canvas + MediaRecorder). Nothing uploads until Post to feed.
+const samples = [
+  { id: 'coast', label: 'Blue cove (sample)', src: '/khensu/moments/clips/s01.mp4', type: 'video' },
+  { id: 'neon', label: 'Neon street (sample)', src: '/khensu/moments/clips/s03.mp4', type: 'video' },
+  { id: 'fit', label: 'Fit check (sample)', src: '/khensu/moments/clips/s06.mp4', type: 'video' },
+  { id: 'dog', label: 'Dog in the park (sample)', src: '/khensu/moments/clips/s20.mp4', type: 'video' },
+];
+---
+<section class="section ms" id="studio-section" aria-labelledby="ms-title">
+  <div class="wrap">
+    <p class="eyebrow">try it here · uploads only when you post</p>
+    <h2 id="ms-title">The editor, running in this page.<br /><span class="dim">Your clips stay in this tab until you post.</span></h2>
+    <p class="lede">Pick a sample or drop in your own photo/video, choose a template look, type a caption, then export.
+      This is the same recipe model as the app — look, caption and format rendered into the file. The native
+      app adds beat-synced multi-clip timelines, auto captions from speech, subject lift and carousels.</p>
+
+    <div class="ms-grid">
+      <form class="ms-card" id="ms-form">
+        <label>Media
+          <select id="ms-sample">
+            {samples.map(s => <option value={s.src} data-type={s.type}>{s.label}</option>)}
+            <option value="upload">My photo / video…</option>
+          </select>
+        </label>
+        <label class="ms-drop">Drop a photo or video — it stays on this device
+          <input id="ms-file" type="file" accept="video/*,image/*" />
+        </label>
+        <div class="ms-row">
+          <label>Template
+            <select id="ms-template">
+              <option value="pulse" data-look="saturate(1.5) contrast(1.1)" data-accent="#f0a8c8">Pulse · Digital Pop · fade</option>
+              <option value="film" data-look="sepia(.35) saturate(1.15) contrast(1.06)" data-accent="#f2d9b3">Film still · Film 35mm · dip</option>
+              <option value="night" data-look="saturate(.82) brightness(1.07) contrast(.94)" data-accent="#8cb3ff">Night bus · Haze · fade</option>
+              <option value="clean" data-look="none" data-accent="#ffffff">Clean cut · Natural · hard cut</option>
+              <option value="print" data-look="saturate(.75) contrast(1.22)" data-accent="#7ee0c8">Scrapbook · Printed · cut</option>
+            </select>
+          </label>
+          <label>Format
+            <select id="ms-format">
+              <option value="9:16">9:16 reel</option><option value="1:1">1:1 square</option>
+              <option value="4:5">4:5 story</option><option value="16:9">16:9 wide</option>
+            </select>
+          </label>
+        </div>
+        <label>Caption (burned into the export)
+          <input id="ms-caption" type="text" maxlength="60" value="on the beat" />
+        </label>
+        <label>Beat
+          <select id="ms-bpm"><option value="120">120 BPM</option><option value="92">92 BPM</option><option value="140">140 BPM</option><option value="0">Off</option></select>
+        </label>
+        <div class="ms-actions">
+          <button type="button" class="btn" id="ms-play">Pause</button>
+          <button type="submit" class="btn" id="ms-export">Export file</button>
+          <button type="button" class="btn primary" id="ms-post">Post to feed</button>
+        </div>
+        <div class="ms-progress" id="ms-progress" hidden><i></i></div>
+        <p class="ms-note" id="ms-status">Video exports as WebM from this browser (up to 15s of the clip); photos as JPG. In the app: MP4 reels, multi-clip beat sync, auto captions, subject lift, carousels to Photos.</p>
+      </form>
+
+      <div class="ms-card ms-stage">
+        <div class="ms-phone">
+          <canvas id="ms-canvas" width="720" height="1280"></canvas>
+          <video id="ms-video" src={samples[0].src} poster="/khensu/moments/clips/s01.webp" autoplay muted loop playsinline preload="metadata" hidden></video>
+          <img id="ms-img" alt="" hidden />
+        </div>
+        <div class="ms-chips"><span id="ms-chip-template">Pulse · Digital Pop</span><span id="ms-chip-format">9:16</span><span>Uploads only when you post</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ms .dim { color: var(--text-dim); font-weight: 300; }
+  .ms-grid { display: grid; gap: 1rem; margin-top: 2rem; }
+  @media (min-width: 920px) { .ms-grid { grid-template-columns: 1.05fr .95fr; } }
+  .ms-card { border: 1px solid var(--line); background: var(--bg-raised); border-radius: 24px; padding: 1.4rem; display: grid; gap: .9rem; align-content: start; }
+  .ms-card label { display: grid; gap: .4rem; font-weight: 600; font-size: .92rem; }
+  .ms-card input[type="text"], .ms-card select { font: inherit; font-weight: 400; padding: .7rem .8rem; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); width: 100%; }
+  .ms-row { display: grid; gap: .8rem; } @media (min-width: 560px) { .ms-row { grid-template-columns: 1fr 1fr; } }
+  .ms-drop { border: 1.5px dashed rgba(240,168,200,.55); border-radius: 16px; padding: 1rem; text-align: center; cursor: pointer; color: var(--text-dim); }
+  .ms-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .ms-note { color: var(--text-faint); font-size: .88rem; line-height: 1.5; margin: 0; }
+  .ms-note.err { color: #ff9a9a; }
+  .ms-progress { height: 6px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+  .ms-progress[hidden] { display: none; }
+  .ms-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #f0a8c8, #7ee0c8); transition: width .2s; }
+  .ms-phone { border-radius: 26px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,.16); width: min(100%, 360px); margin: 0 auto; }
+  .ms-phone canvas { width: 100%; height: auto; display: block; }
+  .ms-chips { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
+  .ms-chips span { font-size: .78rem; border: 1px solid var(--line); border-radius: 999px; padding: .35rem .65rem; color: var(--text-dim); }
+</style>
+
+<script>
+  import { feedApi, postVideo, stageLabel, FeedError, showHandle, loadLocal, addLocalPost } from '../../scripts/feed-client';
+  const $ = (s) => document.querySelector(s);
+  const canvas = $('#ms-canvas'), ctx = canvas.getContext('2d');
+  const video = $('#ms-video'), img = $('#ms-img');
+  let mode = 'video', objectURL = '', playing = true, started = performance.now();
+
+  const formats = { '9:16': [720, 1280], '1:1': [960, 960], '4:5': [960, 1200], '16:9': [1280, 720] };
+  function currentFilter() {
+    const o = $('#ms-template').selectedOptions[0];
+    return { filter: o.dataset.look, accent: o.dataset.accent, name: o.textContent };
+  }
+  function syncChips() {
+    const t = currentFilter();
+    $('#ms-chip-template').textContent = t.name.split('·').slice(0, 2).join('·');
+    $('#ms-chip-format').textContent = $('#ms-format').value;
+    const [w, h] = formats[$('#ms-format').value];
+    canvas.width = w; canvas.height = h;
+  }
+  function draw(now) {
+    const [W, H] = [canvas.width, canvas.height];
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    const src = mode === 'video' ? video : img;
+    const sw = mode === 'video' ? video.videoWidth : img.naturalWidth;
+    const sh = mode === 'video' ? video.videoHeight : img.naturalHeight;
+    if (sw > 0 && sh > 0) {
+      const scale = Math.max(W / sw, H / sh);
+      const dw = sw * scale, dh = sh * scale;
+      ctx.save();
+      const f = currentFilter().filter;
+      ctx.filter = f && f !== 'none' ? f : 'none';
+      ctx.drawImage(src, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      ctx.restore();
+    }
+    // Caption burned at the bottom, template accent behind it.
+    const cap = $('#ms-caption').value.trim();
+    if (cap) {
+      ctx.save();
+      const fs = Math.round(W * 0.055);
+      ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+      const tw = Math.min(ctx.measureText(cap).width + fs * 1.2, W * 0.9);
+      const x = (W - tw) / 2, y = H - fs * 2.6;
+      ctx.globalAlpha = 0.88; ctx.fillStyle = currentFilter().accent;
+      ctx.beginPath(); ctx.roundRect(x, y, tw, fs * 1.7, fs * 0.4); ctx.fill();
+      ctx.globalAlpha = 1; ctx.fillStyle = '#101014'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(cap, W / 2, y + fs * 0.86, W * 0.86);
+      ctx.restore();
+    }
+    // Beat bars when a beat is on.
+    const bpm = Number($('#ms-bpm').value);
+    if (bpm) {
+      const n = 16, bw = W / n;
+      const beat = 60 / bpm;
+      for (let i = 0; i < n; i++) {
+        const ph = Math.abs(Math.sin((now / 1000) / beat * Math.PI + i * 0.7));
+        const h = 10 + ph * H * 0.045;
+        ctx.fillStyle = i % 2 ? '#7ee0c8' : '#f0a8c8';
+        ctx.fillRect(i * bw + 2, H - h, bw - 4, h);
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  function setSource(src, type) {
+    mode = type;
+    if (type === 'image') { video.pause(); img.src = src; }
+    else { video.src = src; video.play().catch(() => {}); }
+  }
+  $('#ms-sample').addEventListener('change', (e) => {
+    if (e.target.value === 'upload') { $('#ms-file').click(); return; }
+    setSource(e.target.value, 'video'); started = performance.now();
+  });
+  $('#ms-file').addEventListener('change', () => {
+    const f = $('#ms-file').files[0]; if (!f) return;
+    if (objectURL) URL.revokeObjectURL(objectURL);
+    objectURL = URL.createObjectURL(f);
+    setSource(objectURL, f.type.startsWith('image') ? 'image' : 'video');
+    $('#ms-status').textContent = `Loaded “${f.name}” on this device only — 0 bytes uploaded.`;
+  });
+  ['ms-template', 'ms-format', 'ms-caption', 'ms-bpm'].forEach(id => document.getElementById(id).addEventListener('input', syncChips));
+  $('#ms-play').addEventListener('click', () => {
+    if (mode !== 'video') return;
+    playing = !playing;
+    playing ? video.play().catch(() => {}) : video.pause();
+    $('#ms-play').textContent = playing ? 'Pause' : 'Play';
+  });
+
+  const status = (m, err = false) => { $('#ms-status').textContent = m; $('#ms-status').classList.toggle('err', err); };
+  // The last export, kept so Post to feed sends exactly the file you exported. Any change to the edit clears it.
+  let lastExport = null;
+  ['ms-template', 'ms-format', 'ms-caption', 'ms-bpm', 'ms-sample', 'ms-file'].forEach(id => document.getElementById(id).addEventListener('input', () => { lastExport = null; }));
+  $('#ms-file').addEventListener('change', () => { lastExport = null; });
+
+  const photoBlob = () => new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92));
+  function record() {
+    return new Promise(async (resolve, reject) => {
+      if (!('MediaRecorder' in window) || !canvas.captureStream) { reject(new Error('This browser cannot record canvas video — the app exports MP4 natively.')); return; }
+      status('Recording your export… keep this tab open.');
+      video.currentTime = 0; await video.play().catch(() => {});
+      const stream = canvas.captureStream(30);
+      try {
+        const vs = video.captureStream ? video.captureStream() : null;
+        vs?.getAudioTracks?.().forEach(t => stream.addTrack(t));
+      } catch {}
+      const rec = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm' });
+      const chunks = [];
+      const seconds = Math.min((isFinite(video.duration) ? video.duration : 10), 15);
+      rec.ondataavailable = (ev) => chunks.push(ev.data);
+      rec.onstop = () => resolve({ blob: new Blob(chunks, { type: 'video/webm' }), duration: seconds });
+      rec.start(200);
+      setTimeout(() => rec.state !== 'inactive' && rec.stop(), seconds * 1000);
+    });
+  }
+
+  $('#ms-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (mode === 'image') {
+      const b = await photoBlob();
+      lastExport = { blob: b, duration: 0 };
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'nu.moments.jpg'; a.click();
+      status('Photo exported as JPG with the look and caption in it. In the app this is a carousel slide or a reel frame.');
+      return;
+    }
+    try {
+      lastExport = await record();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(lastExport.blob); a.download = 'nu.moments.webm'; a.click();
+      status('Exported. The look, caption and beat bars are in the file. Post to feed sends this same file.');
+    } catch (err) { status(err.message, true); }
+  });
+
+  let posting = false;
+  $('#ms-post').addEventListener('click', async () => {
+    if (posting) return;
+    const { api } = feedApi();
+    const caption = $('#ms-caption').value.trim();
+    const bar = $('#ms-progress');
+    posting = true; $('#ms-post').disabled = true;
+    try {
+      if (api && mode === 'image') { status('The feed takes video. Pick a video, or export this photo and share it from the app.', true); return; }
+      if (!lastExport) lastExport = mode === 'image' ? { blob: await photoBlob(), duration: 0 } : await record();
+      if (!api) {
+        await addLocalPost(lastExport.blob, caption, mode === 'image' ? 'nu.moments.jpg' : 'nu.moments.webm');
+        status('Posted on this device. The shared feed isn’t connected on this page; open /feed to see it.');
+        return;
+      }
+      const handle = loadLocal().profile.handle;
+      bar.hidden = false;
+      await postVideo(api, {
+        handle, caption, video: lastExport.blob, durationHint: lastExport.duration,
+        onProgress: (p) => { status(stageLabel(p)); bar.querySelector('i').style.width = `${Math.round(p.fraction * 100)}%`; },
+      });
+      status(`Posted to the feed as ${showHandle(handle)}.`);
+    } catch (err) {
+      status(err instanceof FeedError ? err.message : (err?.message || 'Something went wrong while posting. Try again.'), true);
+    } finally {
+      posting = false; $('#ms-post').disabled = false; bar.hidden = true; bar.querySelector('i').style.width = '0';
+    }
+  });
+  syncChips();
+</script>

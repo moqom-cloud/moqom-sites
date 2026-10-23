@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS, EMAIL, AT_RELEASE } from '../data/six10nine';
+---
+
+<Base title="Contribute" description="Bug reports, ideas and pull requests to six10nine, and the contributor agreement they need." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>Contribute</h1>
+  <p class="lede">Bug reports, ideas and pull requests are welcome.</p>
+  <p>
+    The repository, <span class="mono">{LINKS.repo}</span>, goes public at release. <span class="badge">{AT_RELEASE}</span>
+  </p>
+
+  <h2>Sign the CLA</h2>
+  <p>
+    Elliott Wave LLC owns all of six10nine’s intellectual property and may also license it commercially, so every
+    contributor signs the Contributor Copyright Assignment Agreement once. The agreement is under legal review and may
+    change before the first outside contribution is merged.
+  </p>
+  <p>In plain words: you assign the copyright in your contribution to Elliott Wave LLC, and you get a permanent licence
+    back to use your own contribution for any purpose. Everyone else receives it under the project’s PolyForm
+    Noncommercial licence.</p>
+  <p>To sign, put this line in your first pull request’s description:</p>
+  <pre><code>I have read the Copyright Assignment Agreement and I hereby sign it</code></pre>
+  <p>
+    Pull requests without it can’t be merged. Contributing for your employer? Make sure you’re allowed to, or have them
+    contact <a href={`mailto:${EMAIL.licensing}`}>{EMAIL.licensing}</a>.
+  </p>
+
+  <h2>Before you start</h2>
+  <ul>
+    <li>
+      <strong>Talk first about big changes.</strong> Open an issue before a new feature, a change to the game side, or
+      anything touching the Einstein@home integration. Bug fixes and small improvements can go straight to a pull request.
+    </li>
+    <li><strong>Security issues</strong> go to <a href="/security">security@elliottwave.studio</a>, never to public issues.</li>
+    <li><strong>Read <code>docs/ARCHITECTURE.md</code>.</strong> It’s the design of record; update it in the same pull request if you change behaviour it describes.</li>
+  </ul>
+
+  <h2>Build and test</h2>
+  <p>macOS 14 or later and Xcode 26 (Swift 6.2).</p>
+  <pre><code>cd Packages/Six10NineKit
+swift build
+swift test                 # fast, no permissions needed
+cd ../..
+scripts/install-app.sh     # build, sign with your Apple Development certificate, install, launch</code></pre>
+  <p>
+    Sign with a stable Apple Development identity: macOS ties the Accessibility permission to the signature, and ad-hoc
+    builds lose it on every reinstall.
+  </p>
+
+  <h2>A good pull request</h2>
+  <ul>
+    <li><strong>Logic lives in <code>Six10NineKit</code>, with tests.</strong> Anything that makes a decision belongs in the library as plain value types with XCTest coverage. The app target only wires macOS events to it.</li>
+    <li><strong>Never get in the way.</strong> Keys six10nine doesn’t use must reach apps untouched. Overlays never take focus. Nothing polls.</li>
+    <li><strong>Private by default.</strong> No analytics, no new network calls, and AI stays on-device.</li>
+    <li><strong>Match the surrounding code.</strong> Swift 6 strict concurrency, short comments that explain why, no new dependencies without discussion.</li>
+    <li><code>swift test</code> passes, and the pull request says what you checked by hand: the event tap, menus and overlays aren’t covered by automated tests.</li>
+  </ul>
+  <p>Please follow the Code of Conduct in the repository.</p>
+</Base>

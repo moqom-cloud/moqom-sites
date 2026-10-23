@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="t d" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif">
+  <title id="t">List price per 1,000 HD video minutes</title>
+  <desc id="d">MOQOM charges cost-plus, capped at 3.98 dollars per 1,000 HD minutes. Agora lists 3.99 dollars and Tencent RTC 3.99 dollars. AWS Chime SDK lists 1.70 dollars per 1,000 attendee-minutes and AWS IVS Real-Time about 1.20 dollars per 1,000 participant-minutes at any resolution. Cloudflare's MoQ relays are free during beta.</desc>
+  <rect width="960" height="440" rx="22" fill="#0b1220"/>
+  <text x="40" y="50" fill="#e6edf7" font-size="20" font-weight="600">Price per 1,000 HD video minutes, lower is better</text>
+  <text x="40" y="74" fill="#8a97ab" font-size="14">List prices as each vendor publishes them. MOQOM's is a ceiling: you pay cost-plus, up to it. Scale: $0–$4.</text>
+  <g font-size="14">
+    <!-- $1 = 150 px; bars start at x=300, max 600 px -->
+    <text x="40" y="124" fill="#e6edf7">MOQOM, ceiling*</text>
+    <rect x="301" y="109" width="596" height="22" rx="5" fill="#38d6f5" fill-opacity="0.14" stroke="#38d6f5" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="884" y="126" fill="#38d6f5" font-weight="600" text-anchor="end">up to $3.98</text>
+
+    <text x="40" y="174" fill="#c4cedc">Agora</text>
+    <rect x="300" y="158" width="599" height="24" rx="5" fill="#46536a"/>
+    <text x="884" y="176" fill="#e6edf7" text-anchor="end">$3.99</text>
+
+    <text x="40" y="224" fill="#c4cedc">Tencent RTC</text>
+    <rect x="300" y="208" width="599" height="24" rx="5" fill="#46536a"/>
+    <text x="884" y="226" fill="#e6edf7" text-anchor="end">$3.99</text>
+
+    <text x="40" y="274" fill="#c4cedc">AWS Chime SDK</text>
+    <rect x="300" y="258" width="255" height="24" rx="5" fill="#46536a"/>
+    <text x="565" y="276" fill="#c4cedc">$1.70 per attendee</text>
+
+    <text x="40" y="324" fill="#c4cedc">AWS IVS Real-Time</text>
+    <rect x="300" y="308" width="180" height="24" rx="5" fill="#46536a"/>
+    <text x="490" y="326" fill="#c4cedc">about $1.20, any resolution</text>
+
+    <text x="40" y="374" fill="#c4cedc">Cloudflare MoQ relays</text>
+    <rect x="300" y="358" width="6" height="24" rx="3" fill="#46536a"/>
+    <text x="316" y="376" fill="#c4cedc">free during beta</text>
+  </g>
+  <text x="40" y="416" fill="#8a97ab" font-size="12">* Cost-plus on the bytes delivered, never above the cap. AWS: North America, first 10,000 hours. Sources on moqom.dev.</text>
+</svg>

@@ -1,0 +1,35 @@
+---
+import { BENCH_BADGE } from "../data/site";
+
+interface Props {
+  href?: string;
+}
+const { href = "/benchmarks/#methodology" } = Astro.props;
+---
+
+<a class="bench-badge" href={href} title="These are lab measurements, not production SLAs. Read the methodology.">
+  <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+    <path d="M6 1.5h4M7 1.5v4.2L2.6 13a1 1 0 0 0 .86 1.5h9.08a1 1 0 0 0 .86-1.5L9 5.7V1.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+  {BENCH_BADGE}
+</a>
+
+<style>
+  .bench-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 0.25em 0.7em;
+    border-radius: var(--radius-pill);
+    border: 1px dashed rgb(251 191 36 / 0.5);
+    background: rgb(251 191 36 / 0.07);
+    color: var(--warn);
+    font-size: var(--text-xs);
+    font-weight: 560;
+    line-height: 1.4;
+  }
+  .bench-badge:hover {
+    text-decoration: none;
+    background: rgb(251 191 36 / 0.13);
+  }
+</style>

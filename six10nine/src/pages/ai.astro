@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="AI menu matching" description="How six10nine's on-device AI carries a chord's meaning into apps where you haven't set it." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>AI menu matching</h1>
+  <p class="lede">Set a chord in one app, and it means the same thing in the next one.</p>
+
+  <p>
+    Say <kbd>⌘8</kbd> opens the command palette in Cursor. Play <kbd>⌘8</kbd> in Safari, where you haven’t set it, and
+    six10nine’s on-device AI looks through Safari’s menus for the item that does the same job, then offers it.
+  </p>
+
+  <h2>What you see</h2>
+  <ol>
+    <li>“Finding ⌘8 in Safari…”</li>
+    <li>The first time in each app, a suggestion: “⌘8 → Window › Show Tab Overview?”</li>
+    <li>
+      <kbd>↩</kbd> uses it: the chord is saved for that app and runs. <kbd>Esc</kbd> says no thanks, and that chord isn’t
+      suggested in that app again. Any other key dismisses the suggestion and goes to the app.
+    </li>
+    <li>Once you’ve accepted a suggestion in an app, later matches there are saved and run without asking.</li>
+  </ol>
+  <p>Hold <kbd>⌘67</kbd> to record over a match you don’t like.</p>
+
+  <h2>When there’s no match</h2>
+  <p>
+    If the model finds nothing, isn’t available, or you switch apps before it answers, the app gets its own shortcut as
+    if six10nine weren’t there, and six10nine tries again next time.
+  </p>
+
+  <h2>Requirements</h2>
+  <p>
+    macOS 26 with Apple Intelligence turned on. Without it, nothing is suggested and every chord you’ve set works as
+    usual.
+  </p>
+
+  <h2>Privacy</h2>
+  <p>
+    The model is Apple’s on-device model. It sees what the chord does in your other apps and this app’s menu items, and
+    none of it leaves your Mac. See <a href="/privacy">Privacy</a>.
+  </p>
+</Base>

@@ -1,0 +1,563 @@
+---
+// What artists keep on today's platforms against paying them directly on khėnsu.ñü.
+// Every number and its source lives in src/data/creator-pay.json; khėnsu.ñü's fee is an estimate.
+import data from '../../data/creator-pay.json';
+
+type Src = { name: string; url: string; checked: string };
+type CutRow = { id: string; name: string; note: string; platform: number[]; middle?: number[]; display: string; kind: string; ours?: boolean; sources: Src[] };
+type PerRow = { id: string; name: string; note: string; paid: number[]; artist: number[]; display: string; kind: string; ours?: boolean; sources: Src[] };
+
+const { page = false } = Astro.props as { page?: boolean };
+
+const cut = data.cut.rows as CutRow[];
+const per = data.perThousand.rows as PerRow[];
+const max = data.perThousand.scaleMax;
+
+// Share of each payment the artist keeps, low and high, in percent.
+const kept = (r: CutRow): [number, number] => r.ours
+  ? [100, 100]
+  : [100 - r.platform[1] - (r.middle?.[1] ?? 0), 100 - r.platform[0] - (r.middle?.[0] ?? 0)];
+const keep = [...cut].sort((a, b) => Number(!!b.ours) - Number(!!a.ours) || kept(b)[1] - kept(a)[1]);
+const segs = (r: CutRow) => {
+  const [lo, hi] = kept(r);
+  if (r.ours) return [{ cls: 'seg ours-seg', w: 100 }];
+  const out = [{ cls: 'seg plat', w: lo }];
+  if (hi > lo) out.push({ cls: 'seg range', w: hi - lo });
+  return out;
+};
+const usd = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
+const keptText = (r: CutRow, amt = 100) => {
+  const [lo, hi] = kept(r).map((k) => (amt * k) / 100);
+  return lo === hi ? usd(lo) : `${usd(lo)}–${usd(hi)}`;
+};
+const pct = (v: number) => (v / max) * 100;
+
+const uniq = (rows: { sources: Src[] }[]) => {
+  const seen = new Map<string, Src>();
+  for (const r of rows) for (const s of r.sources) if (!s.url.includes('khėnsu.ñü')) seen.set(s.url, s);
+  return [...seen.values()];
+};
+const cutSources = uniq(cut);
+const perSources = uniq(per);
+
+const cutLabel = 'What the artist keeps when fans pay $100: ' +
+  keep.map((r) => `${r.name} ${keptText(r)}${r.ours ? ', less a network fee estimated under 1 cent a payment' : ` (${r.kind})`}`).join('; ') +
+  '. The shares are the same at any amount up to $1 billion.';
+const perLabel = `${data.perThousand.title}, in US dollars: ` +
+  per.map((r) => `${r.name} ${r.display}${r.ours ? ', a cent a play with no cut' : ` (${r.kind})`}`).join('; ') + '.';
+
+const points = [
+  { t: 'No ads, ever', b: 'You’re paid for people using and interacting with your work: a cent for every play and view, and every tip and gift in full. Nobody pays to put an ad in front of your fans.' },
+  { t: 'Paid straight to you', b: 'Views, tips, gifts, sales and live tickets go from a fan’s wallet to yours. No platform cut and no card processor in between.' },
+  { t: 'Funded by fans, not advances', b: 'Raise the money for a film, an album or a tour with nufi. Backers pay only if you reach your goal, and you keep your rights.' },
+  { t: 'Everyone on the credits paid', b: 'Set the split once, and every payment is shared between collaborators automatically. No label recoupment first.' },
+  { t: 'Every right stays yours', b: 'Publishing rights, copyright, trademarks and IP, like nowhere else. khėnsu.ñü takes no licence to your work, no share of your masters or publishing, and never trains AI on it.' },
+];
+---
+
+<section class="section creator-pay khensu" id="creator-pay-section" aria-labelledby="creator-pay-title">
+  <div class="wrap">
+    <p class="eyebrow">ñü.network &amp; fans pay artists directly</p>
+    <h2 id="creator-pay-title" class="big">From fan to artist.<br /><em>Nobody takes a cut in between.</em></h2>
+    <p class="lede">
+      Studios, labels and streaming services keep most of what people spend on art. On khėnsu.ñü, fans pay the people
+      who made it, in the app, and the only charge is a network fee under 1¢ to send, receive or withdraw. And you keep every right
+      to your work: publishing, copyright, trademarks and IP, like nowhere else. There are no ads: you’re paid for
+      people using and interacting with your work, every play and view, and every tip and gift.
+    </p>
+
+    <div class="stats" aria-label="How khėnsu.ñü payments work" hidden={page}>
+      <p class="target">how payments work</p>
+      <div class="sv"><b>0%</b><span>platform cut</span></div>
+      <div class="sv"><b>100%</b><span>of every view and tip, gift or payment to the artist</span></div>
+      <div class="sv"><b>&lt;1¢</b><span>network fee a payment, estimate</span></div>
+      <div class="sv"><b>42¢</b><span>minimum payout</span></div>
+    </div>
+
+    <div class="charts">
+      <figure class="card cp-card views-card" data-scene="reveal">
+        <figcaption>
+          <b>Views and plays: what reaches the artist for <output class="amt" data-plays>1,000</output> plays</b>
+          <span>US dollars for streams or views. On khėnsu.ñü, a cent a play with no cut; drag to change the number of plays.</span>
+        </figcaption>
+        <label class="scale">
+          <span class="sr-only">Number of plays, from 1,000 to 1 billion</span>
+          <input type="range" min="0" max="6" step="1" value="0" data-views aria-valuetext="1,000 plays" />
+          <span class="ticks" aria-hidden="true">
+            <span>1K</span><span>10K</span><span>100K</span><span>1M</span><span>10M</span><span>100M</span><span>1B</span>
+          </span>
+        </label>
+        <div role="img" aria-label={perLabel}>
+          <ul class="bars per" role="list" aria-hidden="true">
+            {per.map((r, i) => (
+              <li class:list={[{ ours: r.ours }]} style={`--i:${i}`}>
+                <span class="label"><b>{r.name}</b> <small>{r.note}</small></span>
+                <span class="track">
+                  {!r.ours && <span class="ghost" style={`--w:${pct(r.paid[1])}`} />}
+                  <span class="fill">
+                    <span class:list={['seg', r.ours ? 'ours-seg' : 'plat']} style={`--w:${pct(r.artist[0])}`} />
+                    {r.artist[1] > r.artist[0] && <span class="seg range" style={`--w:${pct(r.artist[1] - r.artist[0])}`} />}
+                  </span>
+                </span>
+                <span class="value"><b data-per={r.artist.join(',')}>{r.display}</b> <small class="kind">{r.kind}</small></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <ul class="key" role="list">
+          <li><i class="k-ghost" />Paid for the plays, before label or platform share</li>
+          <li><i class="k-plat" />Reaches the artist</li>
+          <li class="k-ours"><i />khėnsu.ñü, all to the artist</li>
+        </ul>
+        <p class="src">
+          Estimates checked {data.checked}; services pay from a monthly pool, not a fixed rate, and pay varies by country,
+          plan and audience. Signed-artist figures apply a 15–20% royalty to the rights holders’ payout, before recoupment.
+          On khėnsu.ñü every play pays the artist 1¢ and khėnsu.ñü takes no cut, so $10 per 1,000 plays reaches the artist in full. The play rate is the same for everyone; artists set prices only for what they sell, such as albums, tickets and in-app purchases; tips arrive in full, and paid content
+          bought inside the iPhone app follows Apple’s purchase rules.
+          Sources: {perSources.map((s, i) => <>{i ? '; ' : ''}<a href={s.url} rel="noopener">{s.name}</a></>)}.
+        </p>
+      </figure>
+      <figure class="card cp-card keep-card" data-scene="reveal">
+        <figcaption>
+          <b>Everything you sell: what you keep when fans pay <output class="amt" data-amt>$100</output></b>
+          <span>Tickets to digital or real-world events, and one-off purchases such as albums, downloads and in-app purchases. The shares stay the same from $100 to $1 billion; drag to change the amount.</span>
+        </figcaption>
+        <label class="scale">
+          <span class="sr-only">Amount fans pay, from $100 to $1 billion</span>
+          <input type="range" min="0" max="7" step="1" value="0" data-scale
+            aria-valuetext="$100" />
+          <span class="ticks" aria-hidden="true">
+            <span>$100</span><span>$1K</span><span>$10K</span><span>$100K</span><span>$1M</span><span>$10M</span><span>$100M</span><span>$1B</span>
+          </span>
+        </label>
+        <div role="img" aria-label={cutLabel}>
+          <ul class="bars" role="list" aria-hidden="true">
+            {keep.map((r, i) => (
+              <li class:list={[{ ours: r.ours }]} style={`--i:${i}`}>
+                <span class="label">
+                  <b>{r.name}</b>
+                  <small>{r.ours ? 'No platform cut and a 42¢ minimum payout. Each payment lands in your wallet as it’s sent, less a network fee under 1¢ paid to node operators' : r.note}</small>
+                </span>
+                <span class="track"><span class="fill">{segs(r).map((s) => <span class={s.cls} style={`--w:${s.w}`} />)}</span></span>
+                <span class="value">
+                  <b data-kept={kept(r).join(',')}>{keptText(r)}</b>
+                  <small class="kind">{r.ours ? 'all of it, no cut' : `${r.display} taken, ${r.kind}`}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <ul class="key" role="list">
+          <li class="k-ours"><i />khėnsu.ñü, kept by the artist</li>
+          <li><i class="k-plat" />Kept by the artist</li>
+          <li><i class="k-range" />Range</li>
+          <li><i class="k-taken" />Taken by the platform and label</li>
+        </ul>
+        <p class="src">
+          Published terms checked {data.checked}. Every platform here takes a share, so the split is the same at $100 or
+          $1 billion; the App Store’s 15% rate covers developers earning under $1 million a year and subscriptions after their
+          first year, otherwise 30%. The Spotify row is an estimate: about two-thirds of Spotify’s revenue goes to rights
+          holders, and a typical new-artist label deal pays the artist 15–20% of that, before any advance is recouped;
+          songwriting royalties are paid separately. Card fees are worked out at typical payment sizes. khėnsu.ñü’s network
+          fee is an estimate. Apps built on khėnsu.ñü pay a flat 10% of their own in-app purchases and app subscriptions, never scaled up or down; views, gifts, tickets, sales and tips pay no cut.
+          Sources: {cutSources.map((s, i) => <>{i ? '; ' : ''}<a href={s.url} rel="noopener">{s.name}</a></>)}.
+        </p>
+      </figure>
+
+    </div>
+
+    <ul class="points" role="list">
+      {points.map((p) => (
+        <li><b>{p.t}</b><span>{p.b}</span></li>
+      ))}
+    </ul>
+
+    {!page && (
+      <div class="btn-row">
+        <a class="btn primary" href="https://create.khensu.nu">How it works for artists</a>
+      </div>
+    )}
+
+    <p class="footnote">
+      Payments are offered region by region, following legal review in each. Spotify, Apple Music, YouTube, Twitch, Patreon, OnlyFans
+      and Kickstarter are trademarks of their owners; no affiliation. Their terms change often and differ by programme and
+      region.
+    </p>
+  </div>
+</section>
+
+<script>
+  const short = (v: number) => {
+    if (v >= 1e9) return `$${+(v / 1e9).toFixed(2)}B`;
+    if (v >= 1e6) return `$${+(v / 1e6).toFixed(2)}M`;
+    return '$' + Math.round(v).toLocaleString('en-US');
+  };
+  const money = (v: number) => (v < 100 ? `$${v.toFixed(2)}` : short(v));
+  for (const card of document.querySelectorAll<HTMLElement>('.views-card')) {
+    const input = card.querySelector<HTMLInputElement>('[data-views]')!;
+    const out = card.querySelector<HTMLElement>('[data-plays]')!;
+    const cells = [...card.querySelectorAll<HTMLElement>('[data-per]')];
+    const first = cells.map((c) => c.textContent);
+    const update = () => {
+      const plays = 1000 * 10 ** Number(input.value);
+      const label = plays.toLocaleString('en-US');
+      out.textContent = label;
+      input.setAttribute('aria-valuetext', `${label} plays`);
+      input.style.setProperty('--p', `${(Number(input.value) / Number(input.max)) * 100}%`);
+      cells.forEach((c, i) => {
+        if (plays === 1000) return void (c.textContent = first[i]);
+        const [lo, hi] = c.dataset.per!.split(',').map((k) => (Number(k) * plays) / 1000);
+        c.textContent = lo === hi ? money(lo) : `${money(lo)}–${money(hi)}`;
+      });
+    };
+    input.addEventListener('input', update);
+  }
+  for (const card of document.querySelectorAll<HTMLElement>('.keep-card')) {
+    const input = card.querySelector<HTMLInputElement>('[data-scale]')!;
+    const out = card.querySelector<HTMLElement>('[data-amt]')!;
+    const cells = [...card.querySelectorAll<HTMLElement>('[data-kept]')];
+    const update = () => {
+      const amt = 100 * 10 ** Number(input.value);
+      out.textContent = short(amt);
+      input.setAttribute('aria-valuetext', short(amt));
+      input.style.setProperty('--p', `${(Number(input.value) / Number(input.max)) * 100}%`);
+      for (const c of cells) {
+        const [lo, hi] = c.dataset.kept!.split(',').map((k) => (amt * Number(k)) / 100);
+        c.textContent = lo === hi ? short(lo) : `${short(lo)}–${short(hi)}`;
+      }
+    };
+    input.addEventListener('input', update);
+  }
+</script>
+
+<style>
+  .scale {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .scale input {
+    width: 100%;
+    margin: 0.4rem 0;
+    background: linear-gradient(90deg, transparent var(--p, 0%), rgba(255, 255, 255, 0.1) var(--p, 0%)), var(--aura);
+    background-size: 100% 100%, 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+  }
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .amt {
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-variant-numeric: tabular-nums;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .k-taken {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+  .ours .track {
+    height: 18px;
+  }
+  .big {
+    font-size: clamp(1.9rem, 3.8vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    max-width: none;
+  }
+  .big em {
+    display: inline;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 1rem;
+    margin: 2.5rem 0;
+  }
+  .stats[hidden] {
+    display: none;
+  }
+  .stats .target {
+    grid-column: 1 / -1;
+    margin: 0 0 -0.4rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: lowercase;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .sv {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    min-height: 11rem;
+    padding: 1.8rem 1.6rem;
+    border-radius: 24px;
+    background:
+      radial-gradient(120% 90% at 20% 0%, rgba(139, 123, 255, 0.28), rgba(139, 123, 255, 0) 60%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 20px 50px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+  .sv b {
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sv span {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .charts {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .cp-card {
+    margin: 0;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    display: grid;
+    gap: 1.2rem;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  figcaption {
+    display: grid;
+    gap: 0.2rem;
+  }
+  figcaption b {
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  figcaption span,
+  small {
+    color: var(--text-dim);
+  }
+  small {
+    font-size: 0.8rem;
+  }
+
+  .bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .bars li {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 9.5rem;
+    align-items: center;
+    gap: 1rem;
+  }
+  .label small {
+    display: block;
+    line-height: 1.35;
+  }
+  .track {
+    position: relative;
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .fill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    transform-origin: left;
+    transform: scaleX(clamp(0, calc((var(--e, 1) - var(--i) * 0.08) / 0.6), 1));
+  }
+  .seg {
+    flex: none;
+    height: 100%;
+    width: calc(var(--w) * 1%);
+  }
+  .seg:first-child {
+    border-radius: 999px 0 0 999px;
+  }
+  .seg:last-child {
+    border-radius: 0 999px 999px 0;
+  }
+  .seg:only-child {
+    border-radius: 999px;
+  }
+  .plat {
+    background: rgba(255, 255, 255, 0.38);
+  }
+  .mid {
+    background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0 6px, rgba(255, 255, 255, 0.12) 6px 12px);
+  }
+  .range {
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .ours-seg {
+    min-width: 6px;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    box-shadow: 0 0 12px rgba(30, 143, 255, 0.55);
+  }
+  .ghost {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--w) * 1%);
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  }
+  .value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .value b {
+    font-weight: 500;
+  }
+  .kind {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    color: var(--text-faint);
+  }
+  .ours .label b,
+  .ours .value b {
+    font-weight: 600;
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ours .kind {
+    color: #8fc6ff;
+    opacity: 0.8;
+  }
+
+  .key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+  .key li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .key i {
+    flex: none;
+    width: 18px;
+    height: 10px;
+    border-radius: 999px;
+  }
+  .k-plat {
+    background: rgba(255, 255, 255, 0.38);
+  }
+  .k-mid {
+    background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0 4px, rgba(255, 255, 255, 0.12) 4px 8px);
+  }
+  .k-range {
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .k-ghost {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
+  .k-ours {
+    color: #8fc6ff;
+  }
+  .k-ours i {
+    background: var(--aura);
+    background-size: 300% 100%;
+    animation: aura-flow var(--aura-flow-dur) linear infinite;
+  }
+
+  .src {
+    margin: 0;
+    max-width: none;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--text-faint);
+  }
+  .src a {
+    color: var(--text-dim);
+  }
+
+  .points {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  }
+  .points li {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+  .points b {
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .points span {
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .footnote {
+    margin-top: 2rem;
+    max-width: none;
+  }
+
+  @media (max-width: 760px) {
+    .bars li {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.35rem 0.8rem;
+    }
+    .bars .track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    .label small {
+      font-size: 0.74rem;
+    }
+  }
+</style>

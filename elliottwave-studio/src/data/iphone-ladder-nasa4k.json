@@ -1,0 +1,931 @@
+{
+  "clip": "nasa4k",
+  "source": "NASA, Stunning Aurora Borealis from Space in Ultra-High Definition (4K), youtube.com/watch?v=PBJAR3-UvSQ, VP9 2160p stream, 2:45 to 2:51 (about 16 Mbit/s)",
+  "seconds": 6.01,
+  "size": "3840x2160",
+  "source_frames": 180,
+  "vmaf_model": "vmaf_4k_v0.6.1",
+  "transparent_vmaf": 93,
+  "device": "iPhone18,4",
+  "os": "Version 26.6.1 (Build 23G83)",
+  "codecs": {
+    "h264-hw": {
+      "label": "H.264, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 815.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.73,
+          "encode_fps_iphone": 54.5
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 815.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.73,
+          "encode_fps_iphone": 54.6
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 815.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.73,
+          "encode_fps_iphone": 54.6
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 815.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.73,
+          "encode_fps_iphone": 54.5
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 815.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.73,
+          "encode_fps_iphone": 54.5
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 861.4,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 37.24,
+          "encode_fps_iphone": 54.6
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1400.7,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 46.15,
+          "encode_fps_iphone": 54.5
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2777.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 57.11,
+          "encode_fps_iphone": 54.3
+        }
+      ]
+    },
+    "hevc-hw": {
+      "label": "HEVC, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 80.4,
+          "frames": 35,
+          "dropped": 145,
+          "vmaf": 16.32,
+          "encode_fps_iphone": 49.1
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 108.2,
+          "frames": 49,
+          "dropped": 131,
+          "vmaf": 21.56,
+          "encode_fps_iphone": 49.1
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 155.8,
+          "frames": 77,
+          "dropped": 103,
+          "vmaf": 28.58,
+          "encode_fps_iphone": 49.1
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 246.6,
+          "frames": 132,
+          "dropped": 48,
+          "vmaf": 31.86,
+          "encode_fps_iphone": 49.2
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 369.9,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 37.79,
+          "encode_fps_iphone": 49.2
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 696.8,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 50.7,
+          "encode_fps_iphone": 49.1
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1393.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 59.66,
+          "encode_fps_iphone": 49.0
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2797.8,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 64.58,
+          "encode_fps_iphone": 48.8
+        }
+      ]
+    },
+    "av1-svt-rt": {
+      "label": "AV1, SVT-AV1 real time on the Mac (no iPhone AV1 encoder)",
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 283.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 51.67
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 283.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 51.67
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 289.4,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 52.47
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 352.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 58.12
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 636.8,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 71.94
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1189.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 80.45
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2155.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 86.18
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 4152.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 92.36
+        }
+      ]
+    },
+    "nu-1080p-lanczos": {
+      "label": "nu-media base layer 1920 x 1080, Lanczos upscale only",
+      "base": [
+        1920,
+        1080
+      ],
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 43.5,
+          "frames": 63,
+          "dropped": 117,
+          "vmaf": 10.18,
+          "file": "ladder-nu-1080p-32.mp4"
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 69.4,
+          "frames": 106,
+          "dropped": 74,
+          "vmaf": 12.95,
+          "file": "ladder-nu-1080p-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 104.3,
+          "frames": 176,
+          "dropped": 4,
+          "vmaf": 14.15,
+          "file": "ladder-nu-1080p-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 176.8,
+          "frames": 174,
+          "dropped": 6,
+          "vmaf": 32.07,
+          "file": "ladder-nu-1080p-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 349.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 44.85,
+          "file": "ladder-nu-1080p-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 699.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 54.31,
+          "file": "ladder-nu-1080p-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1388.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 60.35,
+          "file": "ladder-nu-1080p-2000.mp4"
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2174.5,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 62.55,
+          "file": "ladder-nu-1080p-4000.mp4"
+        }
+      ]
+    },
+    "nu-540p-lanczos": {
+      "label": "nu-media base layer 960 x 540, Lanczos upscale only",
+      "base": [
+        960,
+        540
+      ],
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 33.6,
+          "frames": 148,
+          "dropped": 32,
+          "vmaf": 2.03,
+          "file": "ladder-nu-540p-32.mp4"
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 48.8,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 8.33,
+          "file": "ladder-nu-540p-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.7,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 19.61,
+          "file": "ladder-nu-540p-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.1,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 30.27,
+          "file": "ladder-nu-540p-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 353.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 39.23,
+          "file": "ladder-nu-540p-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 679.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 45.54,
+          "file": "ladder-nu-540p-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1045.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 47.95,
+          "file": "ladder-nu-540p-2000.mp4"
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2028.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 50.64,
+          "file": "ladder-nu-540p-4000.mp4"
+        }
+      ]
+    },
+    "nu-540p": {
+      "label": "nu-media base layer 960 x 540, Neural Engine super resolution to 1920 x 1080, then Lanczos to 3840 x 2160",
+      "base": [
+        960,
+        540
+      ],
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 33.6,
+          "frames": 148,
+          "dropped": 32,
+          "vmaf": 2.42,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            207
+          ],
+          "file": "ladder-nu-540p-32-sr1.mov"
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 48.8,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 10.61,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            206
+          ],
+          "file": "ladder-nu-540p-64-sr1.mov"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 91.7,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 24.18,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            206
+          ],
+          "file": "ladder-nu-540p-128-sr1.mov"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.1,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.46,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            205
+          ],
+          "file": "ladder-nu-540p-250-sr1.mov"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 353.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 45.52,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            204
+          ],
+          "file": "ladder-nu-540p-500-sr1.mov"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 679.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 51.28,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            205
+          ],
+          "file": "ladder-nu-540p-1000-sr1.mov"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1045.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 53.21,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            204
+          ],
+          "file": "ladder-nu-540p-2000-sr1.mov"
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2028.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 55.32,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            205
+          ],
+          "file": "ladder-nu-540p-4000-sr1.mov"
+        }
+      ]
+    },
+    "nu-270p-lanczos": {
+      "label": "nu-media base layer 480 x 270, Lanczos upscale only",
+      "base": [
+        480,
+        270
+      ],
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 25.0,
+          "frames": 163,
+          "dropped": 17,
+          "vmaf": 2.64,
+          "file": "ladder-nu-270p-32.mp4"
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 47.5,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 6.31,
+          "file": "ladder-nu-270p-64.mp4"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 92.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 12.17,
+          "file": "ladder-nu-270p-128.mp4"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 178.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 16.76,
+          "file": "ladder-nu-270p-250.mp4"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 324.5,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 20.47,
+          "file": "ladder-nu-270p-500.mp4"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 647.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 23.25,
+          "file": "ladder-nu-270p-1000.mp4"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1370.7,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 25.27,
+          "file": "ladder-nu-270p-2000.mp4"
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2795.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 26.03,
+          "file": "ladder-nu-270p-4000.mp4"
+        }
+      ]
+    },
+    "nu-270p": {
+      "label": "nu-media base layer 480 x 270, Neural Engine super resolution to 1920 x 1080, then Lanczos to 3840 x 2160",
+      "base": [
+        480,
+        270
+      ],
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 25.0,
+          "frames": 163,
+          "dropped": 17,
+          "vmaf": 5.46,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            737,
+            208
+          ],
+          "file": "ladder-nu-270p-32-sr2.mov"
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 47.5,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 14.08,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            577,
+            207
+          ],
+          "file": "ladder-nu-270p-64-sr2.mov"
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 92.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 24.72,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            572,
+            205
+          ],
+          "file": "ladder-nu-270p-128-sr2.mov"
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 178.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 31.91,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            581,
+            206
+          ],
+          "file": "ladder-nu-270p-250-sr2.mov"
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 324.5,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 37.35,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            549,
+            206
+          ],
+          "file": "ladder-nu-270p-500-sr2.mov"
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 647.3,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 40.7,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            556,
+            208
+          ],
+          "file": "ladder-nu-270p-1000-sr2.mov"
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1370.7,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 42.8,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            545,
+            207
+          ],
+          "file": "ladder-nu-270p-2000-sr2.mov"
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2795.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 43.6,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            544,
+            208
+          ],
+          "file": "ladder-nu-270p-4000-sr2.mov"
+        }
+      ]
+    },
+    "nu-media": {
+      "label": "nu-media, best base size and enhancement at each bitrate",
+      "points": [
+        {
+          "target_kbps": 32,
+          "actual_kbps": 43.5,
+          "frames": 63,
+          "dropped": 117,
+          "vmaf": 10.18,
+          "file": "ladder-nu-1080p-32.mp4",
+          "from": "nu-1080p-lanczos",
+          "base": [
+            1920,
+            1080
+          ]
+        },
+        {
+          "target_kbps": 64,
+          "actual_kbps": 47.5,
+          "frames": 165,
+          "dropped": 15,
+          "vmaf": 14.08,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            577,
+            207
+          ],
+          "file": "ladder-nu-270p-64-sr2.mov",
+          "from": "nu-270p",
+          "base": [
+            480,
+            270
+          ]
+        },
+        {
+          "target_kbps": 128,
+          "actual_kbps": 92.6,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 24.72,
+          "neural_passes": 2,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            572,
+            205
+          ],
+          "file": "ladder-nu-270p-128-sr2.mov",
+          "from": "nu-270p",
+          "base": [
+            480,
+            270
+          ]
+        },
+        {
+          "target_kbps": 250,
+          "actual_kbps": 177.1,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 36.46,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            205
+          ],
+          "file": "ladder-nu-540p-250-sr1.mov",
+          "from": "nu-540p",
+          "base": [
+            960,
+            540
+          ]
+        },
+        {
+          "target_kbps": 500,
+          "actual_kbps": 353.2,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 45.52,
+          "neural_passes": 1,
+          "neural_output": "1920x1080",
+          "neural_fps_iphone": [
+            204
+          ],
+          "file": "ladder-nu-540p-500-sr1.mov",
+          "from": "nu-540p",
+          "base": [
+            960,
+            540
+          ]
+        },
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 699.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 54.31,
+          "file": "ladder-nu-1080p-1000.mp4",
+          "from": "nu-1080p-lanczos",
+          "base": [
+            1920,
+            1080
+          ]
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1388.0,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 60.35,
+          "file": "ladder-nu-1080p-2000.mp4",
+          "from": "nu-1080p-lanczos",
+          "base": [
+            1920,
+            1080
+          ]
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2174.5,
+          "frames": 180,
+          "dropped": 0,
+          "vmaf": 62.55,
+          "file": "ladder-nu-1080p-4000.mp4",
+          "from": "nu-1080p-lanczos",
+          "base": [
+            1920,
+            1080
+          ]
+        }
+      ]
+    }
+  },
+  "same_as_reference": {
+    "reference": "hevc-hw at 4000 kbit/s",
+    "vmaf": 64.58,
+    "reference_kbps": 2797.8,
+    "kbps": {
+      "nu-media": null,
+      "h264-hw": null,
+      "hevc-hw": {
+        "kbps": 2797.8,
+        "bound": "interpolated"
+      },
+      "av1-svt-rt": {
+        "kbps": 464.5,
+        "bound": "interpolated"
+      }
+    }
+  },
+  "same_as_original": {
+    "vmaf": 93,
+    "kbps": {
+      "nu-media": null,
+      "h264-hw": null,
+      "hevc-hw": null,
+      "av1-svt-rt": null
+    }
+  },
+  "tiles": {
+    "size": [
+      2560,
+      1440
+    ],
+    "order": [
+      "original",
+      "nu-media",
+      "h264-hw",
+      "hevc-hw",
+      "av1-svt-rt"
+    ],
+    "original": "original.mp4",
+    "rates": {
+      "4000": {
+        "nu-media": {
+          "file": "4000-nu-media.mp4",
+          "actual_kbps": 2174.5,
+          "vmaf": 62.55,
+          "dropped": 0,
+          "base": [
+            1920,
+            1080
+          ],
+          "neural": false
+        },
+        "h264-hw": {
+          "file": "4000-h264-hw.mp4",
+          "actual_kbps": 2777.2,
+          "vmaf": 57.11,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "4000-hevc-hw.mp4",
+          "actual_kbps": 2797.8,
+          "vmaf": 64.58,
+          "dropped": 0
+        },
+        "av1-svt-rt": {
+          "file": "4000-av1-svt-rt.mp4",
+          "actual_kbps": 4152.2,
+          "vmaf": 92.36,
+          "dropped": 0
+        }
+      },
+      "500": {
+        "nu-media": {
+          "file": "500-nu-media.mp4",
+          "actual_kbps": 353.2,
+          "vmaf": 45.52,
+          "dropped": 0,
+          "base": [
+            960,
+            540
+          ],
+          "neural": true
+        },
+        "h264-hw": {
+          "file": "500-h264-hw.mp4",
+          "actual_kbps": 815.6,
+          "vmaf": 36.73,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "500-hevc-hw.mp4",
+          "actual_kbps": 369.9,
+          "vmaf": 37.79,
+          "dropped": 0
+        },
+        "av1-svt-rt": {
+          "file": "500-av1-svt-rt.mp4",
+          "actual_kbps": 636.8,
+          "vmaf": 71.94,
+          "dropped": 0
+        }
+      },
+      "64": {
+        "nu-media": {
+          "file": "64-nu-media.mp4",
+          "actual_kbps": 47.5,
+          "vmaf": 14.08,
+          "dropped": 15,
+          "base": [
+            480,
+            270
+          ],
+          "neural": true
+        },
+        "h264-hw": {
+          "file": "64-h264-hw.mp4",
+          "actual_kbps": 815.6,
+          "vmaf": 36.73,
+          "dropped": 0
+        },
+        "hevc-hw": {
+          "file": "64-hevc-hw.mp4",
+          "actual_kbps": 108.2,
+          "vmaf": 21.56,
+          "dropped": 131
+        },
+        "av1-svt-rt": {
+          "file": "64-av1-svt-rt.mp4",
+          "actual_kbps": 283.3,
+          "vmaf": 51.67,
+          "dropped": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "clip": "nasa4k",
+  "source": "NASA, Stunning Aurora Borealis from Space in Ultra-High Definition (4K), youtube.com/watch?v=PBJAR3-UvSQ, VP9 2160p stream, 2:45 to 2:51 (about 16 Mbit/s)",
+  "start": 165.0,
+  "seconds": 6,
+  "size": "3840x2160",
+  "vmaf_model": "vmaf_4k_v0.6.1",
+  "device": "iPhone18,4",
+  "os": "Version 26.6.1 (Build 23G83)",
+  "codecs": {
+    "h264-hw": {
+      "label": "H.264, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 862.3,
+          "vmaf": 37.24,
+          "encode_fps_iphone": 55
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1402.1,
+          "vmaf": 46.15,
+          "encode_fps_iphone": 54
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2780.0,
+          "vmaf": 57.11,
+          "encode_fps_iphone": 54
+        },
+        {
+          "target_kbps": 8000,
+          "actual_kbps": 5127.8,
+          "vmaf": 64.55,
+          "encode_fps_iphone": 54
+        }
+      ]
+    },
+    "hevc-hw": {
+      "label": "HEVC, iPhone hardware",
+      "points": [
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 697.5,
+          "vmaf": 50.7,
+          "encode_fps_iphone": 49
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1394.4,
+          "vmaf": 59.66,
+          "encode_fps_iphone": 49
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2800.6,
+          "vmaf": 64.58,
+          "encode_fps_iphone": 49
+        },
+        {
+          "target_kbps": 8000,
+          "actual_kbps": 4408.1,
+          "vmaf": 66.08,
+          "encode_fps_iphone": 49
+        }
+      ]
+    },
+    "nu-base": {
+      "label": "nu-media base layer, HEVC iPhone hardware at half size",
+      "points": [
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 699.7,
+          "vmaf": 54.31,
+          "encode_fps_iphone": 99
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 1389.4,
+          "vmaf": 60.35,
+          "encode_fps_iphone": 98
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 2176.6,
+          "vmaf": 62.55,
+          "encode_fps_iphone": 97
+        },
+        {
+          "target_kbps": 8000,
+          "actual_kbps": 2602.7,
+          "vmaf": 63.17,
+          "encode_fps_iphone": 97
+        }
+      ]
+    },
+    "av1-svt-rt": {
+      "label": "AV1, SVT-AV1 real time on the Mac (no iPhone AV1 encoder)",
+      "points": [
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1190.2,
+          "vmaf": 80.45
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2157.5,
+          "vmaf": 86.18
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 4156.3,
+          "vmaf": 92.36
+        },
+        {
+          "target_kbps": 8000,
+          "actual_kbps": 8139.0,
+          "vmaf": 96.29
+        }
+      ]
+    },
+    "nu-base-av1": {
+      "label": "nu-media base layer, SVT-AV1 real time on the Mac at half size",
+      "points": [
+        {
+          "target_kbps": 1000,
+          "actual_kbps": 1068.4,
+          "vmaf": 75.01
+        },
+        {
+          "target_kbps": 2000,
+          "actual_kbps": 2067.8,
+          "vmaf": 83.22
+        },
+        {
+          "target_kbps": 4000,
+          "actual_kbps": 4050.1,
+          "vmaf": 88.95
+        },
+        {
+          "target_kbps": 8000,
+          "actual_kbps": 8010.9,
+          "vmaf": 92.78
+        }
+      ]
+    }
+  },
+  "grid": {
+    "want_kbps": 4000,
+    "codecs": {
+      "h264-hw": {
+        "actual_kbps": 4227.1,
+        "vmaf": 63.36
+      },
+      "hevc-hw": {
+        "actual_kbps": 4091.8,
+        "vmaf": 65.96
+      },
+      "av1-svt-rt": {
+        "actual_kbps": 3989.9,
+        "vmaf": 91.96
+      },
+      "nu-base": {
+        "actual_kbps": 3918.8,
+        "vmaf": 64.16
+      },
+      "nu-base-av1": {
+        "actual_kbps": 3998.5,
+        "vmaf": 88.83
+      }
+    }
+  }
+}

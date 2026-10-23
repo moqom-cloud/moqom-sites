@@ -1,0 +1,94 @@
+---
+import Base from '../layouts/Base.astro';
+import { LINKS, MCP_PATH } from '../data/six10nine';
+
+const config = JSON.stringify({ mcpServers: { six10nine: { command: MCP_PATH } } }, null, 2);
+const brewConfig = JSON.stringify({ mcpServers: { six10nine: { command: 'six10nine-mcp' } } }, null, 2);
+const example = JSON.stringify(
+  { app: 'com.apple.Safari', chord: '⌘8', menu_path: ['Window', 'Show Tab Overview'] },
+  null,
+  2,
+);
+
+const tools = [
+  ['list_apps', 'Read', 'Apps that have chords, by bundle ID, with how many.'],
+  ['list_chords', 'Read', 'One app’s chords, or every app’s, and what each does.'],
+  ['get_chord', 'Read', 'One chord in one app, and what it does in other apps.'],
+  ['set_chord_action', 'Write', 'Make a chord click a menu item (["View", "Command Palette…"]). Replaces the chord’s action in that app.'],
+  ['remove_chord', 'Write', 'Remove a chord’s action in an app.'],
+  ['get_aura_status', 'Read', 'Status from the app: aura, whether chords are on, and today’s idle computing.'],
+];
+---
+
+<Base title="MCP server" description="six10nine-mcp lets Cursor, Claude and other AI agents read and change your six10nine chords." docs>
+  <p class="eyebrow">Docs</p>
+  <h1>MCP server</h1>
+  <p class="lede">
+    The app bundles <code>six10nine-mcp</code>, a small <a href={LINKS.mcp}>Model Context Protocol</a> server, so AI
+    agents can read and change your chords.
+  </p>
+  <ul>
+    <li>Speaks stdio, MCP protocol version 2025-06-18 (it also answers clients on 2025-03-26 and 2024-11-05).</li>
+    <li>Reads and writes only six10nine’s own settings on your Mac. It never opens a network connection.</li>
+    <li>Changes take effect right away: the running app reloads chords when the server changes them.</li>
+  </ul>
+
+  <h2>Set up</h2>
+  <p>
+    Add it to Cursor (<code>~/.cursor/mcp.json</code>), Claude Desktop (<code>claude_desktop_config.json</code>) or any
+    MCP client:
+  </p>
+  <pre><code>{config}</code></pre>
+  <p>
+    If you installed to <code>~/Applications</code>, use that path. With Homebrew the command is also linked as
+    <code>six10nine-mcp</code>:
+  </p>
+  <pre><code>{brewConfig}</code></pre>
+
+  <h2>Tools</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th></th><th>Does</th></tr></thead>
+      <tbody>
+        {tools.map(([name, kind, does]) => (
+          <tr>
+            <td><code>{name}</code></td>
+            <td class="kind">{kind}</td>
+            <td>{does}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Apps are named by bundle ID, like <code>com.apple.Safari</code>; <code>list_apps</code> shows the ones with chords.
+    For <code>set_chord_action</code>, give <code>menu_path</code>, the menu item’s titles from the menu bar down. Titles
+    must match the app’s menus exactly. Chords only run menu items, so a keyboard shortcut can’t be set.
+  </p>
+  <pre><code>{example}</code></pre>
+
+  <h2>Chord notation</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Kind</th><th>Written as</th></tr></thead>
+      <tbody>
+        <tr><td>Together</td><td><code>⌘8</code>, <code>⌘⇧8K</code>, <code>cmd+shift+8+k</code></td></tr>
+        <tr><td>In order</td><td><code>⌘P·O·O·P</code>, <code>cmd+p&gt;o&gt;o&gt;p</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Keys are letters, digits, and <code>`</code> for the key left of 1.</p>
+
+  <h2>Trust</h2>
+  <p>
+    The server only talks to the process that started it, over stdio. Treat an MCP client that runs it as trusted to
+    change your chords.
+  </p>
+</Base>
+
+<style>
+  .kind {
+    color: var(--text-faint);
+    font-size: 0.85rem;
+  }
+</style>

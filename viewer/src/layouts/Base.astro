@@ -1,0 +1,271 @@
+---
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '../styles/global.css';
+import { NAV, SITE } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+  sidebar?: boolean;
+}
+
+const DEFAULT_DESC = `${SITE.displayName} puts an interactive, AR-ready 3D model on sites built with WordPress, Shopify, Wix, Squarespace, Webflow, Framer, React, Vue, plain HTML and other builders.`;
+const { title, description = DEFAULT_DESC, noindex = false, sidebar = true } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.displayName}` : `${SITE.displayName} by ${SITE.vendor}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0A0B0D" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.displayName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a href="/" class="brand">
+          <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
+            <path d="M16 3 28 10v12L16 29 4 22V10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="M4 10l12 7 12-7M16 17v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          </svg>
+          <span>{SITE.displayName}</span>
+          <span class="by">by {SITE.vendor}</span>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="/quick-start/">quick start</a></li>
+            <li><a href="/platforms/">platforms</a></li>
+            <li><a href="/hosting/firebase/">hosting</a></li>
+            <li><a href="/pricing/">pricing</a></li>
+            <li><a href={SITE.repoUrl}>source</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class:list={['wrap', sidebar ? 'layout' : 'single']}>
+      {
+        sidebar && (
+          <aside class="sidebar" aria-label="Documentation">
+            {NAV.map((group) => (
+              <section>
+                <h2>{group.title}</h2>
+                <ul>
+                  {group.items.map((item) => (
+                    <li>
+                      <a href={item.href} aria-current={path === item.href ? 'page' : undefined}>
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </aside>
+        )
+      }
+      <main id="main">
+        <slot />
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <ul class="foot-links">
+          <li><a href={SITE.studioUrl}>elliottwave.studio</a></li>
+          <li><a href={SITE.repoUrl}>source</a></li>
+          <li><a href="/pricing/">pricing</a></li>
+          <li><a href="/licence/">licence</a></li>
+          <li><a href="/security/">security</a></li>
+          <li><a href="/contribute/">contribute</a></li>
+          <li><a href={SITE.donateUrl}>donate</a></li>
+        </ul>
+        <p class="legal">
+          © 2026 <a href={SITE.studioUrl}>Elliott Wave LLC</a>. The {SITE.displayName} element and snippets are free under the Apache
+          License 2.0; the platform plugins are paid. Built on Google's &lt;model-viewer&gt; (Apache-2.0); not affiliated with or endorsed by Google.
+        </p>
+      </div>
+    </footer>
+    <script>
+      import '../scripts/copy';
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 10;
+    background: var(--amber);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    gap: 1rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .brand svg {
+    color: var(--amber);
+  }
+  .brand:hover {
+    text-decoration: none;
+  }
+  .by {
+    color: var(--text-faint);
+    font: 0.78rem var(--font-mono);
+  }
+  nav ul {
+    display: flex;
+    gap: clamp(0.75rem, 2.4vw, 1.75rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a {
+    font: 0.84rem var(--font-mono);
+    color: var(--text-dim);
+  }
+  nav a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding-top: 2.5rem;
+    padding-bottom: 4rem;
+  }
+  .single {
+    padding-top: 2.5rem;
+    padding-bottom: 4rem;
+  }
+  .sidebar {
+    position: sticky;
+    top: 82px;
+    align-self: start;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font: 0.7rem var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 1.4rem 0 0.4rem;
+  }
+  .sidebar section:first-child h2 {
+    margin-top: 0;
+  }
+  .sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar a {
+    display: block;
+    padding: 0.22rem 0 0.22rem 0.75rem;
+    border-left: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  .sidebar a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .sidebar a[aria-current='page'] {
+    color: var(--amber);
+    border-left-color: var(--amber);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding: 2.5rem 0;
+    background: var(--bg-sunk);
+  }
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+    font: 0.82rem var(--font-mono);
+  }
+  .foot-links a {
+    color: var(--text-dim);
+  }
+  .legal {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    max-width: none;
+    margin: 0;
+  }
+  .legal a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  @media (max-width: 820px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      position: static;
+      max-height: none;
+      order: 2;
+      border-top: 1px solid var(--line);
+      padding-top: 1.5rem;
+    }
+    .by {
+      display: none;
+    }
+  }
+  @media (max-width: 520px) {
+    nav li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+</style>

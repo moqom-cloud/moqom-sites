@@ -1,0 +1,79 @@
+---
+import { BENCH_LABEL, RESOLUTION_LATENCY, RESOLUTION_NOTE } from '../data/moqom';
+---
+
+<figure class="res">
+  <table>
+    <caption>Median glass-to-glass latency by resolution</caption>
+    <thead>
+      <tr><th scope="col">Resolution</th><th scope="col">Typical use</th><th scope="col">Median</th></tr>
+    </thead>
+    <tbody>
+      {RESOLUTION_LATENCY.map((r) => (
+        <tr>
+          <td>{r.resolution}</td>
+          <td class="use">{r.use}</td>
+          <td class:list={[r.measured ? 'ok' : 'soon']}>{r.median}{r.measured && <sup>*</sup>}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <figcaption class="footnote">
+    {RESOLUTION_NOTE}<br />* {BENCH_LABEL}
+  </figcaption>
+</figure>
+
+<style>
+  .res {
+    margin: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin-bottom: 0.9rem;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding-bottom: 0.75rem;
+  }
+  th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 400;
+    padding: 0 1rem 0.75rem 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  td {
+    padding: 0.8rem 1rem 0.8rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  td:first-child {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .use {
+    color: var(--text-dim);
+  }
+  .ok {
+    color: var(--moqom);
+    font-weight: 500;
+  }
+  .soon {
+    color: var(--text-dim);
+  }
+  sup {
+    font-size: 0.6em;
+    color: var(--text-faint);
+  }
+</style>

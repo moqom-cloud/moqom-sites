@@ -1,0 +1,277 @@
+---
+/* A slowly turning 3D web of relays. Pulses travel along edges and forward on arrival. */
+---
+
+<div class="indras" aria-hidden="true">
+  <canvas class="indras-canvas"></canvas>
+</div>
+
+<script>
+  import {
+    AdditiveBlending,
+    BufferAttribute,
+    BufferGeometry,
+    Color,
+    Group,
+    LineBasicMaterial,
+    LineSegments,
+    PerspectiveCamera,
+    Points,
+    Scene,
+    ShaderMaterial,
+    Vector3,
+    WebGLRenderer,
+  } from "three";
+
+  const NODES = 96;
+  const NEIGHBOURS = 3;
+  const PULSES = 48;
+  const SPEED = 0.9;
+
+  const POINT_VERT = /* glsl */ `
+    attribute float size;
+    attribute float glow;
+    varying float vGlow;
+    void main() {
+      vGlow = glow;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size * (1.0 + glow * 1.6) * (300.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+    }
+  `;
+  const POINT_FRAG = /* glsl */ `
+    uniform vec3 color;
+    uniform vec3 hot;
+    varying float vGlow;
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      float core = smoothstep(0.5, 0.0, d);
+      float a = pow(core, 2.2);
+      gl_FragColor = vec4(mix(color, hot, vGlow), a * (0.55 + vGlow * 0.45));
+    }
+  `;
+
+  function mount(root: HTMLElement) {
+    const canvas = root.querySelector("canvas")!;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let renderer: WebGLRenderer;
+    try {
+      renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" });
+    } catch {
+      root.remove();
+      return;
+    }
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    const scene = new Scene();
+    const camera = new PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 0, 9);
+    const net = new Group();
+    scene.add(net);
+
+    const tint = new Color(getComputedStyle(root).getPropertyValue("--indras-tint").trim() || "#38d6f5");
+    const hot = new Color("#e8fbff");
+
+    // Nodes on a Fibonacci shell plus a sparse inner cloud.
+    const pos: Vector3[] = [];
+    const shell = Math.round(NODES * 0.7);
+    for (let i = 0; i < shell; i++) {
+      const y = 1 - (i / (shell - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
+      const t = i * Math.PI * (3 - Math.sqrt(5));
+      pos.push(new Vector3(Math.cos(t) * r, y, Math.sin(t) * r).multiplyScalar(3.4));
+    }
+    while (pos.length < NODES) {
+      const v = new Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+      pos.push(v.normalize().multiplyScalar(0.8 + Math.random() * 1.9));
+    }
+
+    // Edges: each node to its nearest neighbours, deduplicated.
+    const adj: number[][] = pos.map(() => []);
+    const seen = new Set<string>();
+    const edges: [number, number][] = [];
+    pos.forEach((p, i) => {
+      pos
+        .map((q, j) => [j, p.distanceToSquared(q)] as const)
+        .filter(([j]) => j !== i)
+        .sort((a, b) => a[1] - b[1])
+        .slice(0, NEIGHBOURS)
+        .forEach(([j]) => {
+          const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          edges.push([i, j]);
+          adj[i].push(j);
+          adj[j].push(i);
+        });
+    });
+
+    const lineGeo = new BufferGeometry();
+    const linePos = new Float32Array(edges.length * 6);
+    edges.forEach(([a, b], k) => {
+      pos[a].toArray(linePos, k * 6);
+      pos[b].toArray(linePos, k * 6 + 3);
+    });
+    lineGeo.setAttribute("position", new BufferAttribute(linePos, 3));
+    net.add(
+      new LineSegments(
+        lineGeo,
+        new LineBasicMaterial({ color: tint, transparent: true, opacity: 0.16, blending: AdditiveBlending, depthWrite: false }),
+      ),
+    );
+
+    const pointMaterial = () =>
+      new ShaderMaterial({
+        uniforms: { color: { value: tint }, hot: { value: hot } },
+        vertexShader: POINT_VERT,
+        fragmentShader: POINT_FRAG,
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+      });
+
+    const nodeGeo = new BufferGeometry();
+    const nodePos = new Float32Array(NODES * 3);
+    pos.forEach((p, i) => p.toArray(nodePos, i * 3));
+    const nodeSize = new Float32Array(NODES).map(() => 0.18 + Math.random() * 0.14);
+    const nodeGlow = new Float32Array(NODES);
+    nodeGeo.setAttribute("position", new BufferAttribute(nodePos, 3));
+    nodeGeo.setAttribute("size", new BufferAttribute(nodeSize, 1));
+    nodeGeo.setAttribute("glow", new BufferAttribute(nodeGlow, 1));
+    net.add(new Points(nodeGeo, pointMaterial()));
+
+    type Pulse = { from: number; to: number; t: number; live: boolean };
+    const pulses: Pulse[] = Array.from({ length: PULSES }, () => ({ from: 0, to: 0, t: 0, live: false }));
+    const pulseGeo = new BufferGeometry();
+    const pulsePos = new Float32Array(PULSES * 3);
+    const pulseSize = new Float32Array(PULSES).fill(0.22);
+    const pulseGlow = new Float32Array(PULSES).fill(1);
+    pulseGeo.setAttribute("position", new BufferAttribute(pulsePos, 3));
+    pulseGeo.setAttribute("size", new BufferAttribute(pulseSize, 1));
+    pulseGeo.setAttribute("glow", new BufferAttribute(pulseGlow, 1));
+    net.add(new Points(pulseGeo, pointMaterial()));
+
+    const fire = (from: number) => {
+      const slot = pulses.find((p) => !p.live);
+      const next = adj[from];
+      if (!slot || next.length === 0) return;
+      slot.from = from;
+      slot.to = next[(Math.random() * next.length) | 0];
+      slot.t = 0;
+      slot.live = true;
+    };
+
+    const tmp = new Vector3();
+    const step = (dt: number) => {
+      for (const p of pulses) {
+        if (!p.live) continue;
+        p.t += (dt * SPEED) / Math.max(pos[p.from].distanceTo(pos[p.to]), 0.4);
+        if (p.t >= 1) {
+          p.live = false;
+          nodeGlow[p.to] = 1;
+          if (Math.random() < 0.72) fire(p.to);
+          if (Math.random() < 0.22) fire(p.to);
+        }
+      }
+      for (let i = 0; i < NODES; i++) nodeGlow[i] *= Math.exp(-dt * 2.4);
+      if (Math.random() < dt * 2.2) fire((Math.random() * NODES) | 0);
+
+      pulses.forEach((p, i) => {
+        if (p.live) tmp.lerpVectors(pos[p.from], pos[p.to], p.t).toArray(pulsePos, i * 3);
+        else pulsePos.fill(0, i * 3, i * 3 + 3);
+        pulseSize[i] = p.live ? 0.22 : 0;
+      });
+      nodeGeo.attributes.glow.needsUpdate = true;
+      pulseGeo.attributes.position.needsUpdate = true;
+      pulseGeo.attributes.size.needsUpdate = true;
+    };
+
+    const resize = () => {
+      const { width, height } = root.getBoundingClientRect();
+      renderer.setSize(width, height, false);
+      camera.aspect = width / Math.max(height, 1);
+      camera.position.z = camera.aspect < 1 ? 12 : 9;
+      camera.updateProjectionMatrix();
+    };
+    new ResizeObserver(resize).observe(root);
+    resize();
+
+    const pointer = { x: 0, y: 0 };
+    addEventListener(
+      "pointermove",
+      (e) => {
+        pointer.x = e.clientX / innerWidth - 0.5;
+        pointer.y = e.clientY / innerHeight - 0.5;
+      },
+      { passive: true },
+    );
+
+    for (let i = 0; i < 6; i++) fire((Math.random() * NODES) | 0);
+
+    // Fades and softens as the hero scrolls away. Script rather than a CSS scroll
+    // timeline, which Firefox and older Safari ignore.
+    const fade = () => {
+      const p = Math.min(Math.max(scrollY / Math.max(root.offsetHeight * 0.75, 1), 0), 1);
+      root.style.opacity = String(1 - p);
+      root.style.filter = p > 0.01 && !reduced ? `blur(${(p * 14).toFixed(1)}px)` : "";
+      root.style.transform = reduced ? "" : `scale(${(1 + p * 0.06).toFixed(3)})`;
+    };
+    addEventListener("scroll", fade, { passive: true });
+    fade();
+
+    if (reduced) {
+      step(0.4);
+      net.rotation.set(0.25, 0.6, 0);
+      renderer.render(scene, camera);
+      return;
+    }
+
+    let visible = true;
+    let last = performance.now();
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      last = performance.now();
+    }).observe(root);
+
+    const frame = (now: number) => {
+      requestAnimationFrame(frame);
+      if (!visible || document.hidden) {
+        last = now;
+        return;
+      }
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      step(dt);
+      net.rotation.y += dt * 0.06;
+      net.rotation.x += (pointer.y * 0.35 + 0.18 - net.rotation.x) * dt * 1.5;
+      net.position.x += (pointer.x * 0.6 - net.position.x) * dt * 1.5;
+      net.position.y = Math.sin(now / 2600) * 0.12;
+      renderer.render(scene, camera);
+    };
+    requestAnimationFrame(frame);
+  }
+
+  document.querySelectorAll<HTMLElement>(".indras").forEach(mount);
+</script>
+
+<style>
+  .indras {
+    --indras-tint: #38d6f5;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse 75% 70% at 60% 45%, #000 40%, transparent 85%);
+  }
+  .indras-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  @media (forced-colors: active) {
+    .indras {
+      display: none;
+    }
+  }
+</style>

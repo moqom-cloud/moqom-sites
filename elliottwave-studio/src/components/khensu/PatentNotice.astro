@@ -1,0 +1,21 @@
+---
+// "Patent pending" may only appear once an application is on file (35 U.S.C. 292). Fill in both values from the
+// USPTO filing receipt; until then this renders nothing. Keep in step with khensu-dev/src/pages/shell.astro.
+export const APPLICATION = '';
+export const FILED = '';
+---
+
+{APPLICATION && (
+  <p class="patent">
+    Patent pending: US application {APPLICATION}, filed {FILED}.
+    <a href="https://dev.khensu.nu/shell#patents">Details</a>
+  </p>
+)}
+
+<style>
+  .patent {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+</style>

@@ -1,0 +1,409 @@
+{
+  "checked": "2026-10-11",
+  "cut": {
+    "title": "Taken before the artist is paid",
+    "unit": "% of what a fan pays",
+    "rows": [
+      {
+        "id": "spotify-label",
+        "name": "Spotify, signed to a label",
+        "note": "Spotify keeps about a third, then the label keeps 80–85% of the recording royalty",
+        "platform": [
+          33,
+          33
+        ],
+        "middle": [
+          54,
+          57
+        ],
+        "display": "about 87–90%",
+        "kind": "estimate",
+        "sources": [
+          {
+            "name": "Spotify, Loud & Clear FAQ (about two-thirds paid to rights holders)",
+            "url": "https://loudandclear.byspotify.com/faq/",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "AndR. Learning Center, Record deals explained 2026 (15–25% royalty for new artists)",
+            "url": "https://learn.andrmusic.co/en/articles/13569576-record-deals-explained-royalties-recoupment-rights-2026",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Agarunov Law, Record deals explained 2026 (15–20% of net receipts)",
+            "url": "https://agarunovlaw.com/articles/record-deal-guide-artists.html",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "youtube-shorts",
+        "name": "YouTube Shorts",
+        "note": "Of the creator pool, after music licensing",
+        "platform": [
+          55,
+          55
+        ],
+        "display": "55%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "YouTube Help, Shorts monetization policies",
+            "url": "https://support.google.com/youtube/answer/12504220",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "youtube-long",
+        "name": "YouTube long-form",
+        "note": "Watch Page ads",
+        "platform": [
+          45,
+          45
+        ],
+        "display": "45%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "YouTube Help, YouTube partner earnings overview",
+            "url": "https://support.google.com/youtube/answer/72902",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "twitch",
+        "name": "Twitch subscriptions",
+        "note": "50% standard, 40% or 30% in the Plus Program, after fees",
+        "platform": [
+          30,
+          50
+        ],
+        "display": "30–50%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "Twitch Help, Plus Program",
+            "url": "https://help.twitch.tv/s/article/plus-program",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Twitch Help, Affiliate Program FAQ (standard 50/50)",
+            "url": "https://help.twitch.tv/s/article/twitch-affiliate-program-faq",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "app-store",
+        "name": "Apple App Store",
+        "note": "30% standard, 15% for small developers and after a subscriber’s first year",
+        "platform": [
+          15,
+          30
+        ],
+        "display": "15–30%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "Apple Developer, App Store Small Business Program",
+            "url": "https://developer.apple.com/app-store/small-business-program/",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Apple Developer, Auto-renewable subscriptions",
+            "url": "https://developer.apple.com/app-store/subscriptions/",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "onlyfans",
+        "name": "OnlyFans",
+        "note": "Subscriptions, tips and pay-per-view",
+        "platform": [
+          20,
+          20
+        ],
+        "display": "20%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "OnlyFans, Terms of Service (archived copy)",
+            "url": "https://archive.ph/6mux7",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "patreon",
+        "name": "Patreon",
+        "note": "10% for new creators plus 2.9% + $0.30 card fees; worked out on $10–25 a month",
+        "platform": [
+          14,
+          16
+        ],
+        "display": "about 14–16%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "Patreon Help, Standard platform fee for new creators after 4 August 2025",
+            "url": "https://support.patreon.com/hc/en-us/articles/36426991446797-A-standard-platform-fee-for-new-creators-effective-after-August-4-2025",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "kickstarter",
+        "name": "Kickstarter",
+        "note": "5% plus 3% + $0.30 a pledge; worked out on $10–100 pledges",
+        "platform": [
+          8,
+          11
+        ],
+        "display": "about 8–11%",
+        "kind": "published",
+        "sources": [
+          {
+            "name": "Kickstarter, Fees: United States",
+            "url": "https://www.kickstarter.com/help/fees",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "khensu",
+        "name": "khėnsu.ñü",
+        "note": "No platform cut and a 42¢ minimum payout. Only a network fee of a fraction of a cent, paid to node operators",
+        "platform": [
+          0.1,
+          0.1
+        ],
+        "display": "0% cut",
+        "kind": "no cut",
+        "ours": true,
+        "sources": [
+          {
+            "name": "khėnsu.ñü, Shielded payments: Creators (no platform cut; network fee only, estimate)",
+            "url": "https://khensu.nu/creators#fans-pay-section",
+            "checked": "2026-10-11"
+          }
+        ]
+      }
+    ]
+  },
+  "perThousand": {
+    "title": "What reaches the artist per 1,000 plays",
+    "unit": "US dollars per 1,000 streams or views",
+    "scaleMax": 10,
+    "rows": [
+      {
+        "id": "khensu",
+        "name": "khėnsu.ñü",
+        "note": "A cent a play, every play, all of it to the creator. khėnsu.ñü takes no cut, so nothing comes off before it reaches you",
+        "paid": [
+          10,
+          10
+        ],
+        "artist": [
+          10,
+          10
+        ],
+        "display": "$10",
+        "kind": "no cut",
+        "ours": true,
+        "sources": [
+          {
+            "name": "khėnsu.ñü, creator pay (1¢ a play, no platform cut)",
+            "url": "https://khensu.nu/creators#fans-pay-section",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "youtube-long",
+        "name": "YouTube long-form, creator",
+        "note": "After YouTube’s 45%; median about $2.30",
+        "paid": [
+          2.18,
+          5.45
+        ],
+        "artist": [
+          1.2,
+          3
+        ],
+        "display": "$1.20–3.00",
+        "kind": "estimate",
+        "sources": [
+          {
+            "name": "MilX and AIR Media-Tech, YouTube pay per view in 2026 (300 channels, May 2025–May 2026)",
+            "url": "https://milx.app/en/guidelines/how-much-does-youtube-pay-per-view",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "YouTube Help, YouTube partner earnings overview (55% to creators)",
+            "url": "https://support.google.com/youtube/answer/72902",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "apple-music",
+        "name": "Apple Music, signed artist",
+        "note": "Of about $7–10 paid to rights holders",
+        "paid": [
+          7,
+          10
+        ],
+        "artist": [
+          1.05,
+          2
+        ],
+        "display": "$1.05–2.00",
+        "kind": "estimate",
+        "sources": [
+          {
+            "name": "Apple Music for Artists, average per-play rate $0.01 (individual plans)",
+            "url": "https://artists.apple.com/support/1124-apple-music-insights-royalty-rate",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Songkeeper, How much does Spotify pay per stream (Apple Music $0.007–0.01)",
+            "url": "https://songkeeper.io/blog/spotify-pay-per-stream",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Music.co.uk, Per-stream pay to a signed artist (royalty applied to the label’s payout)",
+            "url": "https://music.co.uk/get-heard/how-to-get-heard/how-much-do-artists-get-paid-per-spotify-stream-in-the-uk-16478.html",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "spotify",
+        "name": "Spotify, signed artist",
+        "note": "Of about $3–5 paid to rights holders",
+        "paid": [
+          3,
+          5
+        ],
+        "artist": [
+          0.45,
+          1
+        ],
+        "display": "$0.45–1.00",
+        "kind": "estimate",
+        "sources": [
+          {
+            "name": "Songkeeper, How much does Spotify pay per stream (2025)",
+            "url": "https://songkeeper.io/blog/spotify-pay-per-stream",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "artist.tools, How much does Spotify pay per stream",
+            "url": "https://www.artist.tools/post/how-much-does-spotify-pay-per-stream",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "Music.co.uk, Per-stream pay to a signed artist",
+            "url": "https://music.co.uk/get-heard/how-to-get-heard/how-much-do-artists-get-paid-per-spotify-stream-in-the-uk-16478.html",
+            "checked": "2026-10-11"
+          }
+        ]
+      },
+      {
+        "id": "youtube-shorts",
+        "name": "YouTube Shorts, creator",
+        "note": "After YouTube’s 55%",
+        "paid": [
+          0.16,
+          0.44
+        ],
+        "artist": [
+          0.07,
+          0.2
+        ],
+        "display": "$0.07–0.20",
+        "kind": "estimate",
+        "sources": [
+          {
+            "name": "AIR Media-Tech, Shorts RPM vs long-form (274 channels, 2026)",
+            "url": "https://air.io/en/air-data-findings/youtube-shorts-rpm-vs-long-form-how-much-do-shorts-earn-in-2026",
+            "checked": "2026-10-11"
+          },
+          {
+            "name": "YouTube Help, Shorts monetization policies (45% to creators)",
+            "url": "https://support.google.com/youtube/answer/12504220",
+            "checked": "2026-10-11"
+          }
+        ]
+      }
+    ]
+  },
+  "film": {
+    "title": "Where $100 of cinema tickets goes in a studio deal",
+    "rows": [
+      {
+        "id": "cinema",
+        "name": "Cinema",
+        "value": 50,
+        "display": "about $50",
+        "kind": "published",
+        "note": "Theatres keep roughly half of box office"
+      },
+      {
+        "id": "fee",
+        "name": "Distribution fee",
+        "value": 15,
+        "display": "about $15",
+        "kind": "estimate",
+        "note": "30% of the distributor’s half in the US and Canada (35% UK, 40% elsewhere)"
+      },
+      {
+        "id": "costs",
+        "name": "Marketing, prints, overhead and the cost of the film, repaid first",
+        "value": 35,
+        "display": "up to $35",
+        "kind": "estimate",
+        "note": "Before any net profit points are paid"
+      }
+    ],
+    "sources": [
+      {
+        "name": "Mark Weinstein, Profit-sharing contracts in Hollywood (USC Marshall)",
+        "url": "http://marshallinside.usc.edu/Mweinstein/research/hollywood.pdf",
+        "checked": "2026-10-11"
+      },
+      {
+        "name": "Tools for Film, Film distribution deals explained (30–40% domestic theatrical fee)",
+        "url": "https://www.toolsforfilm.com/blog/film-distribution-deals-explained",
+        "checked": "2026-10-11"
+      },
+      {
+        "name": "Vitrina, Filmmaker vs distributor revenue splits 2026",
+        "url": "https://vitrina.ai/blog/filmmaker-distributor-revenue-splits/",
+        "checked": "2026-10-11"
+      }
+    ]
+  },
+  "recoup": {
+    "advance": 100000,
+    "royalty": 0.2,
+    "revenueToRecoup": 500000,
+    "kind": "published",
+    "note": "With a 20% royalty, a $100,000 advance is repaid only after $500,000 of the recording’s revenue",
+    "sources": [
+      {
+        "name": "AndR. Learning Center, Record deals explained 2026",
+        "url": "https://learn.andrmusic.co/en/articles/13569576-record-deals-explained-royalties-recoupment-rights-2026",
+        "checked": "2026-10-11"
+      },
+      {
+        "name": "Music.co.uk, The major-label vs indie royalty split explained",
+        "url": "https://music.co.uk/get-heard/uk-streaming-economics/the-major-label-vs-indie-royalty-split-explained-16633.html",
+        "checked": "2026-10-11"
+      }
+    ]
+  }
+}

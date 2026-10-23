@@ -1,0 +1,174 @@
+---
+// Home-page teaser for /memory: the personal feed that learns and ranks only on the device. Keep to what /memory says.
+const points = [
+  { t: 'Learns from your habits', b: 'What you watch to the end, replay, save, share, skip and follow. On your device, and only if you switch it on. Interests fade by half every 14 days unless you come back to them.' },
+  { t: 'Finds things anonymously', b: 'Your device prefetches public posts, live streams, forums and places inside its constant 2-second ticks, then scores them itself.' },
+  { t: 'Yours to see and reset', b: 'A “what it knows about me” screen lists what it learned and why, like the Naxos posts you saved. Remove anything, turn any signal off, or reset it all.' },
+];
+---
+
+<section class="section palgo" aria-labelledby="palgo-title">
+  <div class="wrap palgo-grid">
+    <div>
+      <p class="eyebrow">your algorithm</p>
+      <h2 id="palgo-title" class="palgo-h">An algorithm that works for you.<br /><em>It lives only on your phone.</em></h2>
+      <p class="lede">
+        The Feed starts chronological. Switch on your personal feed and it learns what you love, from your own habits,
+        and finds the right people, posts, live streams, forums and places. Nothing about your taste ever leaves your
+        device, so there is no profile for anyone to sell, target or hand over.
+      </p>
+      <ul class="palgo-points" role="list">
+        {points.map((p) => <li><b>{p.t}</b><span>{p.b}</span></li>)}
+      </ul>
+      <div class="btn-row">
+        <a class="btn primary" href="https://memory.khensu.nu#memory-feed-section">How your feed is scored</a>
+      </div>
+    </div>
+
+    <figure class="palgo-fig" aria-label="Your device holds what you like and the ranking. Only sealed, same-size requests cross the network, through two relays from different operators.">
+      <div class="pf-device" aria-hidden="true">
+        <p class="pf-label">your device</p>
+        <div class="pf-row"><b>What you like</b><span>stays here</span></div>
+        <div class="pf-row"><b>Ranking</b><span>runs here</span></div>
+        <div class="pf-row"><b>Your feed</b><span>shown here</span></div>
+      </div>
+      <div class="pf-wire" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="pf-net" aria-hidden="true">
+        <p class="pf-label">the network</p>
+        <div class="pf-relay">First relay <span>knows who, not what</span></div>
+        <div class="pf-relay">Second relay <span>knows what, not who</span></div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .palgo {
+    background: radial-gradient(60% 70% at 85% 50%, rgba(139, 123, 255, 0.12), transparent 70%);
+  }
+  .palgo-grid {
+    display: grid;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .palgo-grid {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    }
+  }
+  .palgo-h {
+    font-size: clamp(1.9rem, 3.8vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    max-width: none;
+  }
+  .palgo-h > br:has(+ :global(.sec-link)) {
+    display: none;
+  }
+  .palgo-points {
+    display: grid;
+    gap: 1rem;
+    margin: 1.8rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .palgo-points li {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .palgo-points b {
+    font-weight: 500;
+  }
+  .palgo-points span {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+  .palgo-fig {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+  .pf-label {
+    margin: 0 0 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+  }
+  .pf-device {
+    padding: 1.4rem;
+    border-radius: 28px;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, rgba(139, 123, 255, 0.18), rgba(79, 209, 197, 0.05)) padding-box,
+      linear-gradient(#0d0e13, #0d0e13) padding-box,
+      linear-gradient(135deg, rgba(185, 173, 255, 0.7), rgba(79, 209, 197, 0.5)) border-box;
+    box-shadow: 0 0 50px rgba(139, 123, 255, 0.18);
+    display: grid;
+    gap: 0.55rem;
+  }
+  .pf-device .pf-label {
+    color: #c9c0ff;
+  }
+  .pf-row,
+  .pf-relay {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 16px;
+    background: rgba(10, 11, 16, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .pf-row b {
+    font-weight: 500;
+  }
+  .pf-row span,
+  .pf-relay span {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+  .pf-wire {
+    position: relative;
+    justify-self: center;
+    width: 2px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+  }
+  .pf-wire i {
+    position: absolute;
+    left: -2px;
+    width: 6px;
+    height: 10px;
+    border-radius: 2px;
+    background: rgba(242, 241, 236, 0.85);
+    animation: pf-move 2.4s linear infinite;
+  }
+  .pf-wire i:nth-child(2) { animation-delay: -0.8s; }
+  .pf-wire i:nth-child(3) { animation-delay: -1.6s; }
+  @keyframes pf-move {
+    from { top: -10px; }
+    to { top: 100%; }
+  }
+  .pf-net {
+    padding: 1.4rem;
+    border-radius: 28px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.02);
+    display: grid;
+    gap: 0.55rem;
+  }
+  .pf-relay {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02));
+    border-color: rgba(255, 255, 255, 0.12);
+    font-weight: 500;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pf-wire i { animation: none; }
+    .pf-wire i:nth-child(1) { top: 8px; }
+    .pf-wire i:nth-child(2) { top: 28px; }
+    .pf-wire i:nth-child(3) { top: 48px; }
+  }
+</style>

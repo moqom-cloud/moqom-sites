@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import LicenceKey from '../../components/LicenceKey.astro';
+import PriceBadge from '../../components/PriceBadge.astro';
+import Generator from '../../components/Generator.astro';
+import { SITE } from '../../data/site';
+import { allowVisitorModels } from '../../lib/csp';
+
+allowVisitorModels(Astro);
+const tree = `${SITE.repoUrl}/tree/main/packages/shopify`;
+---
+
+<Base title="Shopify" description={`Add ${SITE.displayName} to a Shopify Online Store 2.0 theme.`}>
+  <p class="eyebrow">Platforms</p>
+  <h1>Shopify</h1>
+  <p><PriceBadge plugin="shopify" /></p>
+  <div class="note">
+    <p>
+      <strong>Licence:</strong> the Shopify block and section need a <a href="#licence">licence key</a> for your store. The free
+      alternative is the <a href="/platforms/html/">HTML snippet</a> in a Custom Liquid section (option C).
+    </p>
+  </div>
+  <div class="prose">
+    <p>
+      Shopify themes already show 3D models you add to a product's media. Use {SITE.displayName} when you want its AR button, poster and
+      tap-to-load behaviour, or a model that is not product media.
+    </p>
+    <p>
+      The block reads the product's own 3D media: the GLB, plus the USDZ Shopify generates for iOS when there is one. It can also use a
+      model URL you enter. Shopify returns its CDN addresses without <code>https:</code> (as <code>//cdn.shopify.com/…</code>); the block adds
+      it. Any other URL must start with <code>https://</code>.
+    </p>
+
+    <h2>Option A: theme section (one store, no app)</h2>
+    <ol>
+      <li>Download <code>theme-section/</code> from <a href={tree}>the repository</a> (or a release).</li>
+      <li>Online Store → Themes → … → <strong>Edit code</strong>.</li>
+      <li>Under <strong>Assets</strong>, add <code>{SITE.release.file}</code>.</li>
+      <li>Under <strong>Sections</strong>, add a section named <code>ew-viewer</code> and paste <code>sections/ew-viewer.liquid</code>.</li>
+      <li>In the theme editor, add the <strong>{SITE.displayName}</strong> section to your product template and choose its settings.</li>
+    </ol>
+    <p>Theme updates from the theme's developer can remove custom sections; keep a copy.</p>
+
+    <h2>Option B: theme app extension</h2>
+    <p>
+      <code>extensions/viewer/</code> is a theme app extension with one app block, <strong>3D model</strong>. It needs a Shopify app (a
+      custom app for one store, or a public app on the App Store) and the Shopify CLI. Merchants add the block in the theme editor; no
+      theme code changes. It is not on the Shopify App Store yet.
+    </p>
+
+    <h2>Option C: Custom Liquid (free)</h2>
+    <p>
+      For a single page, a theme's <strong>Custom Liquid</strong> section or block can hold the script and element directly. The generator
+      below makes the snippet.
+    </p>
+  </div>
+
+  <Generator platform="shopify" fixed />
+
+  <LicenceKey plugin="shopify">
+    <li>In the theme editor, select the 3D Viewer block or section and paste the key into <strong>Licence key</strong>. One licence covers your custom domain and your myshopify.com address if you enter it at checkout. The theme editor never shows the badge.</li>
+  </LicenceKey>
+</Base>

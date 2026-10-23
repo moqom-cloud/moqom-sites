@@ -1,0 +1,838 @@
+---
+// îňðřæ.ōġ (nu.indra.og) Live Preview Studio:
+// Uses the unified ñü.ŵævẽš Story / Messages preview style:
+// - Uncut 3D Fibonacci point-cloud spacetime bubble™ + Indra's Net jewel lattice + 3D height threads to ear level
+// - Root → Crown (396 → 963 Hz) morphing chakra yantra at the listener centre + orbiting 3D sound/chakra nodes
+// - Apple Speech word-pop animated lyrics & chakra timecodes with [LEAD] / [CHORUS] / [BACKING] role badges
+// - Embedded glass mini-player card + 🔗 PLAY IN 3D & SHAREPLAY · waves.khensu.nu sticker
+// - Interactive format switcher (16:9 Messages · 9:16 Story / Reel · 1:1 webË Square), on-device 396→963 Hz sound, and Apple SharePlay.
+
+const chakras = [
+  { name: 'Root', sanskrit: 'Muladhara', hz: 396, color: '#e11d48', role: 'lead', tag: 'ROOT · 396 HZ', words: ['Root', 'Muladhara', 'grounds', 'the', '3D', 'spacetime', 'bubble'] },
+  { name: 'Sacral', sanskrit: 'Svadhisthana', hz: 417, color: '#f97316', role: 'backing', tag: 'SACRAL · 417 HZ', words: ['(Sacral', 'water', 'resonates', 'across', 'Indra’s', 'Net)'] },
+  { name: 'Solar plexus', sanskrit: 'Manipura', hz: 528, color: '#eab308', role: 'chorus', tag: 'SOLAR · 528 HZ', words: ['Solar', '528 Hz', 'harmonic', 'blooms', 'around', 'every', 'listener'] },
+  { name: 'Heart', sanskrit: 'Anahata', hz: 639, color: '#22f59a', role: 'chorus', tag: 'HEART · 639 HZ', words: ['Move', 'every', 'instrument', 'together', 'on', 'Apple', 'SharePlay'] },
+  { name: 'Throat', sanskrit: 'Vishuddha', hz: 741, color: '#38bdf8', role: 'lead', tag: 'THROAT · 741 HZ', words: ['Every', 'word', 'timecoded', 'on', 'device', 'by', 'Apple', 'Speech'] },
+  { name: 'Third eye', sanskrit: 'Ajna', hz: 852, color: '#818cf8', role: 'backing', tag: 'AJNA · 852 HZ', words: ['(Indra’s', 'Net', 'over', 'Earth', 'mute-loops', 'in', 'Messages)'] },
+  { name: 'Crown', sanskrit: 'Sahasrara', hz: 963, color: '#c084fc', role: 'chorus', tag: 'CROWN · 963 HZ', words: ['Root', 'to', 'Crown', 'in', 'the', 'uncut', 'spacetime', 'bubble™'] },
+];
+
+const PATHS = [
+  'M20 80 L50 20 L80 80 Z M35 55 H65',
+  'M20 70 Q50 10 80 70 Q50 95 20 70 Z M50 40 V75',
+  'M50 15 L85 75 L15 75 Z M50 35 V70',
+  'M50 20 L70 40 L50 80 L30 40 Z M35 45 L65 45',
+  'M50 20 A30 30 0 1 1 49.9 20 M35 50 H65 M50 35 V65',
+  'M30 55 Q50 15 70 55 Q50 85 30 55 Z M42 48 L58 48',
+  'M50 50 m-32 0 a32 32 0 1 0 64 0 a32 32 0 1 0 -64 0 M50 18 V82 M18 50 H82 M28 28 L72 72 M72 28 L28 72',
+];
+---
+
+<div class="indra-chakra" data-indra-chakra aria-label="îňðřæ.ōġ live preview with uncut 3D spacetime bubble, Apple Speech word-pop lyrics, mini-player and Apple SharePlay">
+  <div class="ic-toolbar" role="group" aria-label="îňðřæ.ōġ preview aspect ratio">
+    <button type="button" class="ic-fmt" data-ic-fmt="indra" aria-pressed="true">16:9 Messages (og:video)</button>
+    <button type="button" class="ic-fmt" data-ic-fmt="story" aria-pressed="false">9:16 Story / Reel</button>
+    <button type="button" class="ic-fmt" data-ic-fmt="square" aria-pressed="false">1:1 webË (nu:preview)</button>
+  </div>
+
+  <div class="ic-stage-wrap">
+    <a
+      class="ic-stage-link"
+      href="https://waves.khensu.nu/#/t/first-attempt?shareplay=live"
+      aria-label="Open First Attempt in 3D on waves.khensu.nu"
+      oncontextmenu="return false"
+    >
+      <canvas class="ic-canvas" data-ic-canvas data-fmt="indra" width="1200" height="630"></canvas>
+    </a>
+    <!-- Hidden SVG used to measure & morph chakra yantra strokes cleanly -->
+    <svg class="ic-svg-hidden" viewBox="0 0 100 100" aria-hidden="true">
+      <path class="ic-path" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </div>
+
+  <div class="ic-meta-row">
+    <p class="ic-label">
+      <span class="ic-dot-live" aria-hidden="true"></span>
+      <span class="ic-name">Root</span>
+      <span class="ic-hz">396 Hz</span>
+      <span class="ic-sub">· uncut spacetime bubble™</span>
+    </p>
+    <ol class="ic-dots" role="list">
+      {chakras.map((c, idx) => (
+        <li class={idx === 0 ? 'on' : ''} style={`--c:${c.color}`} title={`${c.name} · ${c.hz} Hz`} data-ic-jump={idx} />
+      ))}
+    </ol>
+  </div>
+
+  <div class="ic-actions">
+    <button class="ic-sound btn primary" type="button" data-ic-sound aria-pressed="false">Sound (396 → 963 Hz)</button>
+    <button class="ic-shareplay btn" type="button" data-ic-shareplay>Apple SharePlay</button>
+    <button class="ic-export btn" type="button" data-ic-export>Share îňðřæ.ōġ card</button>
+    <a class="btn" href="https://waves.khensu.nu/#/t/first-attempt?shareplay=live">Open in 3D on ñü.ŵævẽš →</a>
+  </div>
+</div>
+
+<script define:vars={{ PATHS, chakras }}>
+  (() => {
+    // Precompute 380 Fibonacci sphere points for the uncut 3D spacetime bubble™
+    const FIB_N = 380;
+    const FIB_PTS = [];
+    for (let i = 0; i < FIB_N; i++) {
+      const y = 1 - (i / (FIB_N - 1)) * 2;
+      const r = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = i * Math.PI * (3 - Math.sqrt(5));
+      FIB_PTS.push({ x: Math.cos(theta) * r, y, z: Math.sin(theta) * r });
+    }
+    const NET_PTS = Array.from({ length: 26 }, (_, i) => ({
+      u: ((i * 37 + 13) % 100) / 100,
+      v: ((i * 61 + 29) % 100) / 100,
+      phase: i * 0.7,
+    }));
+
+    const roundRect = (g, x, y, w, h, r) => {
+      const rad = Math.min(r, w * 0.5, h * 0.5);
+      g.beginPath();
+      g.moveTo(x + rad, y);
+      g.arcTo(x + w, y, x + w, y + h, rad);
+      g.arcTo(x + w, y + h, x, y + h, rad);
+      g.arcTo(x, y + h, x, y, rad);
+      g.arcTo(x, y, x + w, y, rad);
+      g.closePath();
+    };
+
+    for (const root of document.querySelectorAll('[data-indra-chakra]')) {
+      if (root.dataset.on) continue;
+      root.dataset.on = '1';
+      const canvas = root.querySelector('[data-ic-canvas]');
+      const g = canvas?.getContext('2d');
+      const path = root.querySelector('.ic-path');
+      const nameEl = root.querySelector('.ic-name');
+      const hzEl = root.querySelector('.ic-hz');
+      const dots = [...root.querySelectorAll('.ic-dots li')];
+      const soundBtn = root.querySelector('[data-ic-sound]');
+      const spBtn = root.querySelector('[data-ic-shareplay]');
+      const expBtn = root.querySelector('[data-ic-export]');
+      const fmtBtns = [...root.querySelectorAll('[data-ic-fmt]')];
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+      const coverImg = new Image();
+      coverImg.crossOrigin = 'anonymous';
+      coverImg.src = '/khensu/sounds/first-attempt.webp';
+
+      let fmt = 'indra';
+      let soundOn = false;
+      let ctx = null;
+      let idx = 0;
+      let stepStart = performance.now();
+      let raf = 0;
+
+      const setFormat = (nextFmt) => {
+        fmt = nextFmt;
+        if (!canvas) return;
+        canvas.dataset.fmt = fmt;
+        if (fmt === 'story') {
+          canvas.width = 1080;
+          canvas.height = 1920;
+        } else if (fmt === 'square') {
+          canvas.width = 1080;
+          canvas.height = 1080;
+        } else {
+          canvas.width = 1200;
+          canvas.height = 630;
+        }
+        fmtBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.icFmt === fmt)));
+        draw(performance.now());
+      };
+
+      fmtBtns.forEach((b) => {
+        b.addEventListener('click', () => setFormat(b.dataset.icFmt || 'indra'));
+      });
+
+      dots.forEach((d, k) => {
+        d.style.cursor = 'pointer';
+        d.addEventListener('click', () => {
+          idx = k;
+          stepStart = performance.now();
+          if (soundOn) tone(chakras[idx].hz);
+        });
+      });
+
+      const tone = (hz) => {
+        if (!soundOn) return;
+        ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const o = ctx.createOscillator();
+        const gain = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = hz;
+        gain.gain.value = 0.0001;
+        o.connect(gain);
+        gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+        gain.gain.exponentialRampToValueAtTime(0.08, now + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+        o.start(now);
+        o.stop(now + 1.15);
+      };
+
+      const drawBubble = (cx, cy, R, now, c, tStep, sc = 1) => {
+        g.save();
+        // Outer halo inside safe bounds
+        const halo = g.createRadialGradient(cx, cy, R * 0.12, cx, cy, R * 1.16);
+        halo.addColorStop(0, `${c.color}33`);
+        halo.addColorStop(0.6, 'rgba(34, 245, 154, 0.10)');
+        halo.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = halo;
+        g.beginPath();
+        g.arc(cx, cy, R * 1.16, 0, Math.PI * 2);
+        g.fill();
+
+        // Glass sphere rim
+        const sph = g.createRadialGradient(cx - R * 0.28, cy - R * 0.28, R * 0.05, cx, cy, R);
+        sph.addColorStop(0, 'rgba(126, 200, 255, 0.13)');
+        sph.addColorStop(0.7, 'rgba(10, 22, 42, 0.26)');
+        sph.addColorStop(1, 'rgba(34, 245, 154, 0.2)');
+        g.fillStyle = sph;
+        g.beginPath();
+        g.arc(cx, cy, R, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = 'rgba(125, 211, 252, 0.36)';
+        g.lineWidth = 2 * sc;
+        g.stroke();
+
+        // 3D Fibonacci point-cloud shell
+        const yaw = now * 0.00045;
+        const pitch = 0.36;
+        const cyaw = Math.cos(yaw);
+        const syaw = Math.sin(yaw);
+        const cpitch = Math.cos(pitch);
+        const spitch = Math.sin(pitch);
+        const swell = 0.025 * Math.sin(now * 0.004);
+
+        const project3D = (wx, wy, wz) => {
+          const x1 = wx * cyaw - wz * syaw;
+          const z1 = wx * syaw + wz * cyaw;
+          const y2 = wy * cpitch - z1 * spitch;
+          const z2 = wy * spitch + z1 * cpitch;
+          const persp = 2.8 / (2.8 - z2 * 0.55);
+          return {
+            sx: cx + x1 * R * 0.86 * persp,
+            sy: cy - y2 * R * 0.86 * persp,
+            depth: z2,
+          };
+        };
+
+        for (let pIdx = 0; pIdx < FIB_PTS.length; pIdx++) {
+          const p = FIB_PTS[pIdx];
+          const wave = 1 + swell + 0.028 * Math.sin(p.y * 7 - now * 0.005 + p.x * 4);
+          const pr = project3D(p.x * wave, p.y * wave, p.z * wave);
+          const alpha = (0.16 + Math.max(0, (pr.depth + 1) * 0.26)).toFixed(3);
+          g.fillStyle = p.y > 0.25 ? `rgba(169,139,255,${alpha})` : p.y < -0.25 ? `rgba(34,245,154,${alpha})` : `rgba(59,157,255,${alpha})`;
+          g.beginPath();
+          g.arc(pr.sx, pr.sy, Math.max(1.2, (1.6 + (pr.depth + 1) * 0.85) * sc), 0, Math.PI * 2);
+          g.fill();
+        }
+
+        // Equator ring
+        g.strokeStyle = 'rgba(159, 208, 255, 0.18)';
+        g.lineWidth = 1.4 * sc;
+        g.beginPath();
+        g.ellipse(cx, cy, R * 0.88, R * 0.88 * Math.sin(pitch), 0, 0, Math.PI * 2);
+        g.stroke();
+
+        // Compass labels INSIDE safe bounds (never cut off)
+        g.fillStyle = 'rgba(226, 232, 240, 0.58)';
+        g.font = `600 ${Math.round(14 * sc)}px "JetBrains Mono", monospace`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText('ABOVE', cx, cy - R + 20 * sc);
+        g.fillText('BELOW', cx, cy + R - 20 * sc);
+        g.fillText('AHEAD', cx, cy - R * 0.36);
+        g.fillText('BEHIND', cx, cy + R * 0.38);
+
+        // Morphing Chakra Yantra at centre of spacetime bubble
+        g.save();
+        const yantraScale = (R * 0.62) / 100;
+        g.translate(cx - 50 * yantraScale, cy - 50 * yantraScale);
+        g.scale(yantraScale, yantraScale);
+        const p2d = new Path2D(PATHS[idx]);
+        g.strokeStyle = c.color;
+        g.lineWidth = 3.2;
+        g.shadowColor = c.color;
+        g.shadowBlur = 16;
+        g.setLineDash([260]);
+        g.lineDashOffset = (1 - Math.min(1, tStep * 1.35)) * 220;
+        g.stroke(p2d);
+        g.restore();
+
+        // Orbiting 3D sound & chakra nodes inside the bubble with vertical threads to ear level
+        const nodes = [
+          { label: `${c.name} ${c.hz} Hz`, mark: c.color, x: 0.55 * Math.cos(yaw * 1.4), y: 0.35, z: 0.55 * Math.sin(yaw * 1.4) },
+          { label: 'Vocals', mark: '#22f59a', x: -0.48, y: 0.22, z: -0.36 },
+          { label: 'Strings & piano', mark: '#38bdf8', x: 0.52, y: -0.18, z: -0.28 },
+          { label: 'Warm pad', mark: '#c084fc', x: -0.32, y: -0.34, z: 0.48 },
+        ];
+        nodes.forEach((n, ni) => {
+          const p3 = project3D(n.x, n.y, n.z);
+          const ear3 = project3D(n.x, 0, n.z);
+          g.strokeStyle = 'rgba(159, 208, 255, 0.36)';
+          g.lineWidth = 1.5 * sc;
+          g.beginPath();
+          g.moveTo(cx, cy);
+          g.lineTo(ear3.sx, ear3.sy);
+          g.lineTo(p3.sx, p3.sy);
+          g.stroke();
+
+          const nr = (11 + 4 * Math.sin(now * 0.006 + ni)) * sc;
+          const nh = g.createRadialGradient(p3.sx, p3.sy, 1, p3.sx, p3.sy, nr * 2);
+          nh.addColorStop(0, n.mark);
+          nh.addColorStop(1, 'rgba(0,0,0,0)');
+          g.fillStyle = nh;
+          g.beginPath();
+          g.arc(p3.sx, p3.sy, nr * 2, 0, Math.PI * 2);
+          g.fill();
+
+          g.fillStyle = n.mark;
+          g.beginPath();
+          g.arc(p3.sx, p3.sy, nr * 0.55, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = '#fff';
+          g.lineWidth = 1.4 * sc;
+          g.stroke();
+
+          g.fillStyle = '#ffffff';
+          g.font = `600 ${Math.round(15 * sc)}px Inter, -apple-system, sans-serif`;
+          g.textAlign = 'center';
+          g.textBaseline = 'top';
+          g.fillText(n.label, p3.sx, p3.sy + nr * 0.6 + 3 * sc);
+        });
+
+        g.restore();
+      };
+
+      const drawPopWords = (words, activeWordIdx, wordProg, centerX, startY, maxW, fontPx, lineH) => {
+        g.font = `800 ${fontPx}px Inter, -apple-system, sans-serif`;
+        const spaceW = Math.round(fontPx * 0.34);
+        const rows = [];
+        let cur = [];
+        let curW = 0;
+        words.forEach((w, wi) => {
+          const ww = g.measureText(w).width;
+          if (cur.length && curW + spaceW + ww > maxW) {
+            rows.push({ words: cur, totalW: curW });
+            cur = [];
+            curW = 0;
+          }
+          cur.push({ w, wi, width: ww });
+          curW += (cur.length > 1 ? spaceW : 0) + ww;
+        });
+        if (cur.length) rows.push({ words: cur, totalW: curW });
+
+        rows.slice(0, 2).forEach((row, rIdx) => {
+          let x = centerX - row.totalW * 0.5;
+          const y = startY + rIdx * lineH;
+          row.words.forEach((item) => {
+            const isCur = item.wi === activeWordIdx;
+            const isPast = item.wi < activeWordIdx;
+            const bump = isCur ? Math.sin(Math.min(1, wordProg * 1.5) * Math.PI) : 0;
+            const scale = isCur ? 1.15 + bump * 0.12 : 1;
+            const yLift = isCur ? -4 - bump * 5 : 0;
+            g.save();
+            g.translate(x + item.width * 0.5, y + yLift);
+            g.scale(scale, scale);
+            if (isCur) {
+              g.fillStyle = 'rgba(34, 245, 154, 0.24)';
+              g.strokeStyle = '#22f59a';
+              g.lineWidth = 2;
+              roundRect(g, -item.width * 0.5 - 9, -fontPx * 0.66, item.width + 18, fontPx * 1.22, 12);
+              g.fill();
+              g.stroke();
+              g.fillStyle = '#ffffff';
+            } else if (isPast) {
+              g.fillStyle = '#8ef7c8';
+            } else {
+              g.fillStyle = 'rgba(245, 247, 250, 0.65)';
+            }
+            g.font = `800 ${fontPx}px Inter, -apple-system, sans-serif`;
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+            g.fillText(item.w, 0, 0);
+            g.restore();
+            x += item.width + spaceW;
+          });
+        });
+      };
+
+      const drawMiniCard = (cardX, cardY, cardW, cardH, c, prog, sc = 1) => {
+        g.save();
+        g.fillStyle = 'rgba(14, 22, 38, 0.9)';
+        g.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        g.lineWidth = 2 * sc;
+        roundRect(g, cardX, cardY, cardW, cardH, 30 * sc);
+        g.fill();
+        g.stroke();
+
+        const pad = Math.round(18 * sc);
+        const artS = cardH - pad * 2;
+        const artX = cardX + pad;
+        const artY = cardY + pad;
+        if (coverImg.complete && coverImg.naturalWidth > 0) {
+          g.save();
+          roundRect(g, artX, artY, artS, artS, 16 * sc);
+          g.clip();
+          g.drawImage(coverImg, artX, artY, artS, artS);
+          g.restore();
+        } else {
+          g.fillStyle = c.color;
+          roundRect(g, artX, artY, artS, artS, 16 * sc);
+          g.fill();
+        }
+
+        const textX = artX + artS + Math.round(20 * sc);
+        const maxW = cardX + cardW - textX - Math.round(20 * sc);
+        g.fillStyle = '#ffffff';
+        g.font = `700 ${Math.round(29 * sc)}px Inter, -apple-system, sans-serif`;
+        g.textAlign = 'left';
+        g.textBaseline = 'top';
+        g.fillText(`First Attempt · ${c.name} (${c.hz} Hz)`, textX, cardY + Math.round(20 * sc), maxW);
+
+        g.fillStyle = 'rgba(220, 230, 242, 0.82)';
+        g.font = `500 ${Math.round(21 * sc)}px Inter, -apple-system, sans-serif`;
+        g.fillText(`nu.aura · ${c.sanskrit} · Apple SharePlay ready`, textX, cardY + Math.round(58 * sc), maxW);
+
+        g.fillStyle = '#22f59a';
+        g.font = `600 ${Math.round(18 * sc)}px "JetBrains Mono", monospace`;
+        g.fillText(`7 chakras & stems in 3D · nu.waves`, textX, cardY + Math.round(90 * sc), maxW);
+
+        const barY = cardY + cardH - Math.round(36 * sc);
+        g.fillStyle = 'rgba(255, 255, 255, 0.16)';
+        roundRect(g, textX, barY, maxW, Math.max(6, Math.round(8 * sc)), 999);
+        g.fill();
+        const pg = g.createLinearGradient(textX, barY, textX + maxW, barY);
+        pg.addColorStop(0, '#22f59a');
+        pg.addColorStop(1, '#38bdf8');
+        g.fillStyle = pg;
+        roundRect(g, textX, barY, maxW * Math.max(0.08, prog), Math.max(6, Math.round(8 * sc)), 999);
+        g.fill();
+        g.restore();
+      };
+
+      const draw = (now) => {
+        if (!canvas || !g) return;
+        const W = canvas.width;
+        const H = canvas.height;
+        const stepDur = 2400;
+        const elapsed = now - stepStart;
+        const tStep = Math.min(1, elapsed / stepDur);
+        const c = chakras[idx];
+        const wordIdx = Math.min(c.words.length - 1, Math.floor(tStep * c.words.length));
+        const wordProg = (tStep * c.words.length) % 1;
+        const totalProg = (idx + tStep) / chakras.length;
+
+        if (nameEl) nameEl.textContent = c.name;
+        if (hzEl) hzEl.textContent = `${c.hz} Hz`;
+        dots.forEach((d, k) => d.classList.toggle('on', k === idx));
+
+        // Background + Indra's Net lattice
+        const bg = g.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, '#040812');
+        bg.addColorStop(0.5, '#071122');
+        bg.addColorStop(1, '#04060c');
+        g.fillStyle = bg;
+        g.fillRect(0, 0, W, H);
+
+        g.save();
+        g.strokeStyle = 'rgba(125, 211, 252, 0.075)';
+        g.lineWidth = 1.2;
+        for (let aIdx = 0; aIdx < NET_PTS.length; aIdx++) {
+          const a = NET_PTS[aIdx];
+          const ax = (a.u + 0.02 * Math.sin(now * 0.0006 + a.phase)) * W;
+          const ay = (a.v + 0.02 * Math.cos(now * 0.0005 + a.phase)) * H;
+          for (let bIdx = aIdx + 1; bIdx < NET_PTS.length; bIdx++) {
+            const b = NET_PTS[bIdx];
+            const bx = (b.u + 0.02 * Math.sin(now * 0.0006 + b.phase)) * W;
+            const by = (b.v + 0.02 * Math.cos(now * 0.0005 + b.phase)) * H;
+            if (Math.hypot(ax - bx, ay - by) < Math.min(W, H) * 0.24) {
+              g.beginPath();
+              g.moveTo(ax, ay);
+              g.lineTo(bx, by);
+              g.stroke();
+            }
+          }
+          g.fillStyle = 'rgba(186, 230, 253, 0.22)';
+          g.beginPath();
+          g.arc(ax, ay, 2.2, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.restore();
+
+        if (fmt === 'indra') {
+          // 16:9 îňðřæ.ōġ Messages Card (1200×630)
+          const leftX = 48;
+          const leftW = 610;
+          g.save();
+          g.fillStyle = 'rgba(255, 255, 255, 0.07)';
+          g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+          g.lineWidth = 1.5;
+          roundRect(g, leftX, 34, leftW, 44, 999);
+          g.fill();
+          g.stroke();
+          g.fillStyle = '#22f59a';
+          g.beginPath();
+          g.arc(leftX + 24, 56, 6.5, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = '#f8fafc';
+          g.font = '700 18px Inter, -apple-system, sans-serif';
+          g.textAlign = 'left';
+          g.textBaseline = 'middle';
+          g.fillText('îňðřæ.ōġ · ñü.ŵævẽš · spacetime bubble™', leftX + 42, 56);
+          g.fillStyle = '#7dd3fc';
+          g.font = '600 14px "JetBrains Mono", monospace';
+          g.textAlign = 'right';
+          g.fillText(`${c.hz} Hz · SharePlay`, leftX + leftW - 20, 56);
+          g.restore();
+
+          // Role pill + word-pop lyrics
+          const lyrCenterX = leftX + leftW * 0.5;
+          g.save();
+          g.font = '700 13px "JetBrains Mono", monospace';
+          const tagW = g.measureText(c.tag).width + 24;
+          g.fillStyle = 'rgba(10, 18, 34, 0.88)';
+          g.strokeStyle = c.color;
+          g.lineWidth = 1.5;
+          roundRect(g, lyrCenterX - tagW * 0.5, 132, tagW, 24, 999);
+          g.fill();
+          g.stroke();
+          g.fillStyle = c.color;
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText(c.tag, lyrCenterX, 144);
+          drawPopWords(c.words, wordIdx, wordProg, lyrCenterX, 194, leftW - 16, 28, 40);
+          g.restore();
+
+          drawMiniCard(leftX, 342, leftW, 174, c, totalProg, 0.72);
+
+          g.save();
+          const sg = g.createLinearGradient(leftX, 540, leftX + leftW, 590);
+          sg.addColorStop(0, '#22f59a');
+          sg.addColorStop(1, '#38a8ff');
+          g.fillStyle = sg;
+          roundRect(g, leftX, 540, leftW, 50, 999);
+          g.fill();
+          g.fillStyle = '#041019';
+          g.font = '800 18px Inter, -apple-system, sans-serif';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText('🔗 PLAY IN 3D & SHAREPLAY · waves.khensu.nu', lyrCenterX, 565);
+          g.restore();
+
+          // Uncut 3D Spacetime Bubble™ on right (cx=935, cy=315, R=212 -> 100% inside 630px height)
+          drawBubble(935, H * 0.5, 212, now, c, tStep, 0.8);
+        } else if (fmt === 'square') {
+          // 1:1 webË Square (1080×1080)
+          g.save();
+          g.fillStyle = 'rgba(255, 255, 255, 0.07)';
+          g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+          g.lineWidth = 2;
+          roundRect(g, W * 0.07, 34, W * 0.86, 52, 999);
+          g.fill();
+          g.stroke();
+          g.fillStyle = '#22f59a';
+          g.beginPath();
+          g.arc(W * 0.115, 60, 8, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = '#f8fafc';
+          g.font = '700 22px Inter, -apple-system, sans-serif';
+          g.textAlign = 'left';
+          g.textBaseline = 'middle';
+          g.fillText('îňðřæ.ōġ · ñü.ŵævẽš · spacetime bubble™', W * 0.14, 60);
+          g.fillStyle = '#7dd3fc';
+          g.font = '600 18px "JetBrains Mono", monospace';
+          g.textAlign = 'right';
+          g.fillText(`${c.hz} Hz · nu:preview`, W * 0.89, 60);
+          g.restore();
+
+          drawBubble(W * 0.5, 320, 195, now, c, tStep, 0.84);
+          drawPopWords(c.words, wordIdx, wordProg, W * 0.5, 598, W * 0.86, 33, 46);
+          drawMiniCard(W * 0.07, 728, W * 0.86, 200, c, totalProg, 0.84);
+
+          g.save();
+          const sg = g.createLinearGradient(W * 0.1, 962, W * 0.9, 1020);
+          sg.addColorStop(0, '#22f59a');
+          sg.addColorStop(1, '#38a8ff');
+          g.fillStyle = sg;
+          roundRect(g, W * 0.1, 962, W * 0.8, 58, 999);
+          g.fill();
+          g.fillStyle = '#041019';
+          g.font = '800 22px Inter, -apple-system, sans-serif';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText('🔗 PLAY IN 3D & SHAREPLAY · waves.khensu.nu', W * 0.5, 991);
+          g.restore();
+        } else {
+          // 9:16 Story / Reel (1080×1920)
+          g.save();
+          g.fillStyle = 'rgba(255, 255, 255, 0.07)';
+          g.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+          g.lineWidth = 2;
+          roundRect(g, W * 0.07, H * 0.036, W * 0.86, H * 0.044, 999);
+          g.fill();
+          g.stroke();
+          g.fillStyle = '#22f59a';
+          g.beginPath();
+          g.arc(W * 0.12, H * 0.058, 9, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = '#f5f7fa';
+          g.font = '700 26px Inter, -apple-system, sans-serif';
+          g.textAlign = 'left';
+          g.textBaseline = 'middle';
+          g.fillText('îňðřæ.ōġ · spacetime bubble™', W * 0.15, H * 0.058);
+          g.fillStyle = '#7dd3fc';
+          g.font = '600 21px "JetBrains Mono", monospace';
+          g.textAlign = 'right';
+          g.fillText(`${c.hz} Hz · SharePlay`, W * 0.89, H * 0.058);
+          g.restore();
+
+          drawBubble(W * 0.5, H * 0.275, W * 0.245, now, c, tStep, 1);
+          drawPopWords(c.words, wordIdx, wordProg, W * 0.5, H * 0.56, W * 0.84, 42, 58);
+          drawMiniCard(W * 0.07, H * 0.735, W * 0.86, H * 0.132, c, totalProg, 1);
+
+          g.save();
+          const sg = g.createLinearGradient(W * 0.09, H * 0.898, W * 0.91, H * 0.898 + 72);
+          sg.addColorStop(0, '#22f59a');
+          sg.addColorStop(1, '#38a8ff');
+          g.fillStyle = sg;
+          roundRect(g, W * 0.09, H * 0.898, W * 0.82, 72, 999);
+          g.fill();
+          g.fillStyle = '#041019';
+          g.font = '800 25px Inter, -apple-system, sans-serif';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText('🔗 PLAY IN 3D & SHAREPLAY · waves.khensu.nu', W * 0.5, H * 0.898 + 36);
+          g.restore();
+        }
+
+        if (elapsed >= stepDur && !reduce.matches) {
+          idx = (idx + 1) % chakras.length;
+          stepStart = now;
+          tone(chakras[idx].hz);
+        }
+      };
+
+      const loop = (now) => {
+        draw(now);
+        if (!reduce.matches) raf = requestAnimationFrame(loop);
+      };
+
+      soundBtn?.addEventListener('click', () => {
+        soundOn = !soundOn;
+        soundBtn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+        soundBtn.textContent = soundOn ? 'Sound on (396 → 963 Hz)' : 'Sound (396 → 963 Hz)';
+        if (soundOn) tone(chakras[idx].hz);
+      });
+
+      spBtn?.addEventListener('click', async () => {
+        const url = `https://waves.khensu.nu/#/t/first-attempt?shareplay=indra-${Date.now().toString(36).slice(-4)}`;
+        try {
+          await navigator.clipboard?.writeText(url);
+        } catch {}
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'îňðřæ.ōġ · ñü.ŵævẽš SharePlay',
+              text: 'Listen & move sounds in 3D together on Apple SharePlay:',
+              url,
+            });
+            return;
+          } catch {}
+        }
+        spBtn.textContent = 'SharePlay link copied!';
+        setTimeout(() => (spBtn.textContent = 'Apple SharePlay'), 2400);
+      });
+
+      expBtn?.addEventListener('click', async () => {
+        if (!canvas) return;
+        draw(performance.now());
+        const blob = await new Promise((res) => canvas.toBlob(res, 'image/png', 0.95));
+        if (!blob) return;
+        const file = new File([blob], `indra-og-${fmt}.png`, { type: 'image/png' });
+        const url = 'https://indra.og.khensu.nu/';
+        if (navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: 'îňðřæ.ōġ · spacetime bubble™', url });
+            return;
+          } catch {}
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `indra-og-${fmt}.png`;
+        a.click();
+      });
+
+      draw(performance.now());
+      const vis = new IntersectionObserver(
+        ([e]) => {
+          if (e.isIntersecting) {
+            stepStart = performance.now();
+            if (!raf) raf = requestAnimationFrame(loop);
+          } else {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+        },
+        { threshold: 0.15 },
+      );
+      vis.observe(root);
+    }
+  })();
+</script>
+
+<style>
+  .indra-chakra {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem;
+    border-radius: 1.35rem;
+    border: 1px solid rgba(125, 211, 252, 0.22);
+    background: rgba(7, 12, 24, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 36px rgba(34, 245, 154, 0.08);
+    width: 100%;
+  }
+  .ic-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .ic-fmt {
+    padding: 0.36rem 0.78rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(248, 250, 252, 0.8);
+    font: 600 0.74rem var(--font-mono, ui-monospace, monospace);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ic-fmt[aria-pressed='true'] {
+    background: linear-gradient(135deg, rgba(34, 245, 154, 0.24), rgba(56, 189, 248, 0.26));
+    border-color: #22f59a;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(34, 245, 154, 0.25);
+  }
+  .ic-stage-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+  }
+  .ic-stage-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .ic-canvas {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 28rem;
+    object-fit: contain;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+    background: #040812;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .ic-canvas[data-fmt='story'] {
+    max-width: 16.5rem;
+    max-height: 29rem;
+  }
+  .ic-canvas[data-fmt='square'] {
+    max-width: 22rem;
+    max-height: 22rem;
+  }
+  .ic-svg-hidden {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ic-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0 0.25rem;
+  }
+  .ic-label {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .ic-dot-live {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: #22f59a;
+    box-shadow: 0 0 10px #22f59a;
+  }
+  .ic-name {
+    font-weight: 700;
+    color: #fff;
+  }
+  .ic-hz {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.82rem;
+    color: #7dd3fc;
+  }
+  .ic-sub {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .ic-dots {
+    list-style: none;
+    display: flex;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+  }
+  .ic-dots li {
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--c) 35%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 70%, transparent);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .ic-dots li.on {
+    background: var(--c);
+    box-shadow: 0 0 12px var(--c);
+    transform: scale(1.22);
+  }
+  .ic-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+</style>

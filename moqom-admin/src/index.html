@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="content-security-policy" content="%CSP%" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#0A0B0D" />
+    <title>Operator console · MOQOM Cloud</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/app.css" integrity="%CSS_SRI%" />
+    <script type="module" src="/app.js" integrity="%JS_SRI%"></script>
+  </head>
+  <body>
+    <div class="glass-field" aria-hidden="true"></div>
+    <div id="app" data-api="%API%" data-client-id="%CLIENT_ID%" data-hosted-domain="%HOSTED_DOMAIN%" data-dev="%DEV%">
+      <header class="top glass glass--strong">
+        <div class="top-inner">
+          <span class="brand">MOQOM<span class="faint"> Cloud</span> <span class="pill pill-accent">Operator</span></span>
+          <nav id="nav" aria-label="Operator" hidden>
+            <a href="#/tenants" data-route="tenants">Tenants</a>
+            <a href="#/signups" data-route="signups">Signups</a>
+            <a href="#/audit" data-route="audit">Audit log</a>
+          </nav>
+          <div class="who">
+            <span id="who" class="small faint mono"></span>
+            <button id="sign-out" class="btn btn-small" type="button" hidden>Sign out</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="container">
+        <p id="error" class="error" role="alert" hidden></p>
+
+        <section id="signin" class="glass glass--strong card panel narrow-panel" hidden>
+          <h1>Operator console</h1>
+          <p class="muted">
+            For MOQOM staff. Sign in with an allow-listed Google Workspace account. Tenant API keys do not work here.
+            The ID token is kept in this tab only and expires within an hour.
+          </p>
+          <div class="btn-row">
+            <button id="google" class="btn btn-primary" type="button">Sign in with Google</button>
+          </div>
+          <p id="config-error" class="error" hidden>This build has no Google OAuth client ID, so sign-in is unavailable.</p>
+          <form id="dev-form" class="dev" hidden>
+            <p class="small warn">Development build: paste an ID token minted for the local control plane.</p>
+            <label for="dev-token">ID token</label>
+            <input id="dev-token" class="mono" type="password" autocomplete="off" spellcheck="false" />
+            <div class="btn-row"><button class="btn" type="submit">Use token</button></div>
+          </form>
+        </section>
+
+        <section data-view="tenants" hidden>
+          <div class="head-row">
+            <h1>Tenants</h1>
+            <div class="inline">
+              <label for="filter" class="visually-hidden">Filter</label>
+              <input id="filter" type="search" placeholder="Filter by name, email or ID" autocomplete="off" />
+              <select id="status-filter" aria-label="Status">
+                <option value="">Any status</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="suspended">Suspended</option>
+                <option value="archived">Archived</option>
+                <option value="deleted">Deleted</option>
+              </select>
+              <button id="tenants-reload" class="btn btn-small" type="button">Reload</button>
+            </div>
+          </div>
+          <dl class="meta glass card">
+            <div><dt>Tenants</dt><dd id="count-total" class="mono big"></dd></div>
+            <div><dt>Active</dt><dd id="count-active" class="mono big"></dd></div>
+            <div><dt>Balances held</dt><dd id="sum-balance" class="mono big"></dd></div>
+            <div><dt>Usage this month</dt><dd id="sum-spend" class="mono big"></dd></div>
+          </dl>
+          <div class="glass card table-card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Tenant</th><th>Status</th><th>Created</th><th class="num">Balance</th><th class="num">Month spend</th><th>Last activity</th></tr>
+                </thead>
+                <tbody id="tenants"></tbody>
+              </table>
+            </div>
+          </div>
+          <p class="small faint">Last activity is the tenant's newest ledger entry. Month is the calendar month in UTC.</p>
+        </section>
+
+        <section data-view="tenant" hidden>
+          <p><a href="#/tenants">← Tenants</a></p>
+          <div class="head-row">
+            <h1 id="t-name"></h1>
+            <span id="t-status" class="pill"></span>
+          </div>
+          <div id="t-admission" class="callout callout-warn glass" hidden><p id="t-refusal" class="small"></p></div>
+          <dl class="meta glass card">
+            <div><dt>Tenant ID</dt><dd id="t-id" class="mono"></dd></div>
+            <div><dt>Email</dt><dd id="t-email"></dd></div>
+            <div><dt>Created</dt><dd id="t-created" class="small"></dd></div>
+            <div><dt>Card on file</dt><dd id="t-card"></dd></div>
+            <div><dt>Balance</dt><dd id="t-balance" class="mono big"></dd></div>
+            <div><dt>Month spend</dt><dd id="t-spend" class="mono big"></dd></div>
+            <div><dt>Spend limit</dt><dd id="t-limit" class="mono"></dd></div>
+            <div><dt>Auto top-up</dt><dd id="t-auto" class="small"></dd></div>
+          </dl>
+
+          <div class="grid grid-2">
+            <div class="glass card panel">
+              <h2>Status</h2>
+              <p class="small muted">
+                Suspending refuses new sessions and token minting at once; live sessions end when their tokens can't
+                renew. The tenant keeps its keys, its console and its balance. The reason goes to the audit log.
+              </p>
+              <form id="status-form" novalidate>
+                <label for="status-reason">Reason (required, 4–500 characters)</label>
+                <input id="status-reason" type="text" maxlength="500" autocomplete="off" />
+                <div class="btn-row">
+                  <button id="status-go" class="btn" type="submit"></button>
+                </div>
+                <p id="status-note" class="small faint" hidden></p>
+              </form>
+            </div>
+
+            <div class="glass card panel">
+              <h2>Credit adjustment</h2>
+              <p class="small muted">
+                A ledger entry of kind adjustment. Positive adds credit, negative removes it. The reason is shown to the
+                tenant in their ledger; who made it is recorded in the audit log only. Retrying with the same request
+                ID applies it once.
+              </p>
+              <form id="adjust-form" novalidate>
+                <div class="inline">
+                  <div class="field">
+                    <label for="adjust-amount">Amount (USD, ±, up to 10,000)</label>
+                    <input id="adjust-amount" type="number" step="0.01" inputmode="decimal" placeholder="25.00" />
+                  </div>
+                </div>
+                <label for="adjust-reason">Reason (required, shown to the tenant)</label>
+                <input id="adjust-reason" type="text" maxlength="500" autocomplete="off" />
+                <p class="small faint">Request ID <span id="adjust-key" class="mono"></span></p>
+                <div class="btn-row">
+                  <button class="btn btn-primary" type="submit">Apply adjustment</button>
+                  <span id="adjust-status" class="small faint" aria-live="polite"></span>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="glass card panel">
+            <h2>Ledger</h2>
+            <p class="small muted">Newest 500 entries. Cost is MOQOM's and is never shown to the tenant.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>When</th><th>Kind</th><th class="num">Amount</th><th class="num">Cost</th><th>Reference</th><th>Detail</th></tr></thead>
+                <tbody id="t-ledger"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="glass card panel">
+            <h2>API keys</h2>
+            <p class="small muted">Metadata only. Key secrets are never stored and cannot be shown.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Name</th><th>Kind</th><th>ID</th><th>Created</th><th>State</th></tr></thead>
+                <tbody id="t-keys"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="glass card panel">
+            <h2>Audit log for this tenant</h2>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>When</th><th>Operator</th><th>Action</th><th>Outcome</th><th>Detail</th></tr></thead>
+                <tbody id="t-audit"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section data-view="signups" hidden>
+          <div class="head-row">
+            <h1>Signups</h1>
+            <select id="signup-days" aria-label="Window">
+              <option value="30">30 days</option>
+              <option value="90" selected>90 days</option>
+              <option value="365">365 days</option>
+            </select>
+          </div>
+          <div class="glass card panel">
+            <dl class="meta">
+              <div><dt>In window</dt><dd id="s-window" class="mono big"></dd></div>
+              <div><dt>All time</dt><dd id="s-total" class="mono big"></dd></div>
+              <div><dt>Active now</dt><dd id="s-active" class="mono big"></dd></div>
+              <div><dt>Busiest day</dt><dd id="s-peak" class="mono"></dd></div>
+            </dl>
+            <div class="chart-wrap">
+              <svg id="signup-chart" viewBox="0 0 900 240" role="img" aria-labelledby="signup-chart-title">
+                <title id="signup-chart-title">Signups per UTC day</title>
+              </svg>
+            </div>
+            <p class="small faint">Every tenant ever created, by the UTC day it signed up, whatever its status now.</p>
+          </div>
+        </section>
+
+        <section data-view="audit" hidden>
+          <div class="head-row">
+            <h1>Audit log</h1>
+            <button id="audit-reload" class="btn btn-small" type="button">Reload</button>
+          </div>
+          <p class="small muted">
+            Every authenticated operator request, newest first: a row when it is asked for and, for changes, a row with
+            its outcome. Refused sign-ins are in Cloud Logging as <span class="mono">operator_refused</span>.
+          </p>
+          <div class="glass card table-card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>When</th><th>Operator</th><th>Address</th><th>Action</th><th>Tenant</th><th>Outcome</th><th>Detail</th></tr></thead>
+                <tbody id="audit"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
