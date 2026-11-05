@@ -74,6 +74,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
+    <p class="alpha-bar">
+      <b>khėnsu.ñü is a free, open-source alpha.</b> Benchmarks are real, measured in Claude Opus 5.5 test runs.{' '}
+      <a href="https://nocap.khensu.nu">Less data, less energy: nocap →</a>
+    </p>
     <header class="site-header">
       <div class="wrap bar">
         <a href="/" class="brand" aria-label="elliottwave.studio lab, home">
@@ -141,6 +145,9 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     padding: 0.5rem 1rem;
     border-radius: 6px;
   }
+  .alpha-bar { position: relative; z-index: 6; margin: 0; max-width: none; padding: 0.4rem 1rem; text-align: center; font-size: 0.8rem; color: var(--text-dim, rgba(255, 255, 255, 0.6)); background: linear-gradient(90deg, rgba(126, 224, 200, 0.12), rgba(240, 168, 200, 0.12)); border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.1)); }
+  .alpha-bar b { color: inherit; font-weight: 500; }
+  .alpha-bar a { color: #2bb596; text-decoration: none; white-space: nowrap; }
   .site-header {
     position: sticky;
     top: 0;
